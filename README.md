@@ -27,7 +27,8 @@ Database:
 
 ## Repository Structure
 
-complaint-management-system
+complaint-management-systems
+
 ├── README.md  
 ├── PRD.md  
 ├── docs/  
