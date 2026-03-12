@@ -1257,7 +1257,7 @@ gap:20px;
 :root{
   --accent:#1ccad8;
   --accent-strong:#10a8b7;
-  --bg-image:none;
+  --bg-image:url("https://cdn.pixabay.com/photo/2021/02/14/19/51/handshake-6015639_1280.jpg");
   --bg-overlay:rgba(8,12,16,0.72);
   --page-bg:#0f141a;
   --surface:rgba(19,27,36,0.75);
@@ -1278,7 +1278,7 @@ gap:20px;
 body[data-theme="light"]{
   --accent:#1B9CFC;
   --accent-strong:#1684d6;
-  --bg-overlay:#e6eff8;
+  --bg-overlay:rgba(230,239,248,0.7);
   --page-bg:#e6eff8;
   --surface:rgba(255,255,255,0.82);
   --surface-strong:#0A3D62;
@@ -1298,6 +1298,10 @@ body[data-theme="light"]{
 body{
   background:linear-gradient(var(--bg-overlay), var(--bg-overlay)), var(--bg-image);
   color:var(--text);
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
   transition:background 0.4s ease, color 0.4s ease;
 }
 
@@ -1873,34 +1877,47 @@ body[data-theme="light"] footer strong{
 <div id="register" class="page">
 
 <section class="auth-section">
-  <h2>Citizen Registration</h2>
-  <p>Create an account to file complaints and track their resolution.</p>
+  <h2 id="registerTitle">Account Registration</h2>
+  <p id="registerSubtitle">Create a citizen account to file complaints, or register as an officer for review access.</p>
   
   <div class="auth-form-container">
     <form class="auth-form" id="registerForm">
+      <div class="role-switch" id="registerRoleTabs">
+        <button type="button" data-role="citizen" class="active">Citizen</button>
+        <button type="button" data-role="officer">Officer</button>
+      </div>
+      <input type="hidden" id="registerRole" name="role" value="citizen">
+
       <div class="form-group">
         <label for="regFullName">Full Name</label>
-        <input type="text" id="regFullName" name="fullName" required>
+        <input type="text" id="regFullName" name="fullName" placeholder="Your full name" required>
       </div>
       
       <div class="form-group">
         <label for="regEmail">Email Address</label>
-        <input type="email" id="regEmail" name="email" required>
+        <input type="email" id="regEmail" name="email" placeholder="you@example.com" required>
       </div>
       
       <div class="form-group">
         <label for="regPhone">Phone Number</label>
-        <input type="tel" id="regPhone" name="phone" required>
+        <input type="tel" id="regPhone" name="phone" placeholder="e.g., 9876543210" required>
       </div>
       
       <div class="form-group">
         <label for="regPassword">Password</label>
-        <input type="password" id="regPassword" name="password" required minlength="8">
+        <input type="password" id="regPassword" name="password" placeholder="Create a password" required minlength="8">
       </div>
       
       <div class="form-group">
         <label for="regConfirmPassword">Confirm Password</label>
-        <input type="password" id="regConfirmPassword" name="confirmPassword" required minlength="8">
+        <input type="password" id="regConfirmPassword" name="confirmPassword" placeholder="Re-enter password" required minlength="8">
+      </div>
+
+      <div id="officerFields" style="display:none;">
+        <div class="form-group">
+          <label for="regDepartment">Department</label>
+          <input type="text" id="regDepartment" name="department" placeholder="e.g., Public Works">
+        </div>
       </div>
       
       <div class="form-group checkbox-group">
@@ -1930,8 +1947,8 @@ body[data-theme="light"] footer strong{
 <div id="login" class="page">
 
 <section class="auth-section">
-  <h2>Welcome Back</h2>
-  <p>Login to access your account and manage complaints.</p>
+  <h2 id="loginTitle">Welcome Back</h2>
+  <p id="loginSubtitle">Login to access your account and manage complaints.</p>
   
   <div class="auth-form-container">
     <form class="auth-form" id="loginForm">
@@ -1952,11 +1969,6 @@ body[data-theme="light"] footer strong{
         <input type="password" id="loginPassword" name="password" placeholder="Enter your password" required>
       </div>
 
-      <div class="form-group" id="officerKeyGroup" style="display:none;">
-        <label for="officerKey">Officer Security Key</label>
-        <input type="password" id="officerKey" name="officerKey" placeholder="Enter officer security key">
-      </div>
-      
       <button type="submit" class="auth-btn">Login</button>
     </form>
 
@@ -2068,7 +2080,7 @@ function loadUsers() {
   }
 }
 
-function registerCitizen(event) {
+function registerUser(event) {
   event.preventDefault();
   
   const fullName = document.getElementById('regFullName').value;
@@ -2076,7 +2088,8 @@ function registerCitizen(event) {
   const phone = document.getElementById('regPhone').value;
   const password = document.getElementById('regPassword').value;
   const confirmPassword = document.getElementById('regConfirmPassword').value;
-  const role = 'citizen';
+  const role = document.getElementById('registerRole').value;
+  const department = document.getElementById('regDepartment') ? document.getElementById('regDepartment').value.trim() : '';
   
   // Validation
   if (password !== confirmPassword) {
@@ -2095,6 +2108,13 @@ function registerCitizen(event) {
     alert('User with this email already exists!');
     return;
   }
+
+  if (role === 'officer') {
+    if (!department) {
+      alert('Please provide your department.');
+      return;
+    }
+  }
   
   // Create new user
   const newUser = {
@@ -2103,19 +2123,25 @@ function registerCitizen(event) {
     email,
     phone,
     password, // In real app, this would be hashed
-    role: 'citizen',
-    status: 'active',
+    role,
+    department: role === 'officer' ? department : undefined,
+    status: role === 'officer' ? 'pending' : 'active',
     createdAt: new Date().toISOString()
   };
   
   users.push(newUser);
   localStorage.setItem('CityFIxUsers', JSON.stringify(users));
   
-  alert('Registration successful! Please login.');
+  if (role === 'officer') {
+    alert('Officer registration submitted. Your account is pending approval.');
+  } else {
+    alert('Registration successful! Please login.');
+  }
   showPage('login');
   
   // Clear form
   document.getElementById('registerForm').reset();
+  setRegisterRole('citizen');
 }
 
 function loginAdmin(event) {
@@ -2124,19 +2150,10 @@ function loginAdmin(event) {
   const email = document.getElementById('loginEmail').value;
   const password = document.getElementById('loginPassword').value;
   const role = document.getElementById('loginRole').value;
-  const officerKey = document.getElementById('officerKey') ? document.getElementById('officerKey').value : '';
 
   if (!role) {
     alert('Please select a role to login.');
     return;
-  }
-
-  if (role === 'officer') {
-    const requiredKey = localStorage.getItem('officerSecurityKey') || 'OFFICER-KEY-2026';
-    if (!officerKey || officerKey !== requiredKey) {
-      alert('Invalid officer security key.');
-      return;
-    }
   }
 
   const users = JSON.parse(localStorage.getItem('CityFIxUsers') || '[]');
@@ -2328,27 +2345,98 @@ if (registerGoogleBtn) {
 
 const loginRoleTabs = document.getElementById('loginRoleTabs');
 const loginRoleInput = document.getElementById('loginRole');
-const officerKeyGroup = document.getElementById('officerKeyGroup');
 const loginLinks = document.getElementById('loginLinks');
-if (loginRoleTabs && loginRoleInput) {
+const loginTitle = document.getElementById('loginTitle');
+const loginSubtitle = document.getElementById('loginSubtitle');
+
+function setLoginRole(role) {
+  if (loginRoleInput) {
+    loginRoleInput.value = role;
+  }
+  if (loginRoleTabs) {
+    loginRoleTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    const btn = loginRoleTabs.querySelector(`button[data-role="${role}"]`);
+    if (btn) {
+      btn.classList.add('active');
+    }
+  }
+  if (loginLinks) {
+    loginLinks.style.display = role === 'citizen' ? 'block' : 'none';
+  }
+  if (loginTitle && loginSubtitle) {
+    if (role === 'officer') {
+      loginTitle.textContent = 'Officer Login';
+      loginSubtitle.textContent = 'Login to review, manage, and resolve citizen complaints.';
+    } else if (role === 'admin') {
+      loginTitle.textContent = 'Administrator Login';
+      loginSubtitle.textContent = 'Login to manage system settings, users, and reports.';
+    } else {
+      loginTitle.textContent = 'Welcome Back';
+      loginSubtitle.textContent = 'Login to access your account and manage complaints.';
+    }
+  }
+}
+
+if (loginRoleTabs) {
   loginRoleTabs.addEventListener('click', function(e) {
     const btn = e.target.closest('button[data-role]');
     if (!btn) {
       return;
     }
-    loginRoleTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    loginRoleInput.value = btn.getAttribute('data-role');
-    if (officerKeyGroup) {
-      officerKeyGroup.style.display = loginRoleInput.value === 'officer' ? 'block' : 'none';
-    }
-    if (loginLinks) {
-      loginLinks.style.display = loginRoleInput.value === 'citizen' ? 'block' : 'none';
-    }
+    setLoginRole(btn.getAttribute('data-role'));
   });
 }
 
-document.getElementById('registerForm').addEventListener('submit', registerCitizen);
+const registerRoleTabs = document.getElementById('registerRoleTabs');
+const registerRoleInput = document.getElementById('registerRole');
+const officerFields = document.getElementById('officerFields');
+const registerTitle = document.getElementById('registerTitle');
+const registerSubtitle = document.getElementById('registerSubtitle');
+
+function setRegisterRole(role) {
+  if (registerRoleInput) {
+    registerRoleInput.value = role;
+  }
+  if (registerRoleTabs) {
+    registerRoleTabs.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    const btn = registerRoleTabs.querySelector(`button[data-role="${role}"]`);
+    if (btn) {
+      btn.classList.add('active');
+    }
+  }
+  if (officerFields) {
+    officerFields.style.display = role === 'officer' ? 'block' : 'none';
+  }
+  if (registerTitle && registerSubtitle) {
+    if (role === 'officer') {
+      registerTitle.textContent = 'Officer Registration';
+      registerSubtitle.textContent = 'Register as a government officer to review and resolve complaints.';
+    } else {
+      registerTitle.textContent = 'Account Registration';
+      registerSubtitle.textContent = 'Create a citizen account to file complaints, or register as an officer for review access.';
+    }
+  }
+}
+
+if (registerRoleTabs) {
+  registerRoleTabs.addEventListener('click', function(e) {
+    const btn = e.target.closest('button[data-role]');
+    if (!btn) {
+      return;
+    }
+    setRegisterRole(btn.getAttribute('data-role'));
+  });
+}
+
+if (loginRoleInput) {
+  setLoginRole(loginRoleInput.value || 'citizen');
+}
+
+if (registerRoleInput) {
+  setRegisterRole(registerRoleInput.value || 'citizen');
+}
+
+document.getElementById('registerForm').addEventListener('submit', registerUser);
 document.getElementById('loginForm').addEventListener('submit', loginAdmin);
 
 </script>
