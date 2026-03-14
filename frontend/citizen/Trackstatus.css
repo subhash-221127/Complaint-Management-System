@@ -1,11 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
+
 /* ─────────────────────────────────────────
    CIVIC DESK — Simple Dashboard
    Lavender sidebar · Clean neutral layout
 ───────────────────────────────────────── */
 
 :root {
-
-  --sidebar-w: 220px;
+  --sidebar-w: 248px;
+  --transition: all 0.2s ease;
+  --font: 'Plus Jakarta Sans', sans-serif;
+  --orange-light: rgba(249,115,22,0.12);
 
   /* Sidebar */
   --sb:        #142e57;
@@ -40,7 +44,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Inter', system-ui, sans-serif;
+  font-family: var(--font);
   font-size: 14px;
   color: var(--text);
   background: var(--bg);
@@ -54,77 +58,110 @@ button { cursor: pointer; font-family: inherit; font-size: 14px; }
 
 /* ── SIDEBAR ───────────────────────────── */
 .sidebar {
-  position: fixed;
-  top: 0; left: 0;
   width: var(--sidebar-w);
-  height: 100vh;
-  background: var(--sb);
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f2346 0%, #1a3c6e 100%);
   display: flex;
   flex-direction: column;
-  z-index: 100;
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  z-index: 30;
   overflow: hidden;
 }
+.sidebar::before {
+  content: '';
+  position: absolute;
+  bottom: -60px; right: -60px;
+  width: 200px; height: 200px;
+  background: rgba(249,115,22,0.06);
+  border-radius: 50%;
+  pointer-events: none;
+}
 
-.brand {
+.sidebar-logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 20px 18px 16px;
-  font-size: 16px;
-  font-weight: 600;
-  color: #fff;
-  border-bottom: 1px solid rgba(255,255,255,.15);
+  padding: 22px 20px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  text-decoration: none;
 }
-.brand-logo {
-  width: 34px; height: 34px;
-  background: rgba(255,255,255,.2);
-  border-radius: 8px;
+.logo-icon {
+  width: 36px; height: 36px;
+  background: var(--orange);
+  border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px;
-  color: #fff;
+  flex-shrink: 0;
 }
+.logo-text { color: #fff; font-weight: 800; font-size: 1.15rem; }
+.logo-text span { color: var(--orange); }
 
-nav {
-  padding: 14px 10px;
+.sidebar-nav {
   flex: 1;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+  position: relative;
+  z-index: 1;
 }
 
-.nav-item {
+.sidebar-link {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 7px;
-  color: var(--sb-text);
-  font-size: 13.5px;
-  transition: background .15s, color .15s;
+  gap: 12px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: var(--transition);
+  text-decoration: none;
+  border: none;
+  background: none;
+  width: 100%;
+  position: relative;
+  font-family: var(--font);
 }
-.nav-item i {
-  width: 16px;
-  text-align: center;
-  font-size: 13px;
-  opacity: .8;
-}
-.nav-item:hover  { background: var(--sb-hover); color: #fff; }
-.nav-item.active {
-  background: rgba(255,255,255,.2);
+.sidebar-link:hover {
+  background: rgba(255,255,255,0.08);
   color: #fff;
-  font-weight: 500;
+}
+.sidebar-link.active {
+  background: var(--orange-light);
+  color: var(--orange);
+}
+.sidebar-link.active::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px; height: 24px;
+  background: var(--orange);
+  border-radius: 3px 0 0 3px;
+}
+.sidebar-link .icon { font-size: 1rem; flex-shrink: 0; }
+
+/* Sidebar badge (notification count) */
+.sidebar-link .badge {
+  margin-left: auto;
+  background: var(--orange);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  min-width: 20px;
+  text-align: center;
 }
 
-.sidebar-bottom {
-  padding: 12px 14px 16px;
-  border-top: 1px solid rgba(255,255,255,.15);
-}
-.logout-btn {
-  color: #FECACA !important;
-}
-.logout-btn:hover {
-  background: rgba(239,68,68,.2) !important;
-  color: #fff !important;
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+  position: relative;
+  z-index: 1;
 }
 
 /* ── MAIN ─────────────────────────────── */
