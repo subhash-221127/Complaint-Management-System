@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix Admin – Officers</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body>
+<div class="admin-layout">
+
+  <aside class="sidebar">
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+          stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints <span class="badge">18</span></a>
+      <a href="officers.html"   class="sidebar-link active"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="officer-requests.html" class="sidebar-link"><span class="icon">📩</span> Officer Requests <span class="badge">4</span></a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">🚪</span> Logout</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <h1>Officers</h1>
+        <span class="breadcrumb">Officer Management</span>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
+          <div class="admin-avatar" id="admin-avatar">AD</div>
+          <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
+          <div class="profile-dropdown" id="profile-dropdown">
+            <a href="#">👤 My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      <div class="filter-bar">
+        <label>📌 Status:</label>
+        <select id="status-filter" onchange="renderOfficers()">
+          <option value="all">All</option>
+          <option value="Active">Active</option>
+          <option value="On Leave">On Leave</option>
+        </select>
+        <label>🏢 Department:</label>
+        <select id="dept-filter" onchange="renderOfficers()"></select>
+        <div class="search-box" style="margin-left:auto;">
+          <span>🔍</span>
+          <input type="text" id="search-input" placeholder="Search officers…" oninput="renderOfficers()" />
+        </div>
+      </div>
+
+      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+        <div class="stat-card blue">  <div class="stat-card-header"><div class="stat-card-icon blue">👮</div></div>  <div class="stat-value" id="total-officers">0</div>  <div class="stat-label">Total Officers</div></div>
+        <div class="stat-card green"> <div class="stat-card-header"><div class="stat-card-icon green">✅</div></div>  <div class="stat-value" id="active-officers">0</div>  <div class="stat-label">Active</div></div>
+        <div class="stat-card orange"><div class="stat-card-header"><div class="stat-card-icon orange">🏖️</div></div><div class="stat-value" id="leave-officers">0</div>   <div class="stat-label">On Leave</div></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-card-header">
+          <h3 id="officers-count">👮 Officers (0)</h3>
+        </div>
+        <div class="section-card-body">
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Status</th><th>Cases</th><th>Action</th></tr></thead>
+            <tbody id="officers-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="demo-data.js"></script>
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+  let officers = [...DEMO_OFFICERS];
+  document.getElementById('dept-filter').innerHTML =
+    '<option value="all">All Departments</option>' +
+    DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('');
+
+  function renderOfficers() {
+    const sf = document.getElementById('status-filter').value;
+    const df = document.getElementById('dept-filter').value;
+    const q  = document.getElementById('search-input').value.toLowerCase();
+    let data  = [...officers];
+    if (sf !== 'all') data = data.filter(o => o.status === sf);
+    if (df !== 'all') data = data.filter(o => o.department === df);
+    if (q)  data = data.filter(o =>
+      o.name.toLowerCase().includes(q) ||
+      o.id.toLowerCase().includes(q) ||
+      o.email.toLowerCase().includes(q));
+
+    document.getElementById('total-officers').textContent  = officers.length;
+    document.getElementById('active-officers').textContent = officers.filter(o => o.status === 'Active').length;
+    document.getElementById('leave-officers').textContent  = officers.filter(o => o.status === 'On Leave').length;
+    document.getElementById('officers-count').textContent  = `👮 Officers (${data.length})`;
+
+    document.getElementById('officers-body').innerHTML = data.map(o => `
+      <tr onclick="window.location.href='officer-detail.html?id=${o.id}'">
+        <td><strong>${o.id}</strong></td>
+        <td>${o.name}</td>
+        <td>${o.department}</td>
+        <td>${o.designation}</td>
+        <td><span class="status-badge ${o.status.toLowerCase().replace(' ','-')}">${o.status}</span></td>
+        <td>${o.casesResolved}/${o.casesHandled}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeOfficer('${o.id}')">Remove</button></td>
+      </tr>`).join('');
+  }
+
+  function removeOfficer(id) {
+    if (!confirm('Remove this officer?')) return;
+    officers = officers.filter(o => o.id !== id);
+    renderOfficers();
+  }
+
+  renderOfficers();
+  document.addEventListener('click', e => {
+    if (!document.getElementById('admin-profile').contains(e.target))
+      document.getElementById('profile-dropdown').classList.remove('show');
+  });
+</script>
+</body>
+</html>
