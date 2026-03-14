@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix – My Stats</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="officer.css" />
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+          stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="complaints.html" class="sidebar-link"><span class="icon">📊</span> Complaints</a>
+      <a href="mystats.html" class="sidebar-link active"><span class="icon">📊</span> Mystats</a>
+    </nav>
+
+    <!-- My Stats — ACTIVE on this page -->
+    
+  </nav>
+</aside>
+
+<!-- ══════════════════════════════════════════════
+     MAIN
+══════════════════════════════════════════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h2>Officer Dashboard</h2>
+      <p>My Performance Statistics</p>
+    </div>
+
+    <div class="topbar-right">
+
+      <!-- Notification Bell -->
+      <button class="notif-btn" id="notif-btn" onclick="toggleNotif(event)" title="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
+
+      <!-- User Button -->
+      <button class="user-btn" id="user-btn" onclick="toggleUserMenu(event)">
+        <div class="avatar" id="avatar-initials">OP</div>
+        <div class="user-btn-info">
+          <div class="user-btn-name" id="topbar-username">Officer Prasad</div>
+          <div class="user-btn-role">Officer</div>
+        </div>
+        <svg class="chevron-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </button>
+
+      <!-- Notification Panel -->
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-panel-header">
+          <h3>Notifications</h3>
+          <button class="notif-clear" onclick="clearNotifs()">Clear all</button>
+        </div>
+        <div class="notif-list" id="notif-list">
+          <div class="notif-item">
+            <div class="notif-dot" style="background:#3b82f6;"></div>
+            <div class="notif-item-content">
+              <p>New complaint assigned: Pothole on MG Road</p>
+              <span>2 minutes ago</span>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot" style="background:#f59e0b;"></div>
+            <div class="notif-item-content">
+              <p>Complaint #CF-0042 escalated to high priority</p>
+              <span>1 hour ago</span>
+            </div>
+          </div>
+          <div class="notif-item">
+            <div class="notif-dot" style="background:#22c55e;"></div>
+            <div class="notif-item-content">
+              <p>Your resolution for #CF-0038 was approved</p>
+              <span>3 hours ago</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Dropdown -->
+      <div class="user-dropdown" id="user-dropdown">
+        <div class="dropdown-header">
+          <div class="dropdown-avatar-row">
+            <div class="dropdown-avatar" id="dropdown-initials">OP</div>
+            <div>
+              <div class="dropdown-name"  id="dropdown-name">Officer Prasad</div>
+              <div class="dropdown-email" id="dropdown-email">prasad@cityfix.gov.in</div>
+            </div>
+          </div>
+          <div class="dropdown-tags">
+            <span class="dropdown-tag tag-role">Officer</span>
+            <span class="dropdown-tag tag-dept" id="dropdown-dept">Roads &amp; Infra</span>
+            <span class="dropdown-tag tag-zone" id="dropdown-zone">All Zones</span>
+          </div>
+        </div>
+        <div class="dropdown-body">
+          <button class="dropdown-item" onclick="closeDropdowns()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="8" r="4"/>
+              <path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>
+            </svg>
+            My Profile
+          </button>
+          <button class="dropdown-item" onclick="window.location.href='complaints.html'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <line x1="8" y1="6"  x2="21" y2="6"/>
+              <line x1="8" y1="12" x2="21" y2="12"/>
+              <line x1="8" y1="18" x2="21" y2="18"/>
+              <line x1="3" y1="6"  x2="3.01" y2="6"/>
+              <line x1="3" y1="12" x2="3.01" y2="12"/>
+              <line x1="3" y1="18" x2="3.01" y2="18"/>
+            </svg>
+            Complaint Queue
+          </button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item logout" onclick="handleLogout()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+            Logout
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /topbar-right -->
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <div class="page-content">
+
+    <div class="page-header">
+      <h1 class="page-title">My Performance</h1>
+      <p class="page-sub">Your complaint resolution statistics</p>
+    </div>
+
+    <!-- Performance stat cards -->
+    <div class="perf-stats">
+      <div class="perf-card">
+        <div class="perf-card-info">
+          <div class="perf-card-label">Total Assigned</div>
+          <div class="perf-card-val" id="perf-total">0</div>
+        </div>
+        <div class="perf-card-icon" style="background:#dbeafe;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round">
+            <line x1="18" y1="20" x2="18" y2="10"/>
+            <line x1="12" y1="20" x2="12" y2="4"/>
+            <line x1="6"  y1="20" x2="6"  y2="14"/>
+          </svg>
+        </div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-card-info">
+          <div class="perf-card-label">Resolved</div>
+          <div class="perf-card-val" id="perf-resolved">0</div>
+        </div>
+        <div class="perf-card-icon" style="background:var(--green-light);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-card-info">
+          <div class="perf-card-label">In Progress</div>
+          <div class="perf-card-val" id="perf-progress">0</div>
+        </div>
+        <div class="perf-card-icon" style="background:var(--orange-light);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linecap="round">
+            <polyline points="23 4 23 10 17 10"/>
+            <path d="M20.49 15a9 9 0 1 1-.08-8.49"/>
+          </svg>
+        </div>
+      </div>
+      <div class="perf-card">
+        <div class="perf-card-info">
+          <div class="perf-card-label">Avg Time (hrs)</div>
+          <div class="perf-card-val" id="perf-avg">0</div>
+        </div>
+        <div class="perf-card-icon" style="background:var(--purple-light);">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resolution Rate donut -->
+    <div class="resolution-card">
+      <h3>Resolution Rate</h3>
+      <div class="donut-wrap">
+        <div class="donut-svg-wrap">
+          <svg width="160" height="160" viewBox="0 0 160 160">
+            <circle cx="80" cy="80" r="60" fill="none" stroke="#e2e8f0" stroke-width="18"/>
+            <circle cx="80" cy="80" r="60" fill="none" stroke="#22c55e" stroke-width="18"
+              stroke-dasharray="377" id="donut-arc"
+              stroke-dashoffset="377" stroke-linecap="round"
+              style="transition: stroke-dashoffset 1s ease;"/>
+          </svg>
+          <div class="donut-center">
+            <div class="donut-pct" id="donut-pct">0%</div>
+            <div class="donut-sub">Resolved</div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-item">
+            <div class="legend-val" style="color:var(--green);" id="legend-resolved">0</div>
+            <div class="legend-label">Resolved</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-val" style="color:var(--blue);" id="legend-pending">0</div>
+            <div class="legend-label">Pending</div>
+          </div>
+          <div class="legend-item">
+            <div class="legend-val" style="color:var(--amber);" id="legend-progress">0</div>
+            <div class="legend-label">In Progress</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category breakdown -->
+    <div class="breakdown-card">
+      <h3>Complaints by Category</h3>
+      <div id="breakdown-rows"></div>
+    </div>
+
+  </div><!-- /page-content -->
+</div><!-- /main -->
+
+<!-- Toast -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════ -->
+<script>
+  /* ── Auth Guard ── */
+  (function authGuard() {
+    const raw = sessionStorage.getItem('cityfix_user');
+    if (!raw) { window.location.replace('../login.html'); return; }
+    try {
+      const parsed = JSON.parse(raw);
+      if (parsed.role !== 'officer') { window.location.replace('../login.html'); return; }
+    } catch { window.location.replace('../login.html'); }
+  })();
+
+  /* ── Officer info (read from session) ── */
+  const _session = JSON.parse(sessionStorage.getItem('cityfix_user') || '{}');
+  const OFFICER = {
+    name: _session.name || 'Officer Prasad',
+    initials: _session.initials || 'OP',
+    email: _session.email || 'officer@cityfix.com',
+    dept: 'Roads & Infra',
+    zone: 'All Zones'
+  };
+
+  /* ── Load complaints from shared store (kept in sync with complaints.html) ── */
+  const STORE_KEY = 'cityfix_complaints';
+  const DEFAULT_COMPLAINTS = [
+    { id:'CF-0051', title:'Large pothole on MG Road near bus stop',    category:'Roads',        severity:'critical', status:'pending',     location:'MG Road, Zone A',       date:'Mar 12, 2026', desc:'Deep pothole approx 2ft wide causing vehicle damage.' },
+    { id:'CF-0048', title:'Broken street light — entire stretch dark', category:'Electricity',  severity:'high',     status:'in-progress', location:'Gandhi Nagar, Zone B',  date:'Mar 11, 2026', desc:'Street lights non-functional from junction to school gate.' },
+    { id:'CF-0045', title:'Overflowing garbage bin near market',       category:'Sanitation',   severity:'high',     status:'pending',     location:'Old Market, Zone A',    date:'Mar 10, 2026', desc:'Municipal bin not cleared for 4 days.' },
+    { id:'CF-0041', title:'Water pipeline leaking on Nehru Street',    category:'Water Supply', severity:'medium',   status:'in-progress', location:'Nehru Street, Zone C',  date:'Mar 9, 2026',  desc:'Minor pipeline leak causing water wastage.' },
+    { id:'CF-0038', title:'Park benches damaged and unsafe',           category:'Parks',        severity:'low',      status:'resolved',    location:'Central Park, Zone B',  date:'Mar 7, 2026',  desc:'Benches have broken planks posing injury risk.' },
+    { id:'CF-0035', title:'Storm drain blocked causing flooding',      category:'Roads',        severity:'high',     status:'pending',     location:'Ring Road, Zone D',     date:'Mar 6, 2026',  desc:'Drain blocked with debris.' },
+  ];
+
+  function loadComplaints() {
+    try {
+      const saved = localStorage.getItem(STORE_KEY);
+      return saved ? JSON.parse(saved) : DEFAULT_COMPLAINTS;
+    } catch { return DEFAULT_COMPLAINTS; }
+  }
+
+  const complaints = loadComplaints();
+
+  /* ── Boot ── */
+  (function init() {
+    document.getElementById('topbar-username').textContent   = OFFICER.name;
+    document.getElementById('avatar-initials').textContent   = OFFICER.initials;
+    document.getElementById('dropdown-initials').textContent = OFFICER.initials;
+    document.getElementById('dropdown-name').textContent     = OFFICER.name;
+    document.getElementById('dropdown-email').textContent    = OFFICER.email;
+    document.getElementById('dropdown-dept').textContent     = OFFICER.dept;
+    document.getElementById('dropdown-zone').textContent     = OFFICER.zone;
+    renderStats();
+    renderBreakdown();
+  })();
+
+  /* ── Stats ── */
+  function renderStats() {
+    const total    = complaints.length;
+    const resolved = complaints.filter(c => c.status === 'resolved').length;
+    const progress = complaints.filter(c => c.status === 'in-progress').length;
+    const pending  = complaints.filter(c => c.status === 'pending').length;
+    const pct      = total ? Math.round((resolved / total) * 100) : 0;
+
+    document.getElementById('perf-total').textContent    = total;
+    document.getElementById('perf-resolved').textContent = resolved;
+    document.getElementById('perf-progress').textContent = progress;
+    document.getElementById('perf-avg').textContent      = resolved ? 28 : 0;
+    document.getElementById('donut-pct').textContent     = pct + '%';
+    document.getElementById('legend-resolved').textContent = resolved;
+    document.getElementById('legend-pending').textContent  = pending;
+    document.getElementById('legend-progress').textContent = progress;
+
+    /* Animate donut after paint */
+    requestAnimationFrame(() => {
+      const circumf = 2 * Math.PI * 60; // ≈ 377
+      document.getElementById('donut-arc').style.strokeDashoffset = circumf - (pct / 100) * circumf;
+    });
+  }
+
+  /* ── Category breakdown ── */
+  function renderBreakdown() {
+    const COLORS = {
+      Roads: '#f97316', Electricity: '#3b82f6', Sanitation: '#22c55e',
+      'Water Supply': '#8b5cf6', Parks: '#f59e0b'
+    };
+    const counts = {};
+    complaints.forEach(c => { counts[c.category] = (counts[c.category] || 0) + 1; });
+    const max = Math.max(...Object.values(counts), 1);
+    const rows = Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([cat, count]) => {
+        const pct   = Math.round((count / max) * 100);
+        const color = COLORS[cat] || '#94a3b8';
+        return `
+          <div class="breakdown-row">
+            <div class="breakdown-label">${cat}</div>
+            <div class="breakdown-bar-wrap">
+              <div class="breakdown-bar" style="width:0%;background:${color};" data-width="${pct}"></div>
+            </div>
+            <div class="breakdown-count">${count}</div>
+          </div>`;
+      }).join('');
+
+    document.getElementById('breakdown-rows').innerHTML = rows;
+
+    /* Animate bars after paint */
+    requestAnimationFrame(() => {
+      document.querySelectorAll('.breakdown-bar').forEach(bar => {
+        bar.style.width = bar.dataset.width + '%';
+      });
+    });
+  }
+
+  /* ── Dropdowns ── */
+  function toggleUserMenu(e) {
+    e.stopPropagation();
+    document.getElementById('notif-panel').classList.remove('open');
+    const dd = document.getElementById('user-dropdown');
+    dd.classList.toggle('open');
+    document.getElementById('user-btn').classList.toggle('open', dd.classList.contains('open'));
+  }
+  function toggleNotif(e) {
+    e.stopPropagation();
+    document.getElementById('user-dropdown').classList.remove('open');
+    document.getElementById('user-btn').classList.remove('open');
+    const np = document.getElementById('notif-panel');
+    np.classList.toggle('open');
+    if (np.classList.contains('open')) document.getElementById('notif-badge').style.display = 'none';
+  }
+  function closeDropdowns() {
+    document.getElementById('user-dropdown').classList.remove('open');
+    document.getElementById('user-btn').classList.remove('open');
+    document.getElementById('notif-panel').classList.remove('open');
+  }
+  function clearNotifs() {
+    document.getElementById('notif-list').innerHTML = '<div class="notif-empty">No new notifications</div>';
+    document.getElementById('notif-badge').style.display = 'none';
+  }
+  document.addEventListener('click', closeDropdowns);
+
+  /* ── Logout ── */
+  function handleLogout() {
+    showToast('Logging out…');
+    setTimeout(() => { sessionStorage.removeItem('cityfix_user'); window.location.href = '../login.html'; }, 1000);
+  }
+
+  /* ── Toast ── */
+  function showToast(msg, type = '') {
+    const tc  = document.getElementById('toast-container');
+    const div = document.createElement('div');
+    div.className = 'toast' + (type ? ' ' + type : '');
+    div.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${msg}`;
+    tc.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+  }
+</script>
+
+</body>
+</html>
