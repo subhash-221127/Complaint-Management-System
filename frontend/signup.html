@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix – Create Account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #1a3c6e; --navy-dark: #0f2346; --orange: #f97316;
+      --green: #22c55e;
+      --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+      --slate-400: #94a3b8; --slate-500: #64748b; --slate-700: #334155; --slate-800: #1e293b;
+      --font: 'Plus Jakarta Sans', sans-serif;
+    }
+    body { font-family: var(--font); background: var(--slate-50); min-height: 100vh; display: flex; }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      width: 50%; min-height: 100vh;
+      background: linear-gradient(135deg, #0f2346 0%, #1a3c6e 50%, #1e4a8a 100%);
+      display: flex; flex-direction: column; justify-content: space-between;
+      padding: 48px; position: relative; overflow: hidden;
+    }
+    .orb {
+      position: absolute; border-radius: 50%; filter: blur(80px); pointer-events: none;
+    }
+    .orb1 { top: 60px; right: 40px; width: 320px; height: 320px; background: rgba(249,115,22,0.12); }
+    .orb2 { bottom: 60px; left: 20px; width: 360px; height: 360px; background: rgba(34,197,94,0.08); }
+
+    .left-content { position: relative; z-index: 2; }
+    .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 64px; text-decoration: none; }
+    .logo-icon {
+      width: 40px; height: 40px; background: var(--orange);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+    }
+    .logo-text { color: #fff; font-weight: 800; font-size: 1.4rem; }
+    .logo-text span { color: var(--orange); }
+
+    .left-tagline { font-size: clamp(1.8rem, 3vw, 2.8rem); font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 20px; }
+    .left-tagline span { color: var(--orange); }
+    .left-sub { color: rgba(255,255,255,0.7); font-size: 1rem; line-height: 1.7; margin-bottom: 48px; max-width: 360px; }
+
+    .benefits { display: flex; flex-direction: column; gap: 20px; }
+    .benefit {
+      display: flex; align-items: flex-start; gap: 14px;
+      background: rgba(255,255,255,0.06); border-radius: 16px; padding: 18px 20px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .benefit-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      font-size: 1.2rem;
+    }
+    .benefit-title { color: #fff; font-weight: 700; font-size: 0.9rem; margin-bottom: 3px; }
+    .benefit-desc { color: rgba(255,255,255,0.6); font-size: 0.8rem; line-height: 1.5; }
+
+    .left-footer { position: relative; z-index: 2; }
+    .left-footer p { color: rgba(255,255,255,0.4); font-size: 0.8rem; }
+    .left-footer a { color: rgba(255,255,255,0.6); text-decoration: none; }
+    .left-footer a:hover { color: #fff; }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 24px; background: var(--slate-50);
+    }
+    .form-box { width: 100%; max-width: 460px; }
+
+    .mobile-logo {
+      display: none; align-items: center; justify-content: center; gap: 10px; margin-bottom: 28px;
+    }
+    .mobile-logo-icon {
+      width: 40px; height: 40px; background: var(--navy);
+      border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    }
+    .mobile-logo-text { font-weight: 800; font-size: 1.3rem; color: var(--navy); }
+    .mobile-logo-text span { color: var(--orange); }
+
+    .form-card {
+      background: #fff; border-radius: 24px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.07); padding: 36px 32px;
+    }
+    .form-header { margin-bottom: 28px; }
+    .form-title { font-size: 1.6rem; font-weight: 800; color: var(--slate-800); margin-bottom: 6px; }
+    .form-sub { font-size: 0.875rem; color: var(--slate-500); }
+
+    /* Role badge */
+    .citizen-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(26,60,110,0.08); color: var(--navy);
+      padding: 5px 12px; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+      margin-bottom: 24px;
+    }
+
+    /* Form fields */
+    .field-group { margin-bottom: 18px; }
+    label { display: block; font-size: 0.875rem; font-weight: 600; color: var(--slate-700); margin-bottom: 6px; }
+    .input-wrap { position: relative; }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--slate-400); pointer-events: none; display: flex;
+    }
+    .input-valid {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      display: none;
+    }
+    .input-valid.show { display: flex; }
+    input[type=text], input[type=email], input[type=password] {
+      width: 100%; padding: 12px 14px 12px 42px;
+      border: 1.5px solid var(--slate-200); border-radius: 12px;
+      font-family: var(--font); font-size: 0.9rem; color: var(--slate-800);
+      background: var(--slate-50); transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+    input:focus { border-color: var(--navy); box-shadow: 0 0 0 3px rgba(26,60,110,0.08); background: #fff; }
+    input.valid { border-color: var(--green); }
+    input.invalid { border-color: #ef4444; }
+
+    .toggle-pwd {
+      position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: var(--slate-400);
+      display: flex; align-items: center;
+    }
+    .toggle-pwd:hover { color: var(--slate-600); }
+
+    .field-hint { font-size: 0.75rem; margin-top: 5px; }
+    .hint-neutral { color: var(--slate-400); }
+    .hint-error   { color: #ef4444; }
+    .hint-success { color: var(--green); }
+
+    /* Password strength */
+    .strength-bar { display: flex; gap: 4px; margin-top: 8px; }
+    .strength-seg {
+      flex: 1; height: 4px; border-radius: 99px;
+      background: var(--slate-200); transition: background 0.3s;
+    }
+    .strength-label { font-size: 0.75rem; margin-top: 5px; font-weight: 600; }
+
+    /* Error box */
+    .error-box {
+      display: none; align-items: center; gap: 8px;
+      background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px;
+      padding: 12px 14px; color: #dc2626; font-size: 0.85rem; margin-bottom: 16px;
+    }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%; padding: 15px; border-radius: 14px; border: none;
+      background: var(--orange); color: #fff; font-family: var(--font);
+      font-weight: 700; font-size: 0.95rem; cursor: pointer;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      margin-top: 4px;
+    }
+    .submit-btn:hover:not(:disabled) { background: #ea6c0a; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(249,115,22,0.3); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .spinner {
+      width: 16px; height: 16px; border: 2.5px solid rgba(255,255,255,0.4);
+      border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Success state */
+    .success-overlay {
+      display: none; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; padding: 20px 0;
+    }
+    .success-circle {
+      width: 72px; height: 72px; background: rgba(34,197,94,0.1);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+    }
+    .success-title { font-size: 1.4rem; font-weight: 800; color: var(--slate-800); margin-bottom: 8px; }
+    .success-sub { font-size: 0.9rem; color: var(--slate-500); line-height: 1.6; margin-bottom: 24px; }
+
+    /* Divider */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      color: var(--slate-400); font-size: 0.8rem; margin: 20px 0;
+    }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:var(--slate-200); }
+
+    /* Google signup button */
+    .google-btn {
+      width: 100%; padding: 13px; border-radius: 14px;
+      border: 1.5px solid var(--slate-200); background: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      cursor: pointer; font-family: var(--font); font-weight: 600;
+      color: var(--slate-700); font-size: 0.9rem;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .google-btn:hover { border-color: var(--navy); box-shadow: 0 4px 14px rgba(26,60,110,0.1); background: #f8faff; }
+
+    .login-link { text-align: center; font-size: 0.85rem; color: var(--slate-500); margin-top: 14px; }
+    .login-link a { color: var(--navy); font-weight: 700; text-decoration: none; }
+    .login-link a:hover { text-decoration: underline; }
+    .terms { text-align: center; font-size: 0.75rem; color: var(--slate-400); margin-top: 10px; }
+    .terms a { color: var(--navy); text-decoration: none; }
+    .terms a:hover { text-decoration: underline; }
+
+    @media (max-width: 1024px) {
+      .left-panel { display: none; }
+      .mobile-logo { display: flex; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LEFT -->
+<div class="left-panel">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+
+  <div class="left-content">
+    <a href="index.html" class="logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+
+    <h2 class="left-tagline">Be the change<br>your city <span>needs.</span></h2>
+    <p class="left-sub">Creating an account takes less than a minute. Start filing complaints and tracking civic issues today.</p>
+
+    <div class="benefits">
+      <div class="benefit">
+        <div class="benefit-icon" style="background:rgba(249,115,22,0.15);">📋</div>
+        <div>
+          <div class="benefit-title">File Complaints Instantly</div>
+          <div class="benefit-desc">Submit issues with photos, location pins, and AI auto-categorization.</div>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon" style="background:rgba(34,197,94,0.15);">📍</div>
+        <div>
+          <div class="benefit-title">Track Every Update</div>
+          <div class="benefit-desc">Get real-time notifications as your complaint moves through the system.</div>
+        </div>
+      </div>
+      <div class="benefit">
+        <div class="benefit-icon" style="background:rgba(139,92,246,0.15);">⭐</div>
+        <div>
+          <div class="benefit-title">Rate Resolutions</div>
+          <div class="benefit-desc">Give feedback after your issue is resolved to improve city services.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="left-footer">
+    <p>Already have an account? <a href="login.html">Sign in →</a></p>
+  </div>
+</div>
+
+<!-- RIGHT -->
+<div class="right-panel">
+  <div class="form-box">
+
+    <div class="mobile-logo">
+      <div class="mobile-logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+      </div>
+      <span class="mobile-logo-text">City<span>Fix</span></span>
+    </div>
+
+    <div class="form-card">
+      <div id="form-section">
+        <div class="form-header">
+          <h1 class="form-title">Create your account</h1>
+          <p class="form-sub">Join CityFix and start making your city better</p>
+        </div>
+
+        <div class="citizen-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+          Citizen Account
+        </div>
+
+        <!-- Error -->
+        <div id="error-box" class="error-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="error-text"></span>
+        </div>
+
+        <form id="signup-form" onsubmit="handleSignup(event)" novalidate>
+          <!-- Name -->
+          <div class="field-group">
+            <label for="name">Full Name</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M6 20v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg>
+              </span>
+              <input type="text" id="name" placeholder="Ravi Kumar" autocomplete="name" oninput="validateName()" />
+              <span class="input-valid" id="name-valid">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </span>
+            </div>
+            <div class="field-hint hint-neutral" id="name-hint">Enter your full name</div>
+          </div>
+
+          <!-- Email -->
+          <div class="field-group">
+            <label for="email">Email Address</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <input type="email" id="email" placeholder="ravi@example.com" autocomplete="email" oninput="validateEmail()" />
+              <span class="input-valid" id="email-valid">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+              </span>
+            </div>
+            <div class="field-hint hint-neutral" id="email-hint">We'll send a confirmation to this email</div>
+          </div>
+
+          <!-- Password -->
+          <div class="field-group">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input type="password" id="password" placeholder="Min. 8 characters" autocomplete="new-password" oninput="validatePassword()" />
+              <button type="button" class="toggle-pwd" onclick="togglePwd('password','eye1')">
+                <svg id="eye1" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="strength-bar" id="strength-bar">
+              <div class="strength-seg" id="seg1"></div>
+              <div class="strength-seg" id="seg2"></div>
+              <div class="strength-seg" id="seg3"></div>
+              <div class="strength-seg" id="seg4"></div>
+            </div>
+            <div class="strength-label" id="strength-label" style="color:var(--slate-400);">Enter a password</div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="field-group">
+            <label for="confirm">Confirm Password</label>
+            <div class="input-wrap">
+              <span class="input-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              </span>
+              <input type="password" id="confirm" placeholder="Re-enter password" autocomplete="new-password" oninput="validateConfirm()" />
+              <button type="button" class="toggle-pwd" onclick="togglePwd('confirm','eye2')">
+                <svg id="eye2" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <div class="field-hint hint-neutral" id="confirm-hint">Re-enter your password</div>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submit-btn">
+            Create Account
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </form>
+
+        <div class="divider">or sign up with</div>
+
+        <button class="google-btn" onclick="handleGoogleSignup()">
+          <svg width="18" height="18" viewBox="0 0 24 24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <!-- ── SUCCESS STATE ── -->
+      <div class="success-overlay" id="success-section">
+        <div class="success-circle">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <h2 class="success-title">Account Created! 🎉</h2>
+        <p class="success-sub" id="success-msg">Welcome to CityFix! Your account has been successfully created. You can now log in and start reporting issues.</p>
+        <button class="submit-btn" onclick="location.href='login.html'" style="width:auto;padding:14px 32px;">
+          Sign In Now
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <p class="login-link">Already have an account? <a href="login.html">Sign in</a></p>
+    <p class="terms">By creating an account you agree to our <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a></p>
+  </div>
+</div>
+
+<script>
+  // ── Validation state
+  const state = { name: false, email: false, password: false, confirm: false };
+
+  function setField(id, valid, hintId, hintMsg, hintClass, validId) {
+    const inp = document.getElementById(id);
+    inp.className = valid ? 'valid' : (hintMsg && hintMsg !== 'Enter your full name' && hintMsg !== 'We\'ll send a confirmation to this email' && hintMsg !== 'Re-enter your password' ? 'invalid' : '');
+    const hint = document.getElementById(hintId);
+    hint.textContent = hintMsg;
+    hint.className = 'field-hint ' + hintClass;
+    if (validId) document.getElementById(validId).classList.toggle('show', valid);
+  }
+
+  function validateName() {
+    const v = document.getElementById('name').value.trim();
+    const ok = v.length >= 2 && /[a-zA-Z]/.test(v);
+    state.name = ok;
+    setField('name', ok, 'name-hint',
+      ok ? 'Looks good!' : v.length === 0 ? 'Enter your full name' : 'Please enter a valid name',
+      ok ? 'hint-success' : v.length === 0 ? 'hint-neutral' : 'hint-error', 'name-valid');
+  }
+
+  function validateEmail() {
+    const v = document.getElementById('email').value.trim();
+    const ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    state.email = ok;
+    setField('email', ok, 'email-hint',
+      ok ? 'Valid email address!' : v.length === 0 ? "We'll send a confirmation to this email" : 'Enter a valid email address',
+      ok ? 'hint-success' : v.length === 0 ? 'hint-neutral' : 'hint-error', 'email-valid');
+  }
+
+  function getStrength(pwd) {
+    let score = 0;
+    if (pwd.length >= 8) score++;
+    if (/[A-Z]/.test(pwd)) score++;
+    if (/[0-9]/.test(pwd)) score++;
+    if (/[^A-Za-z0-9]/.test(pwd)) score++;
+    return score;
+  }
+
+  function validatePassword() {
+    const pwd = document.getElementById('password').value;
+    const score = getStrength(pwd);
+    const colors = ['', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+    const labels = ['', 'Weak', 'Fair', 'Good', 'Strong'];
+    const lcolors= ['', '#ef4444', '#f97316', '#eab308', '#22c55e'];
+
+    for (let i = 1; i <= 4; i++) {
+      document.getElementById('seg' + i).style.background = i <= score ? colors[score] : 'var(--slate-200)';
+    }
+    const lbl = document.getElementById('strength-label');
+    lbl.textContent = pwd.length === 0 ? 'Enter a password' : labels[score] + ' password';
+    lbl.style.color = pwd.length === 0 ? 'var(--slate-400)' : lcolors[score];
+
+    state.password = pwd.length >= 8;
+    const inp = document.getElementById('password');
+    inp.className = pwd.length === 0 ? '' : state.password ? 'valid' : 'invalid';
+
+    // Re-validate confirm if already typed
+    if (document.getElementById('confirm').value) validateConfirm();
+  }
+
+  function validateConfirm() {
+    const pwd = document.getElementById('password').value;
+    const conf = document.getElementById('confirm').value;
+    const ok = conf.length > 0 && conf === pwd;
+    state.confirm = ok;
+    setField('confirm', ok, 'confirm-hint',
+      ok ? 'Passwords match!' : conf.length === 0 ? 'Re-enter your password' : 'Passwords do not match',
+      ok ? 'hint-success' : conf.length === 0 ? 'hint-neutral' : 'hint-error', null);
+  }
+
+  function togglePwd(inputId, iconId) {
+    const inp = document.getElementById(inputId);
+    const showing = inp.type === 'text';
+    inp.type = showing ? 'password' : 'text';
+    // swap icon path
+    const path = showing
+      ? 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z'
+      : 'M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22';
+    const svg = document.getElementById(iconId);
+    svg.innerHTML = showing
+      ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24M1 1l22 22"/>'
+      : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+  }
+
+  function showError(msg) {
+    const box = document.getElementById('error-box');
+    document.getElementById('error-text').textContent = msg;
+    box.style.display = 'flex';
+  }
+  function hideError() { document.getElementById('error-box').style.display = 'none'; }
+
+  function setLoading(loading) {
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = loading;
+    btn.innerHTML = loading
+      ? '<div class="spinner"></div> Creating account...'
+      : 'Create Account <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+  }
+
+  async function handleSignup(e) {
+    e.preventDefault();
+    hideError();
+
+    // Run all validations
+    validateName(); validateEmail(); validatePassword(); validateConfirm();
+
+    if (!state.name)     { showError('Please enter your full name'); return; }
+    if (!state.email)    { showError('Please enter a valid email address'); return; }
+    if (!state.password) { showError('Password must be at least 8 characters'); return; }
+    if (!state.confirm)  { showError('Passwords do not match'); return; }
+
+    setLoading(true);
+
+    // ── Plug in your registration API call here ──
+    const name  = document.getElementById('name').value.trim();
+    const email = document.getElementById('email').value.trim();
+
+    setTimeout(() => {
+      setLoading(false);
+      // Show success
+      document.getElementById('form-section').style.display = 'none';
+      const success = document.getElementById('success-section');
+      success.style.display = 'flex';
+      document.getElementById('success-msg').textContent =
+        `Welcome, ${name.split(' ')[0]}! Your CityFix account (${email}) is ready. You can now sign in and start reporting civic issues.`;
+    }, 1400);
+  }
+
+  function handleGoogleSignup() {
+  google.accounts.id.initialize({
+    client_id: '1008565268637-3a9bioee9eojqc3oueqj515pmosgjlou.apps.googleusercontent.com',
+    callback: handleGoogleSignupResponse
+  });
+  google.accounts.id.prompt();
+}
+
+  function handleGoogleSignupResponse(response) {
+  const credential = response.credential;
+  const payload = JSON.parse(atob(credential.split('.')[1]));
+
+  // Send to your backend to create the citizen account
+  fetch('/api/auth/google/signup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ credential, role: 'citizen' })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      // Show success screen
+      document.getElementById('form-section').style.display = 'none';
+      document.getElementById('success-section').style.display = 'flex';
+      document.getElementById('success-msg').textContent =
+        `Welcome, ${payload.given_name}! Your CityFix account (${payload.email}) is ready.`;
+    } else {
+      alert(data.message || 'Signup failed. Try again.');
+    }
+  });
+}
+</script>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+</body>
+</html>
