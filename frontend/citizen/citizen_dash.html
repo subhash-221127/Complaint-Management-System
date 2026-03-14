@@ -1,31 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Citizen Complaint Portal</title>
-  <link rel="stylesheet" href="style.css"/>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
+
 <body>
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-logo"><i class="fa-solid fa-landmark"></i></div>
-      <span>CityFix</span>
-    </div>
+    <a href="../index.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+          stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
 
-    <nav>
-      <a href="#"          class="nav-item active"><i class="fa-solid fa-house"></i> Dashboard</a>
-      <a href="citizen_dash.html"   class="nav-item"><i class="fa-solid fa-file-circle-plus"></i> New Complaint</a>
-      <a href="Mycomplaints.html"   class="nav-item"><i class="fa-solid fa-list-check"></i> My Complaints</a>
-      <a href="Trackstatus.html"    class="nav-item"><i class="fa-solid fa-map-location-dot"></i> Track Status</a>
+    
+    <nav class="sidebar-nav">
+      <a href="citizen_dash.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="citizen_dash.html" class="sidebar-link active"><span class="icon">📋</span> New Complaint <span class="badge">18</span></a>
+      <a href="Mycomplaints.html"   class="sidebar-link"><span class="icon">👮</span> My Complaints</a>
+      <a href="Trackstatus.html"   class="sidebar-link"><span class="icon">👥</span> Track Status</a>
     </nav>
+    
 
-    <div class="sidebar-bottom">
-      <a href="#" class="nav-item logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+    <div class="sidebar-footer">
+      <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">🚪</span> Logout</a>
     </div>
   </aside>
 
@@ -113,10 +123,11 @@
 
             <label class="label" style="margin-top:16px;">Severity Level <span class="req">*</span></label>
             <div class="sev-row">
-              <button class="sev low"      data-sev="low">      <i class="fa-solid fa-circle-check"></i>  Low      </button>
-              <button class="sev medium active" data-sev="medium">  <i class="fa-solid fa-circle-exclamation"></i> Medium   </button>
-              <button class="sev high"     data-sev="high">     <i class="fa-solid fa-triangle-exclamation"></i> High     </button>
-              <button class="sev critical" data-sev="critical"> <i class="fa-solid fa-radiation"></i>      Critical </button>
+              <button class="sev low" data-sev="low"> <i class="fa-solid fa-circle-check"></i> Low </button>
+              <button class="sev medium active" data-sev="medium"> <i class="fa-solid fa-circle-exclamation"></i> Medium
+              </button>
+              <button class="sev high" data-sev="high"> <i class="fa-solid fa-triangle-exclamation"></i> High </button>
+              <button class="sev critical" data-sev="critical"> <i class="fa-solid fa-radiation"></i> Critical </button>
             </div>
           </div>
 
@@ -128,16 +139,17 @@
             </div>
 
             <label class="label">Complaint Title <span class="req">*</span></label>
-            <input class="input" type="text" placeholder="e.g. Large pothole on Main Street"/>
+            <input class="input" type="text" placeholder="e.g. Large pothole on Main Street" />
 
             <label class="label" style="margin-top:14px;">Details <span class="req">*</span></label>
             <div style="position:relative;">
-              <textarea class="input textarea" id="descBox" maxlength="600" placeholder="Describe the issue clearly — location, impact, when noticed…"></textarea>
+              <textarea class="input textarea" id="descBox" maxlength="600"
+                placeholder="Describe the issue clearly — location, impact, when noticed…"></textarea>
               <span class="char-count"><span id="cc">0</span>/600</span>
             </div>
 
             <label class="label" style="margin-top:14px;">Attach Photos / Videos</label>
-            <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none"/>
+            <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none" />
             <div class="upload-box" id="uploadBox">
               <i class="fa-solid fa-cloud-arrow-up" id="uploadIcon"></i>
               <p id="uploadText">Drag &amp; drop or <span class="upload-link">browse files</span></p>
@@ -190,21 +202,21 @@
             <div class="field-row">
               <div style="flex:1">
                 <label class="label">Street Address</label>
-                <input class="input" id="addr" type="text" placeholder="Auto-filled from map"/>
+                <input class="input" id="addr" type="text" placeholder="Auto-filled from map" />
               </div>
               <div style="width:110px">
                 <label class="label">Pincode</label>
-                <input class="input" id="pin2" type="text" placeholder="000000"/>
+                <input class="input" id="pin2" type="text" placeholder="000000" />
               </div>
             </div>
             <div class="field-row" style="margin-top:10px;">
               <div style="flex:1">
                 <label class="label">City</label>
-                <input class="input" id="city" type="text" placeholder="City"/>
+                <input class="input" id="city" type="text" placeholder="City" />
               </div>
               <div style="flex:1">
                 <label class="label">District</label>
-                <input class="input" id="dist" type="text" placeholder="District"/>
+                <input class="input" id="dist" type="text" placeholder="District" />
               </div>
             </div>
           </div>
@@ -219,22 +231,22 @@
             <div class="field-row">
               <div style="flex:1">
                 <label class="label">Full Name <span class="req">*</span></label>
-                <input class="input" type="text" value="Jane Doe"/>
+                <input class="input" type="text" value="Jane Doe" />
               </div>
               <div style="flex:1">
                 <label class="label">Mobile <span class="req">*</span></label>
-                <input class="input" type="tel" placeholder="+91 00000 00000"/>
+                <input class="input" type="tel" placeholder="+91 00000 00000" />
               </div>
             </div>
             <div style="margin-top:10px;">
               <label class="label">Email</label>
-              <input class="input" type="email" placeholder="you@example.com"/>
+              <input class="input" type="email" placeholder="you@example.com" />
             </div>
             <label class="check-row" style="margin-top:12px;">
-              <input type="checkbox" checked/> Notify me via SMS on status updates
+              <input type="checkbox" checked /> Notify me via SMS on status updates
             </label>
             <label class="check-row">
-              <input type="checkbox" checked/> I confirm this complaint is accurate
+              <input type="checkbox" checked /> I confirm this complaint is accurate
             </label>
           </div>
 
@@ -260,4 +272,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>
