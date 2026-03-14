@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Complaints — CivicDesk</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="Mycomplaints.css"/>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo"><i class="fa-solid fa-landmark"></i></div>
+      <span>CityFix</span>
+    </div>
+    <nav>
+      <a href="#"         class="nav-item"><i class="fa-solid fa-house"></i> Dashboard</a>
+      <a href="citizen_dash.html" class="nav-item"><i class="fa-solid fa-file-circle-plus"></i> New Complaint</a>
+      <a href="Mycomplaints.html" class="nav-item active"><i class="fa-solid fa-list-check"></i> My Complaints</a>
+      <a href="Trackstatus.html"  class="nav-item"><i class="fa-solid fa-map-location-dot"></i> Track Status</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <a href="#" class="nav-item logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="header">
+      <div>
+        <h1 class="page-title">My Complaints</h1>
+        <p class="page-sub">All complaints submitted by you</p>
+      </div>
+      <div class="header-right">
+        <button class="icon-btn"><i class="fa-solid fa-bell"></i></button>
+        <div class="profile-chip">
+          <div class="chip-avatar">JD</div>
+          <span>Jane Doe</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Search by ID, issue or location…"/>
+        </div>
+        <select class="filter-sel" id="statusFilter">
+          <option value="">All Statuses</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Pending">Pending</option>
+          <option value="Resolved">Resolved</option>
+        </select>
+        <select class="filter-sel" id="categoryFilter">
+          <option value="">All Categories</option>
+          <option>Roads &amp; Potholes</option>
+          <option>Electricity &amp; Lighting</option>
+          <option>Garbage &amp; Sanitation</option>
+          <option>Water &amp; Sewage</option>
+          <option>Parks &amp; Recreation</option>
+          <option>Noise Pollution</option>
+          <option>Public Safety</option>
+        </select>
+        <a href="new-complaint.html" class="new-btn">
+          <i class="fa-solid fa-plus"></i> New Complaint
+        </a>
+      </div>
+
+      <!-- TABLE CARD -->
+      <div class="table-card">
+        <div class="table-card-header">
+          <span class="table-card-title">Recent Complaints</span>
+          <span class="total-count" id="totalCount"></span>
+        </div>
+        <div class="table-wrap">
+          <table id="complaintsTable">
+            <thead>
+              <tr>
+                <th>Comp. ID</th>
+                <th>Issue Title</th>
+                <th>Category</th>
+                <th>Severity</th>
+                <th>Location</th>
+                <th>Contact</th>
+                <th>Date Filed</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyState" style="display:none">
+          <i class="fa-solid fa-folder-open"></i>
+          <p>No complaints found.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <span class="modal-id" id="modalId"></span>
+          <h3 id="modalTitle"></h3>
+        </div>
+        <button class="modal-close" id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="Mycomplaints.js"></script>
+</body>
+</html>
