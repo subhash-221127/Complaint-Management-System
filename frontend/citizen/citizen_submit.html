@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CityFix — Submit Complaint</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="citizen.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <!-- Real Leaflet map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+/* ── Profile dropdown ── */
+function toggleProfile(e) {
+  e.stopPropagation();
+  const btn = document.getElementById('profileBtn');
+  const dd  = document.getElementById('profileDropdown');
+  btn.classList.toggle('open');
+  dd.classList.toggle('open');
+}
+document.addEventListener('click', () => {
+  document.getElementById('profileBtn')?.classList.remove('open');
+  document.getElementById('profileDropdown')?.classList.remove('open');
+});
+
+</script>
+  <style>
+    #leafletMap { height: 260px; border-radius: 10px; z-index: 0; }
+    .step-badge {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--navy); color: #fff;
+      font-size: 0.72rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <a href="#" class="sidebar-logo">
+    <div class="logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    </div>
+    <span class="logo-text">City<span>Fix</span></span>
+  </a>
+  <nav class="sidebar-nav">
+    <a href="citizen_dash.html"         class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+    <a href="citizen_submit.html"       class="sidebar-link active"><span class="icon">📋</span> New Complaint</a>
+    <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
+    <a href="citizen_track.html"        class="sidebar-link"><span class="icon">📍</span> Track Status</a>
+  </nav>
+  <div class="sidebar-footer">
+    <a href="login.html" class="sidebar-link"><span class="icon">🚪</span> Logout</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="header">
+    <div class="header-left">
+      <h1 class="page-title">Submit a Complaint</h1>
+      <span class="page-sub">Report civic issues — reviewed within 24 hours</span>
+    </div>
+    <div class="header-right">
+      <button class="notif-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
+      <div class="profile-chip">
+        <div class="chip-avatar">JD</div>
+        <span>Jane Doe</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- STATS ROW -->
+    <div class="stats-row" style="grid-template-columns:repeat(4,1fr);">
+      <div class="stat-card c-green"><div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div><div><p class="stat-num">247</p><p class="stat-lbl">Resolved</p></div></div>
+      <div class="stat-card c-orange"><div class="stat-icon orange"><i class="fa-solid fa-clock"></i></div><div><p class="stat-num">18</p><p class="stat-lbl">Pending</p></div></div>
+      <div class="stat-card c-purple"><div class="stat-icon purple"><i class="fa-solid fa-star"></i></div><div><p class="stat-num">4.8</p><p class="stat-lbl">Avg. Rating</p></div></div>
+      <div class="stat-card c-blue"><div class="stat-icon blue"><i class="fa-solid fa-users"></i></div><div><p class="stat-num">1,340</p><p class="stat-lbl">Total Users</p></div></div>
+    </div>
+
+    <div class="form-grid">
+
+      <!-- LEFT -->
+      <div class="col">
+
+        <!-- Category & Severity -->
+        <div class="card">
+          <div class="card-head">
+            <div class="step-badge">1</div>
+            <i class="fa-solid fa-tags card-icon"></i>
+            <h2>Category &amp; Severity</h2>
+          </div>
+          <label class="label">Complaint Category <span class="req">*</span></label>
+          <div class="select-wrap">
+            <select class="input" id="categorySelect">
+              <option value="">— Select a category —</option>
+              <option>Roads &amp; Potholes</option>
+              <option>Water &amp; Sewage</option>
+              <option>Electricity &amp; Lighting</option>
+              <option>Garbage &amp; Sanitation</option>
+              <option>Public Safety</option>
+              <option>Noise Pollution</option>
+              <option>Parks &amp; Recreation</option>
+              <option>Other</option>
+            </select>
+            <i class="fa-solid fa-chevron-down arr"></i>
+          </div>
+          <label class="label" style="margin-top:16px;">Severity Level <span class="req">*</span></label>
+          <div class="sev-row">
+            <button class="sev low"      data-sev="low">     <i class="fa-solid fa-circle-check"></i> Low</button>
+            <button class="sev medium active" data-sev="medium">  <i class="fa-solid fa-circle-exclamation"></i> Medium</button>
+            <button class="sev high"     data-sev="high">    <i class="fa-solid fa-triangle-exclamation"></i> High</button>
+            <button class="sev critical" data-sev="critical"><i class="fa-solid fa-radiation"></i> Critical</button>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="card">
+          <div class="card-head">
+            <div class="step-badge">2</div>
+            <i class="fa-solid fa-pen-nib card-icon"></i>
+            <h2>Description</h2>
+          </div>
+          <label class="label">Complaint Title <span class="req">*</span></label>
+          <input class="input" type="text" id="titleInput" placeholder="e.g. Large pothole on Main Street"/>
+          <label class="label" style="margin-top:14px;">Details <span class="req">*</span></label>
+          <div style="position:relative;">
+            <textarea class="input textarea" id="descBox" maxlength="600"
+              placeholder="Describe the issue clearly — location, impact, when noticed…"></textarea>
+            <span class="char-count"><span id="cc">0</span>/600</span>
+          </div>
+          <label class="label" style="margin-top:14px;">Attach Photos / Videos</label>
+          <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none"/>
+          <div class="upload-box" id="uploadBox">
+            <i class="fa-solid fa-cloud-arrow-up" id="uploadIcon"></i>
+            <p id="uploadText">Drag &amp; drop or <span class="upload-link">browse files</span></p>
+            <small id="uploadSub">JPG, PNG, MP4 · Max 10 MB</small>
+            <div class="file-list" id="fileList"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT -->
+      <div class="col">
+
+        <!-- Location — Real Leaflet Map -->
+        <div class="card">
+          <div class="card-head">
+            <div class="step-badge">3</div>
+            <i class="fa-solid fa-location-dot card-icon"></i>
+            <h2>Incident Location</h2>
+          </div>
+
+          <button class="locate-btn" id="locateBtn">
+            <i class="fa-solid fa-crosshairs"></i> Use My Current Location
+          </button>
+
+          <div id="addressBar" style="display:none;align-items:center;gap:8px;padding:7px 12px;background:var(--navy-light);border-radius:8px;font-size:0.82rem;color:var(--navy);margin-bottom:10px;font-weight:600;">
+            <i class="fa-solid fa-location-dot"></i>
+            <span id="addressText"></span>
+          </div>
+
+          <!-- REAL LEAFLET MAP -->
+          <div id="leafletMap"></div>
+          <p style="font-size:0.72rem;color:var(--light);text-align:center;margin-top:6px;">
+            <i class="fa-solid fa-hand-pointer"></i> Click map to pin location · Drag pin to adjust
+          </p>
+
+          <div class="field-row" style="margin-top:12px;">
+            <div style="flex:1">
+              <label class="label">Street Address</label>
+              <input class="input" id="addr" type="text" placeholder="Auto-filled from map"/>
+            </div>
+            <div style="width:110px">
+              <label class="label">Pincode</label>
+              <input class="input" id="pincode" type="text" placeholder="000000"/>
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:10px;">
+            <div style="flex:1"><label class="label">City</label><input class="input" id="city" type="text" placeholder="City"/></div>
+            <div style="flex:1"><label class="label">District</label><input class="input" id="dist" type="text" placeholder="District"/></div>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div class="card">
+          <div class="card-head">
+            <div class="step-badge">4</div>
+            <i class="fa-solid fa-address-card card-icon"></i>
+            <h2>Contact Info</h2>
+          </div>
+          <div class="field-row">
+            <div style="flex:1">
+              <label class="label">Full Name <span class="req">*</span></label>
+              <input class="input" type="text" value="Jane Doe"/>
+            </div>
+            <div style="flex:1">
+              <label class="label">Mobile <span class="req">*</span></label>
+              <input class="input" type="tel" placeholder="+91 00000 00000"/>
+            </div>
+          </div>
+          <div style="margin-top:10px;">
+            <label class="label">Email</label>
+            <input class="input" type="email" placeholder="you@example.com"/>
+          </div>
+          <label class="check-row" style="margin-top:12px;">
+            <input type="checkbox" checked/> Notify me via SMS on status updates
+          </label>
+          <label class="check-row">
+            <input type="checkbox" checked/> I confirm this complaint is accurate
+          </label>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn">
+  <i class="fa-solid fa-paper-plane"></i>
+  <span>Submit Complaint</span>
+</button>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <i class="fa-solid fa-circle-check"></i>
+  <div>
+    <strong>Submitted!</strong>
+    <small id="toastId">ID: CMP-2026-109</small>
+  </div>
+</div>
+
+<script>
+/* ── Severity toggle ── */
+document.querySelectorAll('.sev').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.sev').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+/* ── Char counter ── */
+const box = document.getElementById('descBox');
+const cc  = document.getElementById('cc');
+box?.addEventListener('input', () => {
+  cc.textContent = box.value.length;
+  cc.style.color = box.value.length > 500 ? 'var(--red)' : '';
+});
+
+/* ── LEAFLET MAP ── */
+let map, marker;
+document.addEventListener('DOMContentLoaded', () => {
+  // Default center — Vijayawada, India
+  map = L.map('leafletMap').setView([16.5062, 80.6480], 14);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors',
+    maxZoom: 19
+  }).addTo(map);
+
+  const pinIcon = L.divIcon({
+    className: '',
+    html: `<div style="width:20px;height:20px;background:var(--red,#ef4444);border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`,
+    iconAnchor: [10, 20],
+    popupAnchor: [0, -20]
+  });
+
+  map.on('click', e => placeMarker(e.latlng.lat, e.latlng.lng));
+
+  // Locate button — real GPS
+  document.getElementById('locateBtn').addEventListener('click', () => {
+    const btn = document.getElementById('locateBtn');
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Locating…';
+    btn.disabled  = true;
+
+    if (!navigator.geolocation) {
+      alert('Geolocation not supported by your browser.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Use My Current Location';
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        placeMarker(pos.coords.latitude, pos.coords.longitude);
+        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Location found!';
+        btn.style.background = 'var(--green-light)';
+        btn.style.borderColor = 'var(--green)';
+        btn.style.color = 'var(--green-dark)';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Use My Current Location';
+          btn.style.cssText = '';
+          btn.disabled = false;
+        }, 3000);
+      },
+      err => {
+        alert('Could not get your location: ' + err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-crosshairs"></i> Use My Current Location';
+      }
+    );
+  });
+
+  function placeMarker(lat, lng) {
+    if (marker) map.removeLayer(marker);
+    marker = L.marker([lat, lng], { draggable: true, icon: pinIcon }).addTo(map);
+    map.setView([lat, lng], 16);
+    reverseGeocode(lat, lng);
+    marker.on('dragend', e => {
+      const pos = e.target.getLatLng();
+      reverseGeocode(pos.lat, pos.lng);
+    });
+  }
+
+  async function reverseGeocode(lat, lng) {
+    const bar = document.getElementById('addressBar');
+    const txt = document.getElementById('addressText');
+    bar.style.display = 'flex';
+    txt.textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+    try {
+      const res  = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`);
+      const data = await res.json();
+      const addr = data.address || {};
+      txt.textContent = data.display_name || txt.textContent;
+
+      const road   = addr.road || addr.pedestrian || addr.footway || '';
+      const city   = addr.city || addr.town || addr.village || '';
+      const dist   = addr.county || addr.state_district || '';
+      const pin    = addr.postcode || '';
+      const house  = addr.house_number || '';
+
+      if (document.getElementById('addr')) document.getElementById('addr').value = [house,road].filter(Boolean).join(', ');
+      if (document.getElementById('pincode')) document.getElementById('pincode').value = pin;
+      if (document.getElementById('city')) document.getElementById('city').value = city;
+      if (document.getElementById('dist')) document.getElementById('dist').value = dist;
+    } catch(e) {}
+  }
+});
+
+/* ── File upload ── */
+const uploadBox  = document.getElementById('uploadBox');
+const fileInput  = document.getElementById('fileInput');
+const fileList   = document.getElementById('fileList');
+const uploadIcon = document.getElementById('uploadIcon');
+const uploadText = document.getElementById('uploadText');
+const uploadSub  = document.getElementById('uploadSub');
+
+function handleFiles(files) {
+  const valid = [], MAX = 10*1024*1024;
+  const errors = [];
+  Array.from(files).forEach(f => { f.size > MAX ? errors.push(f.name) : valid.push(f); });
+  if (errors.length) alert('Skipped (too large):\n' + errors.join('\n'));
+  if (!valid.length) return;
+
+  uploadIcon.className = 'fa-solid fa-circle-check';
+  uploadIcon.style.color = 'var(--green-dark)';
+  uploadText.innerHTML = `<strong>${valid.length} file${valid.length>1?'s':''} selected</strong>`;
+  uploadSub.textContent = 'Click to change files';
+  uploadBox.style.borderColor = 'var(--green)';
+  uploadBox.style.background = 'var(--green-light)';
+  fileList.innerHTML = '';
+
+  valid.forEach(f => {
+    const isImage = f.type.startsWith('image/');
+    const isVideo = f.type.startsWith('video/');
+    const icon = isImage?'fa-image':isVideo?'fa-film':'fa-file';
+    const size = f.size<1024*1024?(f.size/1024).toFixed(0)+' KB':(f.size/(1024*1024)).toFixed(1)+' MB';
+    const chip = document.createElement('div');
+    chip.className = 'file-chip';
+    chip.innerHTML = `<i class="fa-solid ${icon}"></i><span class="file-chip-name">${f.name}</span><span class="file-chip-size">${size}</span><button class="file-chip-remove"><i class="fa-solid fa-xmark"></i></button>`;
+    chip.querySelector('.file-chip-remove').addEventListener('click', e => {
+      e.stopPropagation(); chip.remove();
+      if (!fileList.children.length) resetUpload();
+    });
+    if (isImage) {
+      const r = new FileReader();
+      r.onload = ev => { const t=document.createElement('img'); t.src=ev.target.result; t.className='file-thumb'; chip.prepend(t); };
+      r.readAsDataURL(f);
+    }
+    fileList.appendChild(chip);
+  });
+}
+
+function resetUpload() {
+  uploadIcon.className = 'fa-solid fa-cloud-arrow-up';
+  uploadIcon.style.color = '';
+  uploadText.innerHTML = 'Drag &amp; drop or <span class="upload-link">browse files</span>';
+  uploadSub.textContent = 'JPG, PNG, MP4 · Max 10 MB';
+  uploadBox.style.borderColor = '';
+  uploadBox.style.background = '';
+  fileInput.value = '';
+}
+
+uploadBox?.addEventListener('click', () => fileInput.click());
+fileInput?.addEventListener('change', () => handleFiles(fileInput.files));
+uploadBox?.addEventListener('dragover', e => { e.preventDefault(); uploadBox.style.borderColor='var(--navy)'; });
+uploadBox?.addEventListener('dragleave', () => { if(!fileList.children.length){ uploadBox.style.borderColor=''; } });
+uploadBox?.addEventListener('drop', e => { e.preventDefault(); handleFiles(e.dataTransfer.files); });
+
+/* ── FAB submit ── */
+const fab   = document.getElementById('fabBtn');
+const toast = document.getElementById('toast');
+
+fab?.addEventListener('click', () => {
+  const sel = document.getElementById('categorySelect');
+  if (sel && !sel.value) {
+    sel.style.borderColor = 'var(--red)';
+    sel.scrollIntoView({ behavior:'smooth', block:'center' });
+    setTimeout(() => sel.style.borderColor = '', 2000);
+    return;
+  }
+  if (!document.getElementById('titleInput').value.trim()) {
+    document.getElementById('titleInput').focus();
+    document.getElementById('titleInput').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('titleInput').style.borderColor = '', 2000);
+    return;
+  }
+
+  fab.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…';
+  fab.disabled  = true;
+
+  setTimeout(() => {
+    const id = 'CMP-2026-' + Math.floor(Math.random()*900+100);
+    document.getElementById('toastId').textContent = 'ID: ' + id;
+    toast.classList.add('show');
+    fab.innerHTML = '<i class="fa-solid fa-circle-check"></i> Submitted!';
+    setTimeout(() => {
+      toast.classList.remove('show');
+      fab.disabled  = false;
+      fab.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Submit Complaint</span>';
+    }, 3500);
+  }, 1800);
+});
+</script>
+</body>
+</html>
