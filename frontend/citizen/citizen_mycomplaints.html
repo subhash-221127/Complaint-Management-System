@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CityFix — My Complaints</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="citizen.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <a href="#" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
+          stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
+    <nav class="sidebar-nav">
+      <a href="citizen_dash.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="citizen_submit.html" class="sidebar-link"><span class="icon">📋</span> New Complaint</a>
+      <a href="citizen_mycomplaints.html" class="sidebar-link active"><span class="icon">📁</span> My Complaints</a>
+      <a href="citizen_track.html" class="sidebar-link"><span class="icon">📍</span> Track Status</a>
+    </nav>
+
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="header">
+      <div class="header-left">
+        <h1 class="page-title">My Complaints</h1>
+        <span class="page-sub">All complaints submitted by you</span>
+      </div>
+      <div class="header-right">
+        <button class="notif-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
+        <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="chip-avatar">JD</div>
+            <div class="profile-btn-info">
+              <span class="profile-btn-name">Jane Doe</span>
+              <span class="profile-btn-role">Citizen</span>
+            </div>
+            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+          </button>
+          <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-user-header">
+              <div class="dropdown-user-row">
+                <div class="dropdown-user-avatar">JD</div>
+                <div>
+                  <div class="dropdown-user-name">Jane Doe</div>
+                  <div class="dropdown-user-email">jane@email.com</div>
+                </div>
+              </div>
+              <div class="dropdown-user-tags">
+                <span class="dropdown-user-tag">Citizen</span>
+                <span class="dropdown-user-tag">Springfield</span>
+              </div>
+            </div>
+            <div class="dropdown-items">
+              <a href="#" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+              <div class="dropdown-divider"></div>
+              <a href="../login.html" class="dropdown-item logout-item"><i class="fa-solid fa-right-from-bracket"></i>
+                Logout</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="searchInput" placeholder="Search by ID, issue or location…" />
+        </div>
+        <select class="filter-sel" id="statusFilter">
+          <option value="">All Statuses</option>
+          <option value="inprogress">In Progress</option>
+          <option value="pending">Pending</option>
+          <option value="resolved">Resolved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select class="filter-sel" id="categoryFilter">
+          <option value="">All Categories</option>
+          <option>Roads &amp; Potholes</option>
+          <option>Electricity &amp; Lighting</option>
+          <option>Garbage &amp; Sanitation</option>
+          <option>Water &amp; Sewage</option>
+          <option>Parks &amp; Recreation</option>
+          <option>Noise Pollution</option>
+          <option>Public Safety</option>
+        </select>
+        <select class="filter-sel" id="dateFilter">
+          <option value="">All Time</option>
+          <option value="week">This Week</option>
+          <option value="month">This Month</option>
+        </select>
+        <a href="citizen_submit.html" class="btn btn-orange btn-sm" style="margin-left:auto;">
+          <i class="fa-solid fa-plus"></i> New Complaint
+        </a>
+      </div>
+
+      <!-- TABLE CARD -->
+      <div class="section-card">
+        <div class="section-card-header">
+          <h3>📁 Recent Complaints</h3>
+          <span style="font-size:0.78rem;color:var(--muted);font-weight:600;" id="totalCount"></span>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="data-table" id="complaintsTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Issue</th>
+                <th>Category</th>
+                <th>Severity</th>
+                <th>Location</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Officer</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyState" style="display:none;">
+          <i class="fa-solid fa-folder-open"></i>
+          <p>No complaints found</p>
+          <small>Adjust your filters or submit a new complaint</small>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DETAIL / ACTION MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <span class="modal-id" id="modalId"></span>
+          <h3 id="modalTitle"></h3>
+        </div>
+        <button class="modal-close" id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- WITHDRAW MODAL -->
+  <div class="modal-overlay" id="withdrawOverlay">
+    <div class="modal" style="max-width:400px;">
+      <div class="modal-header">
+        <div>
+          <h3>Withdraw Complaint</h3>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('withdrawOverlay').classList.remove('show')"><i
+            class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:14px;">Please provide a reason for withdrawing
+          this complaint:</p>
+        <textarea class="input textarea" id="withdrawReason" placeholder="e.g. Issue resolved by itself…"
+          style="min-height:80px;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="btn btn-danger" onclick="confirmWithdraw()"><i class="fa-solid fa-ban"></i> Confirm
+            Withdraw</button>
+          <button class="btn btn-outline"
+            onclick="document.getElementById('withdrawOverlay').classList.remove('show')">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <div><strong id="toastMsg">Done!</strong><small id="toastSub"></small></div>
+  </div>
+
+  <script src="citizen-data.js"></script>
+  <script>
+    const CAT_ICONS = {
+      'Roads & Potholes': 'fa-road', 'Electricity & Lighting': 'fa-bolt',
+      'Garbage & Sanitation': 'fa-trash', 'Water & Sewage': 'fa-droplet',
+      'Parks & Recreation': 'fa-tree', 'Noise Pollution': 'fa-volume-high', 'Public Safety': 'fa-shield-halved',
+    };
+    function statusBadgeHTML(s) {
+      const map = { pending: ['badge-status pending', 'fa-clock', 'Pending'], inprogress: ['badge-status inprogress', 'fa-rotate', 'In Progress'], resolved: ['badge-status resolved', 'fa-circle-check', 'Resolved'], rejected: ['badge-status rejected', 'fa-circle-xmark', 'Withdrawn'] };
+      const [cls, ico, lbl] = map[s] || map.pending;
+      return `<span class="${cls}"><i class="fa-solid ${ico}"></i> ${lbl}</span>`;
+    }
+    function sevBadgeHTML(s) {
+      return `<span class="sev-badge sev-${s}"><span class="sev-dot"></span>${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
+    }
+
+    let withdrawTarget = null;
+
+    function renderTable() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      const sf = document.getElementById('statusFilter').value;
+      const cf = document.getElementById('categoryFilter').value;
+      const df = document.getElementById('dateFilter').value;
+      const tbody = document.getElementById('tableBody');
+      const empty = document.getElementById('complaintsTable');
+
+      let data = [...CITIZEN_COMPLAINTS];
+      if (q) data = data.filter(c => c.id.toLowerCase().includes(q) || c.title.toLowerCase().includes(q) || c.location.toLowerCase().includes(q));
+      if (sf) data = data.filter(c => c.status === sf);
+      if (cf) data = data.filter(c => c.category === cf);
+      if (df === 'week') data = data.filter(c => new Date(c.rawDate) >= new Date(Date.now() - 7 * 864e5));
+      if (df === 'month') data = data.filter(c => new Date(c.rawDate) >= new Date(Date.now() - 30 * 864e5));
+
+      document.getElementById('totalCount').textContent = `${data.length} complaint${data.length !== 1 ? 's' : ''}`;
+
+      if (!data.length) {
+        tbody.innerHTML = ''; document.getElementById('emptyState').style.display = 'block';
+        document.getElementById('complaintsTable').style.display = 'none'; return;
+      }
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('complaintsTable').style.display = 'table';
+
+      tbody.innerHTML = data.map(c => `
+    <tr>
+      <td><span style="font-family:monospace;font-weight:700;color:var(--navy);font-size:0.78rem;">${c.id}</span></td>
+      <td>
+        <div style="font-weight:700;font-size:0.875rem;">${c.title}</div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${c.description.substring(0, 55)}…</div>
+      </td>
+      <td><span style="font-size:0.78rem;"><i class="fa-solid ${CAT_ICONS[c.category] || 'fa-circle-dot'}" style="color:var(--navy);margin-right:5px;"></i>${c.category}</span></td>
+      <td>${sevBadgeHTML(c.severity)}</td>
+      <td>
+        <div style="font-size:0.8rem;font-weight:600;">${c.location.split(',')[0]}</div>
+        <div style="font-size:0.72rem;color:var(--muted);">${c.location.split(',').slice(1).join(',').trim()}</div>
+      </td>
+      <td style="font-size:0.8rem;white-space:nowrap;">${c.date}</td>
+      <td>${statusBadgeHTML(c.status)}</td>
+      <td>
+        ${c.officer && c.officer !== '—' ? `
+          <div style="font-size:0.8rem;font-weight:600;">${c.officer}</div>
+          <div style="font-size:0.72rem;color:var(--muted);">${c.dept}</div>` :
+          `<span style="font-size:0.75rem;color:var(--light);">Not assigned</span>`}
+      </td>
+      <td>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="view-btn" onclick="window.location.href='view_complaint.html?id=${c.id}'"><i class="fa-solid fa-eye"></i> View</button>
+          ${c.status === 'pending' ? `<button class="btn btn-danger btn-sm" onclick="openWithdraw('${c.id}')"><i class="fa-solid fa-ban"></i></button>` : ''}
+          ${c.status === 'resolved' && !c.rated ? `<button class="btn btn-green btn-sm" onclick="openRating('${c.id}')"><i class="fa-solid fa-star"></i></button>` : ''}
+          ${c.status === 'resolved' && c.canReopen ? `<button class="btn btn-outline btn-sm" onclick="reopenComplaint('${c.id}')"><i class="fa-solid fa-rotate-left"></i></button>` : ''}
+          ${c.upvotes ? `<button class="upvote-btn${c.upvoted ? ' voted' : ''}" onclick="toggleUpvote('${c.id}',this)"><i class="fa-solid fa-thumbs-up"></i> <span class="uv-count">${c.upvotes}</span></button>` : ''}
+        </div>
+      </td>
+    </tr>`).join('');
+    }
+
+    function openWithdraw(id) {
+      withdrawTarget = id;
+      document.getElementById('withdrawReason').value = '';
+      document.getElementById('withdrawOverlay').classList.add('show');
+    }
+    function confirmWithdraw() {
+      const c = CITIZEN_COMPLAINTS.find(x => x.id === withdrawTarget);
+      if (c) { c.status = 'rejected'; }
+      document.getElementById('withdrawOverlay').classList.remove('show');
+      renderTable();
+      showToast('Complaint withdrawn', '');
+    }
+    function reopenComplaint(id) {
+      if (!confirm('Re-open this complaint? A new investigation will be initiated.')) return;
+      const c = CITIZEN_COMPLAINTS.find(x => x.id === id);
+      if (c) { c.status = 'pending'; c.canReopen = false; renderTable(); showToast('Complaint re-opened', 'New investigation started'); }
+    }
+    function toggleUpvote(id, btn) {
+      const c = CITIZEN_COMPLAINTS.find(x => x.id === id);
+      if (!c) return;
+      c.upvoted = !c.upvoted; c.upvotes += c.upvoted ? 1 : -1;
+      btn.classList.toggle('voted', c.upvoted);
+      btn.querySelector('.uv-count').textContent = c.upvotes;
+    }
+
+    /* ── Rating ── */
+    let ratingTarget = null, currentRating = 0;
+    function openRating(id) {
+      ratingTarget = id; currentRating = 0;
+      const c = CITIZEN_COMPLAINTS.find(x => x.id === id);
+      document.getElementById('modalId').textContent = 'Rate Resolution';
+      document.getElementById('modalTitle').textContent = c.title;
+      document.getElementById('modalBody').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">How satisfied are you with the resolution?</div>
+      <div class="stars" id="starRow">
+        ${[1, 2, 3, 4, 5].map(n => `<span class="star" data-v="${n}" onclick="setRating(${n})">★</span>`).join('')}
+      </div>
+      <textarea class="input textarea" id="ratingComment" placeholder="Share your feedback (optional)…" style="margin-top:14px;min-height:80px;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-orange" onclick="submitRating()"><i class="fa-solid fa-paper-plane"></i> Submit Rating</button>
+        <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>`;
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+    function setRating(n) {
+      currentRating = n;
+      document.querySelectorAll('.star').forEach(s => s.classList.toggle('filled', +s.dataset.v <= n));
+    }
+    function submitRating() {
+      if (!currentRating) { alert('Please select a rating.'); return; }
+      const c = CITIZEN_COMPLAINTS.find(x => x.id === ratingTarget);
+      if (c) { c.rated = true; c.rating = currentRating; }
+      closeModal(); renderTable(); showToast('Thank you for your feedback!', '');
+    }
+
+    /* ── Detail modal ── */
+    function openDetail(id) {
+      const c = CITIZEN_COMPLAINTS.find(x => x.id === id);
+      if (!c) return;
+      document.getElementById('modalId').textContent = c.id;
+      document.getElementById('modalTitle').textContent = c.title;
+      const tlHTML = c.timeline.map(t => `
+    <div class="tl-step ${t.state}">
+      <div class="tl-dot"><i class="fa-solid ${t.state === 'done' ? 'fa-check' : t.state === 'active' ? t.icon : 'fa-circle'}"></i></div>
+      <div class="tl-content">
+        <div class="tl-title">${t.step}</div>
+        <div class="tl-desc">${t.desc}</div>
+        ${t.date !== '—' ? `<div class="tl-date"><i class="fa-regular fa-clock"></i> ${t.date}</div>` : ''}
+        ${t.note ? `<div class="tl-note"><i class="fa-solid fa-circle-info"></i> ${t.note}</div>` : ''}
+      </div>
+    </div>`).join('');
+
+      const commHTML = (c.comments || []).map(cm => `
+    <div class="comment-item">
+      <div class="comment-meta"><strong>${cm.author}</strong><span>${cm.date}</span></div>
+      <div class="comment-text">${cm.text}</div>
+    </div>`).join('') || '<p style="font-size:0.82rem;color:var(--light);">No comments yet.</p>';
+
+      document.getElementById('modalBody').innerHTML = `
+    <div class="modal-section">
+      <div class="modal-section-title">Details</div>
+      <div class="modal-grid">
+        <div class="modal-field"><label>Category</label><span>${c.category}</span></div>
+        <div class="modal-field"><label>Severity</label><span>${sevBadgeHTML(c.severity)}</span></div>
+        <div class="modal-field"><label>Status</label><span>${statusBadgeHTML(c.status)}</span></div>
+        <div class="modal-field"><label>Date Filed</label><span>${c.date}</span></div>
+        <div class="modal-field"><label>Officer</label><span>${c.officer || 'Not assigned'}</span></div>
+        <div class="modal-field"><label>Department</label><span>${c.dept || '—'}</span></div>
+        ${c.officer && c.officer !== '—' ? `
+        <div class="modal-field" style="grid-column:span 2;">
+          <label>Officer Contact</label>
+          <span style="display:flex;gap:12px;">
+            ${c.officerPhone ? `<a href="tel:${c.officerPhone}" style="color:var(--navy);font-weight:600;"><i class="fa-solid fa-phone"></i> ${c.officerPhone}</a>` : ''}
+            ${c.officerEmail ? `<a href="mailto:${c.officerEmail}" style="color:var(--navy);font-weight:600;"><i class="fa-solid fa-envelope"></i> ${c.officerEmail}</a>` : ''}
+          </span>
+        </div>`: ''}
+        ${c.eta ? `<div class="modal-field"><label>ETA</label><span class="eta-chip"><i class="fa-solid fa-calendar-check"></i> ${c.eta}</span></div>` : ''}
+        ${c.rating ? `<div class="modal-field"><label>Your Rating</label><span>${'★'.repeat(c.rating)}${'☆'.repeat(5 - c.rating)} (${c.rating}/5)</span></div>` : ''}
+      </div>
+      <div style="margin-top:12px;"><div class="modal-section-title">Description</div>
+      <div class="modal-desc-box">${c.description}</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Progress Timeline</div>
+      <div class="timeline">${tlHTML}</div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Comments &amp; Updates</div>
+      <div class="comment-list">${commHTML}</div>
+      <div style="display:flex;gap:8px;">
+        <input class="input" type="text" id="commentInput" placeholder="Add a comment…" style="flex:1;" onkeydown="if(event.key==='Enter')addComment('${c.id}')"/>
+        <button class="btn btn-primary btn-sm" onclick="addComment('${c.id}')"><i class="fa-solid fa-paper-plane"></i></button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;padding-top:8px;border-top:1px solid var(--border-light);flex-wrap:wrap;">
+      ${c.status === 'pending' ? `<button class="btn btn-danger" onclick="openWithdraw('${c.id}');closeModal()"><i class="fa-solid fa-ban"></i> Withdraw</button>` : ''}
+      ${c.status === 'resolved' && !c.rated ? `<button class="btn btn-green" onclick="closeModal();openRating('${c.id}')"><i class="fa-solid fa-star"></i> Rate</button>` : ''}
+      ${c.status === 'resolved' && c.canReopen ? `<button class="btn btn-outline" onclick="reopenComplaint('${c.id}');closeModal()"><i class="fa-solid fa-rotate-left"></i> Re-open</button>` : ''}
+    </div>`;
+      document.getElementById('modalOverlay').classList.add('show');
+    }
+
+    function addComment(id) {
+      const input = document.getElementById('commentInput');
+      if (!input || !input.value.trim()) return;
+      const c = CITIZEN_COMPLAINTS.find(x => x.id === id);
+      if (c) { if (!c.comments) c.comments = []; c.comments.push({ author: 'Jane Doe', date: 'Just now', text: input.value.trim() }); input.value = ''; openDetail(id); }
+    }
+
+    function closeModal() { document.getElementById('modalOverlay').classList.remove('show'); }
+
+    function showToast(msg, sub) {
+      const t = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      document.getElementById('toastSub').textContent = sub;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    /* ── Profile dropdown ── */
+    function toggleProfile(e) {
+      e.stopPropagation();
+      const btn = document.getElementById('profileBtn');
+      const dd = document.getElementById('profileDropdown');
+      btn.classList.toggle('open');
+      dd.classList.toggle('open');
+    }
+    document.addEventListener('click', () => {
+      document.getElementById('profileBtn')?.classList.remove('open');
+      document.getElementById('profileDropdown')?.classList.remove('open');
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderTable();
+      ['searchInput'].forEach(id => document.getElementById(id)?.addEventListener('input', renderTable));
+      ['statusFilter', 'categoryFilter', 'dateFilter'].forEach(id => document.getElementById(id)?.addEventListener('change', renderTable));
+      document.getElementById('modalClose')?.addEventListener('click', closeModal);
+      document.getElementById('modalOverlay')?.addEventListener('click', e => { if (e.target.id === 'modalOverlay') closeModal(); });
+    });
+  </script>
+</body>
+
+</html>
