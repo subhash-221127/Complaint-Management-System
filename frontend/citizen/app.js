@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+  const API_BASE = 'http://localhost:5000/api';
 
   /* Severity toggle */
   document.querySelectorAll('.sev').forEach(btn => {
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /* Map click — move pin */
   const mapBox = document.getElementById('mapBox');
   const pin    = document.getElementById('pin');
+  let pinPos = { x: 50, y: 42 };
   if (mapBox && pin) {
     mapBox.addEventListener('click', e => {
       const r = mapBox.getBoundingClientRect();
@@ -28,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const y = ((e.clientY - r.top)  / r.height * 100).toFixed(1);
       pin.style.left = x + '%';
       pin.style.top  = y + '%';
+      pinPos = { x: Number(x), y: Number(y) };
       pin.style.animation = 'none';
       void pin.offsetWidth;
       pin.style.animation = 'drop .4s ease-out';
@@ -69,6 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pin) {
           pin.style.left = '50%';
           pin.style.top  = '42%';
+          pinPos = { x: 50, y: 42 };
         }
 
         fillAddress();
@@ -131,9 +135,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const toast = document.getElementById('toast');
 
   if (fab && toast) {
-    fab.addEventListener('click', () => {
+    fab.addEventListener('click', async () => {
 
       const sel = document.getElementById('categorySelect');
+      const titleEl = document.getElementById('complaintTitle');
+      const descEl = document.getElementById('descBox');
+      const nameEl = document.getElementById('contactName');
+      const phoneEl = document.getElementById('contactPhone');
+      const emailEl = document.getElementById('contactEmail');
+      const addrEl = document.getElementById('addr');
+      const pinEl = document.getElementById('pin2');
+      const cityEl = document.getElementById('city');
+      const distEl = document.getElementById('dist');
 
       if (sel && !sel.value) {
         sel.style.borderColor = '#EF4444';
@@ -147,11 +160,84 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return;
       }
+      if (titleEl && !titleEl.value.trim()) {
+        titleEl.style.borderColor = '#EF4444';
+        titleEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (descEl && !descEl.value.trim()) {
+        descEl.style.borderColor = '#EF4444';
+        descEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (nameEl && !nameEl.value.trim()) {
+        nameEl.style.borderColor = '#EF4444';
+        nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (phoneEl && !phoneEl.value.trim()) {
+        phoneEl.style.borderColor = '#EF4444';
+        phoneEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
 
       fab.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting…';
       fab.disabled  = true;
 
-      setTimeout(() => {
+      try {
+        const sevBtn = document.querySelector('.sev.active');
+        const severity = sevBtn ? sevBtn.dataset.sev : 'medium';
+
+        const category = sel.value.trim();
+        const departmentMap = {
+          'Roads & Potholes': 'Roads & Infrastructure',
+          'Water & Sewage': 'Water Supply',
+          'Electricity & Lighting': 'Electricity',
+          'Garbage & Sanitation': 'Sanitation',
+          'Public Safety': 'Public Safety',
+          'Noise Pollution': 'Public Safety',
+          'Parks & Recreation': 'Parks & Recreation',
+          'Other': 'Public Safety',
+        };
+        const department = departmentMap[category] || category;
+
+        const citizenResp = await fetch(`${API_BASE}/citizens`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: nameEl.value.trim(),
+            email: emailEl.value.trim() || `citizen${Date.now()}@cityfix.com`,
+            phone: phoneEl.value.trim(),
+          }),
+        });
+        const citizenJson = await citizenResp.json();
+        if (!citizenJson.success) throw new Error(citizenJson.message || 'Citizen create failed');
+
+        const complaintResp = await fetch(`${API_BASE}/complaints`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: titleEl.value.trim(),
+            description: descEl.value.trim(),
+            citizenId: citizenJson.data._id,
+            department,
+            category,
+            priority: severity.charAt(0).toUpperCase() + severity.slice(1),
+            contactName: nameEl.value.trim(),
+            contactPhone: phoneEl.value.trim(),
+            contactEmail: emailEl.value.trim(),
+            address: addrEl?.value?.trim(),
+            pincode: pinEl?.value?.trim(),
+            city: cityEl?.value?.trim(),
+            district: distEl?.value?.trim(),
+            locationPin: pinPos,
+          }),
+        });
+        const complaintJson = await complaintResp.json();
+        if (!complaintJson.success) throw new Error(complaintJson.message || 'Complaint create failed');
+
+        const idText = toast.querySelector('small');
+        if (idText) idText.textContent = `ID: ${complaintJson.data.complaintId}`;
 
         toast.classList.add('show');
         fab.innerHTML = '<i class="fa-solid fa-circle-check"></i> Submitted!';
@@ -162,8 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
           fab.innerHTML =
             '<i class="fa-solid fa-paper-plane"></i> <span>Submit Complaint</span>';
         }, 3500);
-
-      }, 2000);
+      } catch (err) {
+        alert(err.message || 'Failed to submit complaint');
+        fab.disabled  = false;
+        fab.innerHTML =
+          '<i class="fa-solid fa-paper-plane"></i> <span>Submit Complaint</span>';
+      }
     });
   }
 

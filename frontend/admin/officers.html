@@ -90,8 +90,23 @@
     </div>
   </div>
 </div>
+<script>
+let officers = [...DEMO_OFFICERS];
 
-<script src="demo-data.js"></script>
+with
+
+let officers = [];
+
+async function loadOfficers() {
+  try {
+    const res = await fetch("http://localhost:5000/api/officers");
+    officers = await res.json();
+    loadOfficers();
+  } catch (err) {
+    console.error("Failed to load officers", err);
+  }
+}
+</script>
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
 <script>
