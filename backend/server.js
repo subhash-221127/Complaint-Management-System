@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -8,39 +7,55 @@ const path = require("path");
 dotenv.config();
 const app = express();
 
-// Middleware
+// Enable CORS
 app.use(cors());
+
+// Body parser
 app.use(express.json());
 
-// Serve static frontend files
-const frontendPath = path.join(__dirname, "../frontend");
-app.use(express.static(frontendPath));
+// Serve static frontend if needed
+app.use(express.static(path.join(__dirname, "../frontend")));
 
-// API routes
-const authRoutes = require("./routes/auth");
-app.use("/api", authRoutes);
+// ---------------------------
+// Routes
+// ---------------------------
+const userRoutes = require("./routes/auth"); // your login/signup routes
+app.use("/api", userRoutes);
 
-// MongoDB connection
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB connected"))
-  .catch(err => console.log("MongoDB connection error:", err));
+// Complaints
+const complaintsRoutes = require("./routes/complaints");
+app.use("/api", complaintsRoutes);
 
-// Serve any HTML file from frontend folder
-app.get("/:folder/:file", (req, res) => {
-  const folder = req.params.folder;
-  const file = req.params.file;
+// ---------------------------
+// MongoDB Connection
+// ---------------------------
+const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/complaint-management-system";
 
-  const filePath = path.join(frontendPath, folder, file);
-  res.sendFile(filePath, err => {
-    if (err) res.status(404).send("File not found");
+function connectToMongo(uri) {
+  return mongoose.connect(uri)
+    .then(() => console.log(`MongoDB connected (${uri})`))
+    .catch(err => {
+      console.error(`MongoDB connection error (${uri}):`, err);
+      throw err;
+    });
+}
+
+connectToMongo(MONGO_URI)
+  .catch(async () => {
+    // If the primary URI fails, try localhost as a fallback (useful for offline development).
+    const fallback = "mongodb://127.0.0.1:27017/complaint-management-system";
+    if (MONGO_URI !== fallback) {
+      console.log("Attempting fallback MongoDB URI (local) …");
+      try {
+        await connectToMongo(fallback);
+      } catch (err) {
+        console.error("Fallback MongoDB connection also failed. The server will start but database features may not work.");
+      }
+    }
   });
-});
 
-// Optional: catch root requests (index.html)
-app.get("/", (req, res) => {
-  res.sendFile(path.join(frontendPath, "index.html"));
-});
-
-// Start server
+// ---------------------------
+// Start Server
+// ---------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
