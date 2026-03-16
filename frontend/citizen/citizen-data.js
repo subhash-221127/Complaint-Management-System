@@ -1,7 +1,3 @@
-/* ─────────────────────────────────────────
-   citizen-data.js — Shared demo data
-───────────────────────────────────────── */
-
 const CITIZEN_COMPLAINTS = [
   {
     id:'CMP-2026-101', title:'Street Light Not Working',
