@@ -12,6 +12,7 @@
 
 <div class="admin-layout">
 
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <a href="dashboard.html" class="sidebar-logo">
       <span class="logo-text">City<span>Fix</span></span>
@@ -33,84 +34,79 @@
 
   </aside>
 
+  <!-- MAIN -->
   <div class="main-content">
 
 
-<header class="topbar">
-  <h1>Citizens</h1>
-</header>
-
+    <header class="topbar">
+      <h1>Citizens</h1>
+    </header>
 
 <div class="page-content">
 
-  <div class="filter-bar">
-    <input
-      type="text"
-      id="search-input"
-      placeholder="Search citizens..."
-      oninput="renderCitizens()" />
-  </div>
+      <!-- SEARCH -->
+      <div class="filter-bar">
+        <input
+          type="text"
+          id="search-input"
+          placeholder="Search citizens..."
+          oninput="renderCitizens()" />
+      </div>
 
+      <!-- TABLE -->
+      <div class="section-card">
 
-  <div class="section-card">
+        <h3 id="citizens-count">👥 Citizens (0)</h3>
 
-    <h3 id="citizens-count">👥 Citizens (0)</h3>
+        <table class="data-table">
 
-    <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Joined</th>
+              <th>Action</th>
+            </tr>
+          </thead>
 
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Phone</th>
-          <th>Joined</th>
-          <th>Action</th>
-        </tr>
-      </thead>
+          <tbody id="citizens-body"></tbody>
 
-      <tbody id="citizens-body"></tbody>
+        </table>
 
-    </table>
+      </div>
 
-  </div>
-
-</div>
-
+    </div>
 
   </div>
 
 </div>
 
 <script src="theme.js"></script>
-
 <script src="admin-auth.js"></script>
 
 <script>
-
 let citizens = [];
 
+// FETCH DATA
 async function loadCitizens() {
-
   try {
-
     const res = await fetch("http://localhost:5000/api/citizens");
+    const result = await res.json();
 
-    citizens = await res.json();
+    citizens = result.data || [];
 
     renderCitizens();
 
   } catch (err) {
-
     console.error("Failed to load citizens:", err);
 
   }
-
 }
 
 
 function renderCitizens() {
-
   const q = document.getElementById("search-input").value.toLowerCase();
 
   let data = [...citizens];
@@ -138,12 +134,10 @@ function renderCitizens() {
         </td>
       </tr>
     `).join("");
-
 }
 
 
 async function removeCitizen(id) {
-
   if (!confirm("Remove this citizen?")) return;
 
   try {
@@ -153,15 +147,12 @@ async function removeCitizen(id) {
     });
 
     citizens = citizens.filter(c => c._id !== id);
-
     renderCitizens();
 
   } catch (err) {
-
     console.error("Delete failed:", err);
 
   }
-
 }
 
 
