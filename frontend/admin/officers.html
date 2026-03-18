@@ -8,9 +8,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="admin.css" />
 </head>
+
 <body>
 <div class="admin-layout">
 
+  <!-- SIDEBAR -->
   <aside class="sidebar">
     <a href="dashboard.html" class="sidebar-logo">
       <div class="logo-icon">
@@ -22,9 +24,10 @@
       </div>
       <span class="logo-text">City<span>Fix</span></span>
     </a>
+
     <nav class="sidebar-nav">
       <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints <span class="badge">18</span></a>
+      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints <span class="badge complaints-count-badge">0</span></a>
       <a href="officers.html"   class="sidebar-link active"><span class="icon">👮</span> Officers</a>
       <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
       <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
@@ -35,7 +38,9 @@
     </div>
   </aside>
 
+  <!-- MAIN -->
   <div class="main-content">
+
     <header class="topbar">
       <div class="topbar-left">
         <h1>Officers</h1>
@@ -55,6 +60,8 @@
     </header>
 
     <div class="page-content">
+
+      <!-- FILTERS -->
       <div class="filter-bar">
         <label>📌 Status:</label>
         <select id="status-filter" onchange="renderOfficers()">
@@ -70,26 +77,35 @@
         </div>
       </div>
 
-      <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
-        <div class="stat-card blue">  <div class="stat-card-header"><div class="stat-card-icon blue">👮</div></div>  <div class="stat-value" id="total-officers">0</div>  <div class="stat-label">Total Officers</div></div>
-        <div class="stat-card green"> <div class="stat-card-header"><div class="stat-card-icon green">✅</div></div>  <div class="stat-value" id="active-officers">0</div>  <div class="stat-label">Active</div></div>
-        <div class="stat-card orange"><div class="stat-card-header"><div class="stat-card-icon orange">🏖️</div></div><div class="stat-value" id="leave-officers">0</div>   <div class="stat-label">On Leave</div></div>
+      <!-- STATS -->
+      <div>
+        <p>Total: <span id="total-officers">0</span></p>
+        <p>Active: <span id="active-officers">0</span></p>
+        <p>On Leave: <span id="leave-officers">0</span></p>
       </div>
 
-      <div class="section-card">
-        <div class="section-card-header">
-          <h3 id="officers-count">👮 Officers (0)</h3>
-        </div>
-        <div class="section-card-body">
-          <table class="data-table">
-            <thead><tr><th>ID</th><th>Name</th><th>Department</th><th>Designation</th><th>Status</th><th>Cases</th><th>Action</th></tr></thead>
-            <tbody id="officers-body"></tbody>
-          </table>
-        </div>
-      </div>
+      <!-- TABLE -->
+      <table border="1" width="100%">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Department</th>
+            <th>Designation</th>
+            <th>Status</th>
+            <th>Cases</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody id="officers-body"></tbody>
+      </table>
+
     </div>
   </div>
 </div>
+
+<!-- SCRIPT -->
 <script>
 let officers = [...DEMO_OFFICERS];
 
@@ -97,6 +113,7 @@ with
 
 let officers = [];
 
+// ✅ FETCH DATA
 async function loadOfficers() {
   try {
     const res = await fetch("http://localhost:5000/api/officers");
@@ -106,43 +123,55 @@ async function loadOfficers() {
     console.error("Failed to load officers", err);
   }
 }
-</script>
-<script src="theme.js"></script>
-<script src="admin-auth.js"></script>
-<script>
-  let officers = [...DEMO_OFFICERS];
-  document.getElementById('dept-filter').innerHTML =
-    '<option value="all">All Departments</option>' +
-    DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('');
 
-  function renderOfficers() {
-    const sf = document.getElementById('status-filter').value;
-    const df = document.getElementById('dept-filter').value;
-    const q  = document.getElementById('search-input').value.toLowerCase();
-    let data  = [...officers];
-    if (sf !== 'all') data = data.filter(o => o.status === sf);
-    if (df !== 'all') data = data.filter(o => o.department === df);
-    if (q)  data = data.filter(o =>
-      o.name.toLowerCase().includes(q) ||
-      o.id.toLowerCase().includes(q) ||
-      o.email.toLowerCase().includes(q));
+// ✅ RENDER TABLE
+function renderOfficers() {
+  const sf = document.getElementById('status-filter').value;
+  const df = document.getElementById('dept-filter').value;
+  const q  = document.getElementById('search-input').value.toLowerCase();
 
-    document.getElementById('total-officers').textContent  = officers.length;
-    document.getElementById('active-officers').textContent = officers.filter(o => o.status === 'Active').length;
-    document.getElementById('leave-officers').textContent  = officers.filter(o => o.status === 'On Leave').length;
-    document.getElementById('officers-count').textContent  = `👮 Officers (${data.length})`;
+  let data = [...officers];
+
+  if (sf !== 'all') data = data.filter(o => o.status === sf);
+  if (df !== 'all') data = data.filter(o => o.department === df);
+
+  if (q) {
+    data = data.filter(o =>
+      (o.name || "").toLowerCase().includes(q) ||
+      (o.email || "").toLowerCase().includes(q)
+    );
+  }
+
+  document.getElementById('total-officers').textContent = officers.length;
+  document.getElementById('active-officers').textContent =
+    officers.filter(o => o.status === 'Active').length;
+  document.getElementById('leave-officers').textContent =
+    officers.filter(o => o.status === 'On Leave').length;
+
+  document.getElementById('officers-count').textContent =
+    👮 Officers (${data.length});
 
     document.getElementById('officers-body').innerHTML = data.map(o => `
       <tr onclick="window.location.href='officer-detail.html?id=${o.id}'">
         <td><strong>${o.id}</strong></td>
         <td>${o.name}</td>
-        <td>${o.department}</td>
-        <td>${o.designation}</td>
-        <td><span class="status-badge ${o.status.toLowerCase().replace(' ','-')}">${o.status}</span></td>
-        <td>${o.casesResolved}/${o.casesHandled}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeOfficer('${o.id}')">Remove</button></td>
-      </tr>`).join('');
-  }
+        <td>${o.department || "-"}</td>
+        <td>${o.designation || "-"}</td>
+        <td>
+          <span class="status-badge ${ (o.status || "").toLowerCase().replace(' ','-') }">
+            ${o.status || "Active"}
+          </span>
+        </td>
+        <td>${o.casesResolved || 0}/${o.casesHandled || 0}</td>
+        <td>
+          <button class="btn btn-danger btn-sm"
+            onclick="removeOfficer('${o._id}')">
+            Remove
+          </button>
+        </td>
+      </tr>
+    `).join('');
+}
 
   function removeOfficer(id) {
     if (!confirm('Remove this officer?')) return;
@@ -156,5 +185,6 @@ async function loadOfficers() {
       document.getElementById('profile-dropdown').classList.remove('show');
   });
 </script>
+
 </body>
 </html>

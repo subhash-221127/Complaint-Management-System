@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Complaint Detail</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --blue: #2563eb;
+      --orange: #d97706;
+      --green: #059669;
+      --red: #dc2626;
+      --gray: #64748b;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+    }
+
+    header {
+      background: #0f172a;
+      color: #fff;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    header h1 { margin: 0; font-size: 1.2rem; }
+
+    .container {
+      max-width: 1000px;
+      margin: 20px auto;
+      padding: 0 14px 20px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .meta-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .meta-label {
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .meta-value { font-weight: 600; }
+
+    .status-pill {
+      display: inline-block;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .pending { background: var(--orange); }
+    .in-progress { background: var(--blue); }
+    .resolved { background: var(--green); }
+    .rejected { background: var(--red); }
+
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .action-box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    input, select {
+      padding: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      min-width: 240px;
+      outline: none;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-blue { background: var(--blue); }
+    .btn-red { background: var(--red); }
+    .btn-green { background: var(--green); }
+    .btn-gray { background: var(--gray); }
+
+    .muted { color: var(--muted); font-size: 0.9rem; }
+
+    a.back {
+      text-decoration: none;
+      color: #fff;
+      background: #1e293b;
+      border: 1px solid #334155;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+    }
+
+    #message {
+      margin-top: 10px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Complaint Detail</h1>
+    <a class="back" href="complaints.html">Back to Complaints</a>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2 id="title">Loading...</h2>
+      <p id="description" class="muted">Please wait while complaint details are loaded.</p>
+
+      <div class="meta-grid">
+        <div class="meta-item"><div class="meta-label">Complaint ID</div><div class="meta-value" id="complaint-id">--</div></div>
+        <div class="meta-item"><div class="meta-label">Department</div><div class="meta-value" id="department">--</div></div>
+        <div class="meta-item"><div class="meta-label">Status</div><div class="meta-value" id="status">--</div></div>
+        <div class="meta-item"><div class="meta-label">Assigned Officer</div><div class="meta-value" id="assigned">Not Assigned</div></div>
+        <div class="meta-item"><div class="meta-label">Created At</div><div class="meta-value" id="created-at">--</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h3>Actions</h3>
+      <div class="actions-grid">
+        <div class="action-box">
+          <h4>Assign Officer</h4>
+          <div class="row">
+            <input id="officer" type="text" placeholder="Enter officer name" />
+            <button class="btn-blue" onclick="assignComplaint()">Assign</button>
+          </div>
+        </div>
+
+        <div class="action-box">
+          <h4>Update Status</h4>
+          <div class="row">
+            <select id="status-select">
+              <option value="Pending">Pending</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Resolved">Resolved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+            <button class="btn-gray" onclick="updateStatus()">Update Status</button>
+            <button class="btn-green" onclick="setResolved()">Mark Resolved</button>
+            <button class="btn-red" onclick="rejectComplaint()">Reject</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="message"></div>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = "http://localhost:5000/api/complaints";
+    const id = new URLSearchParams(window.location.search).get("id");
+
+    function formatDate(dateValue) {
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return "--";
+      return date.toLocaleString();
+    }
+
+    function statusPill(status) {
+      const key = (status || "Pending").toLowerCase().replace(/\s+/g, "-");
+      return `<span class="status-pill ${key}">${status || "Pending"}</span>`;
+    }
+
+    function showMessage(text, isError = false) {
+      const message = document.getElementById("message");
+      message.textContent = text;
+      message.style.color = isError ? "#dc2626" : "#059669";
+    }
+
+    async function loadComplaint() {
+      if (!id) {
+        showMessage("Complaint id is missing in URL", true);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/${id}`);
+        if (!res.ok) throw new Error("Failed to load complaint");
+
+        const complaint = await res.json();
+
+        document.getElementById("title").textContent = complaint.title || "Untitled complaint";
+        document.getElementById("description").textContent = complaint.description || "No description provided";
+        document.getElementById("complaint-id").textContent = complaint._id || "--";
+        document.getElementById("department").textContent = complaint.department || "--";
+        document.getElementById("status").innerHTML = statusPill(complaint.status);
+        document.getElementById("assigned").textContent = complaint.assignedTo || "Not Assigned";
+        document.getElementById("created-at").textContent = formatDate(complaint.createdAt);
+        document.getElementById("status-select").value = complaint.status || "Pending";
+      } catch (err) {
+        console.error(err);
+        showMessage("Unable to load complaint details. Check backend server.", true);
+      }
+    }
+
+    async function assignComplaint() {
+      const officer = document.getElementById("officer").value.trim();
+      if (!officer) {
+        showMessage("Officer name is required to assign complaint.", true);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_BASE}/${id}/assign`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ officer }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Assign failed");
+
+        showMessage("Complaint assigned successfully.");
+        document.getElementById("officer").value = "";
+        loadComplaint();
+      } catch (err) {
+        showMessage(err.message, true);
+      }
+    }
+
+    async function updateStatus() {
+      const status = document.getElementById("status-select").value;
+
+      try {
+        const res = await fetch(`${API_BASE}/${id}/status`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Status update failed");
+
+        showMessage(`Status updated to ${status}.`);
+        loadComplaint();
+      } catch (err) {
+        showMessage(err.message, true);
+      }
+    }
+
+    async function setResolved() {
+      document.getElementById("status-select").value = "Resolved";
+      await updateStatus();
+    }
+
+    async function rejectComplaint() {
+      try {
+        const res = await fetch(`${API_BASE}/${id}/reject`, { method: "PUT" });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Reject failed");
+
+        showMessage("Complaint rejected successfully.");
+        loadComplaint();
+      } catch (err) {
+        showMessage(err.message, true);
+      }
+    }
+
+    loadComplaint();
+  </script>
+</body>
+</html>

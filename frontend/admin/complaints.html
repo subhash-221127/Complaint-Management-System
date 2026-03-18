@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CityFix Admin – Complaints</title>
+  <title>CityFix Admin - Complaints</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="admin.css" />
@@ -14,8 +14,7 @@
   <aside class="sidebar">
     <a href="dashboard.html" class="sidebar-logo">
       <div class="logo-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
-          stroke-linecap="round">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
           <circle cx="12" cy="10" r="3" />
         </svg>
@@ -23,15 +22,15 @@
       <span class="logo-text">City<span>Fix</span></span>
     </a>
     <nav class="sidebar-nav">
-      <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-      <a href="complaints.html" class="sidebar-link active"><span class="icon">📋</span> Complaints <span class="badge">18</span></a>
-      <a href="officers.html"   class="sidebar-link"><span class="icon">👮</span> Officers</a>
-      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+      <a href="dashboard.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link active"><span class="icon">📋</span> Complaints <span class="badge complaints-count-badge">0</span></a>
+      <a href="officers.html" class="sidebar-link"><span class="icon">👮</span> Officers</a>
+      <a href="citizens.html" class="sidebar-link"><span class="icon">👥</span> Citizens</a>
       <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
-      <a href="officer-requests.html" class="sidebar-link"><span class="icon">📩</span> Officer Requests <span class="badge">4</span></a>
+      <a href="officer-requests.html" class="sidebar-link"><span class="icon">📩</span> Officer Requests</a>
     </nav>
     <div class="sidebar-footer">
-      <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">🚪</span> Logout</a>
+      <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">L</span> Logout</a>
     </div>
   </aside>
 
@@ -39,16 +38,16 @@
     <header class="topbar">
       <div class="topbar-left">
         <h1>Complaints</h1>
-        <span class="breadcrumb">All Complaints Management</span>
+        <span class="breadcrumb">All complaints from database (newest first)</span>
       </div>
       <div class="topbar-right">
-        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">M</span></button>
         <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
           <div class="admin-avatar" id="admin-avatar">AD</div>
           <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
           <div class="profile-dropdown" id="profile-dropdown">
-            <a href="#">👤 My Profile</a>
-            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+            <a href="#">My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">Logout</a>
           </div>
         </div>
       </div>
@@ -56,8 +55,8 @@
 
     <div class="page-content">
       <div class="filter-bar">
-        <label>📅 Time:</label>
-        <select id="time-filter" onchange="renderComplaints()">
+        <label>Time:</label>
+        <select id="time-filter" onchange="applyFilters()">
           <option value="all">All Time</option>
           <option value="today">Today</option>
           <option value="this-week">This Week</option>
@@ -65,30 +64,43 @@
           <option value="last-6-months">Last 6 Months</option>
           <option value="last-year">Last Year</option>
         </select>
-        <label>📌 Status:</label>
-        <select id="status-filter" onchange="renderComplaints()">
+
+        <label>Status:</label>
+        <select id="status-filter" onchange="applyFilters()">
           <option value="all">All</option>
           <option value="Pending">Pending</option>
           <option value="In Progress">In Progress</option>
           <option value="Resolved">Resolved</option>
           <option value="Rejected">Rejected</option>
         </select>
-        <label>🏢 Dept:</label>
-        <select id="dept-filter" onchange="renderComplaints()"></select>
+
+        <label>Department:</label>
+        <select id="dept-filter" onchange="applyFilters()">
+          <option value="all">All Departments</option>
+        </select>
+
         <div class="search-box" style="margin-left:auto;">
-          <span>🔍</span>
-          <input type="text" id="search-input" placeholder="Search complaints…" oninput="renderComplaints()" />
+          <span>S</span>
+          <input type="text" id="search-input" placeholder="Search complaints..." oninput="debouncedFilters()" />
         </div>
       </div>
 
       <div class="section-card">
-        <div class="section-card-header">
-          <h3 id="complaints-count">📋 All Complaints (0)</h3>
+        <div class="section-card-header" style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+          <h3 id="complaints-count">All Complaints (0)</h3>
+          <button class="btn btn-outline btn-sm" onclick="refreshComplaints()">Refresh</button>
         </div>
         <div class="section-card-body">
           <table class="data-table">
             <thead>
-              <tr><th>ID</th><th>Title</th><th>Citizen</th><th>Department</th><th>Status</th><th>Priority</th><th>Date</th></tr>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th>Date</th>
+              </tr>
             </thead>
             <tbody id="complaints-body"></tbody>
           </table>
@@ -98,43 +110,142 @@
   </div>
 </div>
 
-<script src="demo-data.js"></script>
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
 <script>
-  document.getElementById('dept-filter').innerHTML =
-    '<option value="all">All Departments</option>' +
-    DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('');
+  const API_BASE = "http://localhost:5000/api/complaints";
+  let complaints = [];
+  let debounceTimer;
 
-  function renderComplaints() {
-    let data = [...DEMO_COMPLAINTS];
-    const tf = document.getElementById('time-filter').value;
-    const sf = document.getElementById('status-filter').value;
-    const df = document.getElementById('dept-filter').value;
-    const q  = document.getElementById('search-input').value.toLowerCase();
-    data = filterByTime(data, 'date', tf);
-    if (sf !== 'all') data = data.filter(c => c.status === sf);
-    if (df !== 'all') data = data.filter(c => c.department === df);
-    if (q) data = data.filter(c =>
-      c.title.toLowerCase().includes(q) ||
-      c.id.toLowerCase().includes(q) ||
-      c.citizen.toLowerCase().includes(q));
-    document.getElementById('complaints-count').textContent = `📋 All Complaints (${data.length})`;
-    document.getElementById('complaints-body').innerHTML = data.map(c => `
-      <tr onclick="window.location.href='complaint-detail.html?id=${c.id}'">
-        <td><strong>${c.id}</strong></td>
-        <td>${c.title}</td>
-        <td>${c.citizen}</td>
-        <td>${c.department}</td>
-        <td><span class="status-badge ${c.status.toLowerCase().replace(' ','-')}">${c.status}</span></td>
-        <td><span class="priority-badge ${c.priority.toLowerCase()}">${c.priority}</span></td>
-        <td>${c.date}</td>
-      </tr>`).join('');
+  function formatDate(dateValue) {
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return "--";
+    return date.toLocaleString();
   }
-  renderComplaints();
-  document.addEventListener('click', e => {
-    if (!document.getElementById('admin-profile').contains(e.target))
-      document.getElementById('profile-dropdown').classList.remove('show');
+
+  function populateDepartments(data) {
+    const depts = [...new Set(data.map((item) => item.department).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const deptFilter = document.getElementById("dept-filter");
+    const current = deptFilter.value;
+
+    deptFilter.innerHTML = '<option value="all">All Departments</option>' +
+      depts.map((dept) => `<option value="${dept}">${dept}</option>`).join("");
+
+    if (depts.includes(current)) {
+      deptFilter.value = current;
+    }
+  }
+
+  function renderComplaints(data) {
+    const tbody = document.getElementById("complaints-body");
+    document.getElementById("complaints-count").textContent = `All Complaints (${data.length})`;
+
+    if (data.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">No complaints found for selected filters.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = data.map((c) => {
+      const statusClass = (c.status || "Pending").toLowerCase().replace(/\s+/g, "-");
+      return `
+        <tr onclick="openComplaint('${c._id}')" style="cursor:pointer;">
+          <td><strong>${c._id}</strong></td>
+          <td>${c.title || "--"}</td>
+          <td>${c.department || "--"}</td>
+          <td><span class="status-badge ${statusClass}">${c.status || "Pending"}</span></td>
+          <td>${c.assignedTo || "Not Assigned"}</td>
+          <td>${formatDate(c.createdAt)}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  function applyFilters() {
+    const tf = document.getElementById("time-filter").value;
+    const sf = document.getElementById("status-filter").value;
+    const df = document.getElementById("dept-filter").value;
+    const search = document.getElementById("search-input").value.trim().toLowerCase();
+
+    let filtered = [...complaints];
+
+    if (sf !== "all") {
+      filtered = filtered.filter((c) => c.status === sf);
+    }
+
+    if (df !== "all") {
+      filtered = filtered.filter((c) => c.department === df);
+    }
+
+    if (tf !== "all") {
+      const now = new Date();
+      const threshold = new Date(now);
+
+      if (tf === "today") {
+        threshold.setHours(0, 0, 0, 0);
+      } else if (tf === "this-week") {
+        const day = threshold.getDay();
+        const diff = (day + 6) % 7;
+        threshold.setDate(threshold.getDate() - diff);
+        threshold.setHours(0, 0, 0, 0);
+      } else if (tf === "this-month") {
+        threshold.setDate(1);
+        threshold.setHours(0, 0, 0, 0);
+      } else if (tf === "last-6-months") {
+        threshold.setMonth(threshold.getMonth() - 6);
+      } else if (tf === "last-year") {
+        threshold.setFullYear(threshold.getFullYear() - 1);
+      }
+
+      filtered = filtered.filter((c) => {
+        const createdAt = new Date(c.createdAt);
+        return !Number.isNaN(createdAt.getTime()) && createdAt >= threshold;
+      });
+    }
+
+    if (search) {
+      filtered = filtered.filter((c) =>
+        (c.title || "").toLowerCase().includes(search) ||
+        (c.description || "").toLowerCase().includes(search) ||
+        (c.department || "").toLowerCase().includes(search) ||
+        (c.assignedTo || "").toLowerCase().includes(search) ||
+        (c._id || "").toLowerCase().includes(search)
+      );
+    }
+
+    renderComplaints(filtered);
+  }
+
+  function debouncedFilters() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(applyFilters, 200);
+  }
+
+  function openComplaint(id) {
+    window.location.href = `complaint.html?id=${id}`;
+  }
+
+  async function refreshComplaints() {
+    try {
+      const res = await fetch(API_BASE);
+      if (!res.ok) throw new Error("Failed to load complaints");
+
+      complaints = await res.json();
+      populateDepartments(complaints);
+      applyFilters();
+    } catch (err) {
+      console.error(err);
+      document.getElementById("complaints-body").innerHTML =
+        `<tr><td colspan="6" style="text-align:center; padding:20px; color:#dc2626;">Unable to load complaints. Check backend server.</td></tr>`;
+    }
+  }
+
+  refreshComplaints();
+
+  document.addEventListener("click", (e) => {
+    const profile = document.getElementById("admin-profile");
+    if (profile && !profile.contains(e.target)) {
+      document.getElementById("profile-dropdown").classList.remove("show");
+    }
   });
 </script>
 </body>
