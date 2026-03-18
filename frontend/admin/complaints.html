@@ -96,9 +96,10 @@
               <tr>
                 <th>ID</th>
                 <th>Title</th>
+                <th>Citizen</th>
                 <th>Department</th>
                 <th>Status</th>
-                <th>Assigned To</th>
+                <th>Priority</th>
                 <th>Date</th>
               </tr>
             </thead>
@@ -114,7 +115,9 @@
 <script src="admin-auth.js"></script>
 <script>
   const API_BASE = "http://localhost:5000/api/complaints";
+  const API_ROOT = "http://localhost:5000/api";
   let complaints = [];
+  let citizensById = {};
   let debounceTimer;
 
   function formatDate(dateValue) {
@@ -123,8 +126,41 @@
     return date.toLocaleString();
   }
 
+  function normalizeStatus(status) {
+    const s = (status || "Pending").toLowerCase();
+    if (s === "pending") return "Pending";
+    if (s === "in progress" || s === "inprogress" || s === "assigned") return "In Progress";
+    if (s === "resolved") return "Resolved";
+    if (s === "rejected") return "Rejected";
+    return status || "Pending";
+  }
+
+  function normalizePriority(priority, severity) {
+    const raw = (priority || severity || "Medium").toString().toLowerCase();
+    if (raw === "critical") return "Critical";
+    if (raw === "high") return "High";
+    if (raw === "medium") return "Medium";
+    if (raw === "low") return "Low";
+    return "Medium";
+  }
+
+  function normalizeDepartment(value, fallback) {
+    const looksLikeObjectId = typeof value === "string" && /^[a-f0-9]{24}$/i.test(value);
+    if (looksLikeObjectId) return fallback || "Department";
+    return value || fallback || "--";
+  }
+
+  function getCitizenName(c) {
+    if (c.citizenName) return c.citizenName;
+    if (c.citizen?.name) return c.citizen.name;
+    if (c.contactName) return c.contactName;
+    if (c.citizenId && citizensById[c.citizenId]) return citizensById[c.citizenId];
+    return "Citizen";
+  }
+
   function populateDepartments(data) {
-    const depts = [...new Set(data.map((item) => item.department).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    const depts = [...new Set(data.map((item) => normalizeDepartment(item.department, item.category)).filter(Boolean))]
+      .sort((a, b) => a.localeCompare(b));
     const deptFilter = document.getElementById("dept-filter");
     const current = deptFilter.value;
 
@@ -141,19 +177,25 @@
     document.getElementById("complaints-count").textContent = `All Complaints (${data.length})`;
 
     if (data.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">No complaints found for selected filters.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:20px; color:#6b7280;">No complaints found for selected filters.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = data.map((c) => {
-      const statusClass = (c.status || "Pending").toLowerCase().replace(/\s+/g, "-");
+      const statusText = normalizeStatus(c.status);
+      const statusClass = statusText.toLowerCase().replace(/\s+/g, "-");
+      const priorityText = normalizePriority(c.priority, c.severity);
+      const priorityClass = priorityText.toLowerCase();
+      const deptText = normalizeDepartment(c.department, c.category);
+      const citizenText = getCitizenName(c);
       return `
         <tr onclick="openComplaint('${c._id}')" style="cursor:pointer;">
-          <td><strong>${c._id}</strong></td>
+          <td><strong>${c.complaintId || c._id}</strong></td>
           <td>${c.title || "--"}</td>
-          <td>${c.department || "--"}</td>
-          <td><span class="status-badge ${statusClass}">${c.status || "Pending"}</span></td>
-          <td>${c.assignedTo || "Not Assigned"}</td>
+          <td>${citizenText}</td>
+          <td>${deptText}</td>
+          <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+          <td><span class="priority-badge ${priorityClass}">${priorityText}</span></td>
           <td>${formatDate(c.createdAt)}</td>
         </tr>
       `;
@@ -169,11 +211,11 @@
     let filtered = [...complaints];
 
     if (sf !== "all") {
-      filtered = filtered.filter((c) => c.status === sf);
+      filtered = filtered.filter((c) => normalizeStatus(c.status) === sf);
     }
 
     if (df !== "all") {
-      filtered = filtered.filter((c) => c.department === df);
+      filtered = filtered.filter((c) => normalizeDepartment(c.department, c.category) === df);
     }
 
     if (tf !== "all") {
@@ -206,7 +248,8 @@
       filtered = filtered.filter((c) =>
         (c.title || "").toLowerCase().includes(search) ||
         (c.description || "").toLowerCase().includes(search) ||
-        (c.department || "").toLowerCase().includes(search) ||
+        (normalizeDepartment(c.department, c.category) || "").toLowerCase().includes(search) ||
+        (getCitizenName(c) || "").toLowerCase().includes(search) ||
         (c.assignedTo || "").toLowerCase().includes(search) ||
         (c._id || "").toLowerCase().includes(search)
       );
@@ -221,21 +264,34 @@
   }
 
   function openComplaint(id) {
-    window.location.href = `complaint.html?id=${id}`;
+    window.location.href = `complaint-detail.html?id=${id}`;
   }
 
   async function refreshComplaints() {
     try {
-      const res = await fetch(API_BASE);
-      if (!res.ok) throw new Error("Failed to load complaints");
+      const [complaintsRes, citizensRes] = await Promise.all([
+        fetch(API_BASE),
+        fetch(`${API_ROOT}/citizens`),
+      ]);
+      if (!complaintsRes.ok) throw new Error("Failed to load complaints");
 
-      complaints = await res.json();
+      complaints = await complaintsRes.json();
+      citizensById = {};
+
+      if (citizensRes.ok) {
+        const citizensPayload = await citizensRes.json();
+        const citizens = Array.isArray(citizensPayload) ? citizensPayload : (citizensPayload.data || []);
+        citizens.forEach((citizen) => {
+          citizensById[citizen._id] = citizen.name || "Citizen";
+        });
+      }
+
       populateDepartments(complaints);
       applyFilters();
     } catch (err) {
       console.error(err);
       document.getElementById("complaints-body").innerHTML =
-        `<tr><td colspan="6" style="text-align:center; padding:20px; color:#dc2626;">Unable to load complaints. Check backend server.</td></tr>`;
+        `<tr><td colspan="7" style="text-align:center; padding:20px; color:#dc2626;">Unable to load complaints. Check backend server.</td></tr>`;
     }
   }
 

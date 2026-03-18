@@ -921,6 +921,7 @@ body {
 .timeline-dot.orange { background: var(--orange); }
 .timeline-dot.blue   { background: var(--info); }
 .timeline-dot.green  { background: var(--success); }
+.timeline-dot.red    { background: var(--danger); }
 .timeline-content .event { font-size: 0.9rem; font-weight: 700; }
 .timeline-content .time  { font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px; }
 

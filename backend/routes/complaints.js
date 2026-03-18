@@ -1,9 +1,18 @@
 const express = require("express");
+const mongoose = require("mongoose");
 const router = express.Router();
 const Complaint = require("../models/Complaint");
 
 function statusRegex(status) {
   return { $regex: `^${status}$`, $options: "i" };
+}
+
+async function findComplaint(identifier) {
+  if (mongoose.Types.ObjectId.isValid(identifier)) {
+    const byId = await Complaint.findById(identifier);
+    if (byId) return byId;
+  }
+  return Complaint.findOne({ complaintId: identifier });
 }
 
 function buildDateFilter(range) {
@@ -67,7 +76,7 @@ router.get("/dashboard/overview", async (req, res) => {
       Complaint.find()
         .sort({ createdAt: -1 })
         .limit(8)
-        .select("title department status assignedTo createdAt"),
+        .select("complaintId title department status assignedTo createdAt"),
     ]);
 
     res.json({
@@ -123,7 +132,7 @@ router.get("/", async (req, res) => {
 // GET single complaint by ID
 router.get("/:id", async (req, res) => {
   try {
-    const complaint = await Complaint.findById(req.params.id);
+    const complaint = await findComplaint(req.params.id);
     if (!complaint) {
       return res.status(404).json({ message: "Complaint not found" });
     }
@@ -141,7 +150,7 @@ router.put("/:id/assign", async (req, res) => {
       return res.status(400).json({ message: "Officer name is required" });
     }
 
-    const complaint = await Complaint.findById(req.params.id);
+    const complaint = await findComplaint(req.params.id);
     if (!complaint) {
       return res.status(404).json({ message: "Complaint not found" });
     }
@@ -170,7 +179,7 @@ router.put("/:id/status", async (req, res) => {
       });
     }
 
-    const complaint = await Complaint.findById(req.params.id);
+    const complaint = await findComplaint(req.params.id);
     if (!complaint) {
       return res.status(404).json({ message: "Complaint not found" });
     }
@@ -178,6 +187,11 @@ router.put("/:id/status", async (req, res) => {
     complaint.status = status;
     if (status === "Rejected") {
       complaint.assignedTo = null;
+    }
+    if (status === "Resolved") {
+      complaint.resolvedAt = complaint.resolvedAt || new Date();
+    } else {
+      complaint.resolvedAt = null;
     }
 
     await complaint.save();
@@ -190,13 +204,14 @@ router.put("/:id/status", async (req, res) => {
 // REJECT complaint
 router.put("/:id/reject", async (req, res) => {
   try {
-    const complaint = await Complaint.findById(req.params.id);
+    const complaint = await findComplaint(req.params.id);
     if (!complaint) {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
     complaint.status = "Rejected";
     complaint.assignedTo = null;
+    complaint.resolvedAt = null;
 
     await complaint.save();
     res.json({ message: "Rejected successfully", complaint });

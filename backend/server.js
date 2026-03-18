@@ -10,8 +10,12 @@ app.use(express.json());
 
 const complaintRoutes = require("./routes/complaints");
 const authRoutes = require("./routes/auth");
+const officerRoutes = require("./routes/admin_page_officers");
+const citizenRoutes = require("./routes/admin_page_citizens");
 app.use("/api/complaints", complaintRoutes);
 app.use("/api", authRoutes);
+app.use("/api/officers", officerRoutes);
+app.use("/api/citizens", citizenRoutes);
 
 const PORT = process.env.PORT || 5000;
 const DB_NAME = process.env.MONGO_DB_NAME || "complaint-management-system";

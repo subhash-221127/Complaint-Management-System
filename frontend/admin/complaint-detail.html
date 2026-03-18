@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CityFix Admin – Complaint Detail</title>
+  <title>CityFix Admin - Complaint Detail</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="admin.css" />
@@ -12,20 +12,25 @@
 <div class="admin-layout">
 
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">C</div>
-      <div class="sidebar-brand">City<span>Fix</span></div>
-    </div>
+    <a href="dashboard.html" class="sidebar-logo">
+      <div class="logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
+      </div>
+      <span class="logo-text">City<span>Fix</span></span>
+    </a>
     <nav class="sidebar-nav">
-      <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-      <a href="complaints.html" class="sidebar-link active"><span class="icon">📋</span> Complaints</a>
-      <a href="officers.html"   class="sidebar-link"><span class="icon">👮</span> Officers</a>
-      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
-      <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
-      <a href="officer-requests.html" class="sidebar-link"><span class="icon">📩</span> Officer Requests <span class="badge">4</span></a>
+      <a href="dashboard.html" class="sidebar-link"><span class="icon">&#128202;</span> Dashboard</a>
+      <a href="complaints.html" class="sidebar-link active"><span class="icon">&#128203;</span> Complaints <span class="badge complaints-count-badge">0</span></a>
+      <a href="officers.html" class="sidebar-link"><span class="icon">&#128110;</span> Officers</a>
+      <a href="citizens.html" class="sidebar-link"><span class="icon">&#128101;</span> Citizens</a>
+      <a href="departments.html" class="sidebar-link"><span class="icon">&#127970;</span> Departments</a>
+      <a href="officer-requests.html" class="sidebar-link"><span class="icon">&#128233;</span> Officer Requests</a>
     </nav>
     <div class="sidebar-footer">
-      <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">🚪</span> Logout</a>
+      <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">L</span> Logout</a>
     </div>
   </aside>
 
@@ -33,204 +38,326 @@
     <header class="topbar">
       <div class="topbar-left">
         <h1>Complaint Detail</h1>
-        <span class="breadcrumb" id="breadcrumb">Loading…</span>
+        <span class="breadcrumb" id="breadcrumb">Loading...</span>
       </div>
       <div class="topbar-right">
-        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
+        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">M</span></button>
         <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
           <div class="admin-avatar" id="admin-avatar">AD</div>
           <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
           <div class="profile-dropdown" id="profile-dropdown">
-            <a href="#">👤 My Profile</a>
-            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
+            <a href="#">My Profile</a>
+            <a href="../login.html" onclick="doLogout(event)">Logout</a>
           </div>
         </div>
       </div>
     </header>
 
-    <div class="page-content detail-page" id="page-content">
-      <!-- Populated by JS -->
-    </div>
+    <div class="page-content detail-page" id="page-content"></div>
   </div>
 </div>
 
-<script src="demo-data.js"></script>
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
 <script>
-  const params      = new URLSearchParams(window.location.search);
-  const complaintId = params.get('id');
-  const complaint   = DEMO_COMPLAINTS.find(c => c.id === complaintId);
+  const API_ROOT = "http://localhost:5000/api";
+  const API_BASE = `${API_ROOT}/complaints`;
+  const complaintId = new URLSearchParams(window.location.search).get("id");
+  let complaint = null;
+  let officers = [];
+  let citizenDetails = null;
 
-  if (!complaint) {
-    document.getElementById('page-content').innerHTML = `
-      <div style="text-align:center;padding:80px 20px;">
-        <div style="font-size:4rem;margin-bottom:16px;">🔍</div>
-        <h2>Complaint Not Found</h2>
-        <p style="color:var(--text-secondary);margin:8px 0 24px;">The complaint you're looking for doesn't exist.</p>
-        <a href="complaints.html" class="btn btn-primary">← Back to Complaints</a>
-      </div>`;
-  } else {
-    document.getElementById('breadcrumb').textContent = complaint.id + ' — ' + complaint.department;
-    const deptOfficers = DEMO_OFFICERS.filter(o => o.department === complaint.department);
-    let assignedOfficer = complaint.status !== 'Pending' && deptOfficers.length > 0 ? deptOfficers[0] : null;
-
-    function renderPage() {
-      document.getElementById('page-content').innerHTML = `
-        <a href="complaints.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">← Back to Complaints</a>
-
-        <div class="detail-header">
-          <div>
-            <h2>${complaint.title}</h2>
-            <div class="meta">
-              <span class="status-badge ${complaint.status.toLowerCase().replace(' ','-')}">${complaint.status}</span>
-              <span class="priority-badge ${complaint.priority.toLowerCase()}">${complaint.priority}</span>
-              <span style="font-size:0.82rem;color:var(--text-secondary);">📅 ${complaint.date}</span>
-              <span style="font-size:0.82rem;color:var(--text-secondary);">🏢 ${complaint.department}</span>
-            </div>
-          </div>
-          <span style="font-size:0.85rem;color:var(--text-placeholder);font-weight:700;">${complaint.id}</span>
-        </div>
-
-        <div class="detail-grid">
-          <div class="info-card">
-            <h4>📋 Complaint Information</h4>
-            <div class="info-row"><span class="info-label">Complaint ID</span><span class="info-value">${complaint.id}</span></div>
-            <div class="info-row"><span class="info-label">Department</span><span class="info-value">${complaint.department}</span></div>
-            <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="status-badge ${complaint.status.toLowerCase().replace(' ','-')}">${complaint.status}</span></span></div>
-            <div class="info-row"><span class="info-label">Priority</span><span class="info-value"><span class="priority-badge ${complaint.priority.toLowerCase()}">${complaint.priority}</span></span></div>
-            <div class="info-row"><span class="info-label">Date Filed</span><span class="info-value">${complaint.date}</span></div>
-          </div>
-          <div class="info-card">
-            <h4>👤 Citizen Information</h4>
-            <div class="info-row"><span class="info-label">Name</span><span class="info-value">${complaint.citizen}</span></div>
-            <div class="info-row"><span class="info-label">Citizen ID</span><span class="info-value">${complaint.citizenId || '—'}</span></div>
-            <div style="margin-top:16px;">
-              <div style="font-size:0.75rem;font-weight:800;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Description</div>
-              <div class="description-box">${complaint.description}</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Assign Officer -->
-        <div class="assign-section">
-          <h4>👮 Assign Officer</h4>
-          ${assignedOfficer ? `
-            <div style="margin-bottom:16px;">
-              <div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Currently Assigned:</div>
-              <div class="assigned-officer">
-                <div class="assigned-avatar">${assignedOfficer.name.split(' ').map(n=>n[0]).join('')}</div>
-                <div class="assigned-info">
-                  <div class="name">${assignedOfficer.name}</div>
-                  <div class="dept">${assignedOfficer.designation} · ${assignedOfficer.department}</div>
-                  <div class="dept">📧 ${assignedOfficer.email} · 📞 ${assignedOfficer.phone}</div>
-                </div>
-                <button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="unassignOfficer()">Unassign</button>
-              </div>
-            </div>` : ''}
-          <div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">
-            ${assignedOfficer ? 'Reassign to a different officer:' : 'Select an officer to handle this complaint:'}
-          </div>
-          <div class="assign-form">
-            <div class="form-group">
-              <label>Department</label>
-              <select id="assign-dept" onchange="filterOfficers()">
-                <option value="${complaint.department}">${complaint.department}</option>
-                ${DEPARTMENTS.filter(d => d !== complaint.department).map(d => `<option value="${d}">${d}</option>`).join('')}
-              </select>
-            </div>
-            <div class="form-group">
-              <label>Officer</label>
-              <select id="assign-officer">
-                ${deptOfficers.filter(o=>o.status==='Active').map(o=>`<option value="${o.id}">${o.name} — ${o.designation}</option>`).join('')}
-                ${deptOfficers.filter(o=>o.status==='Active').length===0 ? '<option value="">No active officers</option>' : ''}
-              </select>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="assignOfficer()" style="height:42px;align-self:flex-end;">✅ Assign</button>
-          </div>
-        </div>
-
-        <!-- Status Update -->
-        <div class="status-update-section">
-          <h4>📌 Update Status</h4>
-          <div class="status-btns">
-            <button class="status-btn ${complaint.status==='Pending'?'active-status':''}"     onclick="updateStatus('Pending')">⏳ Pending</button>
-            <button class="status-btn ${complaint.status==='In Progress'?'active-status':''}" onclick="updateStatus('In Progress')">🔄 In Progress</button>
-            <button class="status-btn ${complaint.status==='Resolved'?'active-status':''}"    onclick="updateStatus('Resolved')">✅ Resolved</button>
-            <button class="status-btn ${complaint.status==='Rejected'?'active-status':''}"    onclick="updateStatus('Rejected')">❌ Rejected</button>
-          </div>
-        </div>
-
-        <!-- Timeline -->
-        <div class="timeline">
-          <h4>📅 Activity Timeline</h4>
-          <div class="timeline-item">
-            <div class="timeline-dot orange"></div>
-            <div class="timeline-content">
-              <div class="event">Complaint Filed</div>
-              <div class="time">${complaint.date} — Filed by ${complaint.citizen}</div>
-            </div>
-          </div>
-          ${assignedOfficer ? `
-          <div class="timeline-item">
-            <div class="timeline-dot blue"></div>
-            <div class="timeline-content">
-              <div class="event">Assigned to ${assignedOfficer.name}</div>
-              <div class="time">${complaint.date} — Assigned by Admin</div>
-            </div>
-          </div>` : ''}
-          ${complaint.status === 'In Progress' ? `
-          <div class="timeline-item">
-            <div class="timeline-dot blue"></div>
-            <div class="timeline-content">
-              <div class="event">Status changed to In Progress</div>
-              <div class="time">${complaint.date} — Updated by officer</div>
-            </div>
-          </div>` : ''}
-          ${complaint.status === 'Resolved' ? `
-          <div class="timeline-item">
-            <div class="timeline-dot green"></div>
-            <div class="timeline-content">
-              <div class="event">Complaint Resolved</div>
-              <div class="time">${complaint.date} — Resolved successfully</div>
-            </div>
-          </div>` : ''}
-        </div>
-      `;
-    }
-
-    window.filterOfficers = function() {
-      const dept = document.getElementById('assign-dept').value;
-      const officers = DEMO_OFFICERS.filter(o => o.department === dept && o.status === 'Active');
-      document.getElementById('assign-officer').innerHTML = officers.length > 0
-        ? officers.map(o => `<option value="${o.id}">${o.name} — ${o.designation}</option>`).join('')
-        : '<option value="">No active officers available</option>';
-    };
-    window.assignOfficer = function() {
-      const officerId = document.getElementById('assign-officer').value;
-      if (!officerId) { alert('Please select an officer first.'); return; }
-      const officer = DEMO_OFFICERS.find(o => o.id === officerId);
-      assignedOfficer = officer;
-      if (complaint.status === 'Pending') complaint.status = 'In Progress';
-      alert(`✅ Complaint assigned to ${officer.name} successfully!`);
-      renderPage();
-    };
-    window.unassignOfficer = function() {
-      if (!confirm('Unassign this officer?')) return;
-      assignedOfficer = null;
-      renderPage();
-    };
-    window.updateStatus = function(status) {
-      complaint.status = status;
-      renderPage();
-    };
-
-    renderPage();
+  function normalizeStatus(status) {
+    const s = (status || "Pending").toLowerCase();
+    if (s === "pending") return "Pending";
+    if (s === "in progress" || s === "inprogress" || s === "assigned") return "In Progress";
+    if (s === "resolved") return "Resolved";
+    if (s === "rejected") return "Rejected";
+    return status || "Pending";
   }
 
-  document.addEventListener('click', e => {
-    if (!document.getElementById('admin-profile').contains(e.target))
-      document.getElementById('profile-dropdown').classList.remove('show');
+  function statusClass(status) {
+    return normalizeStatus(status).toLowerCase().replace(/\s+/g, "-");
+  }
+
+  function formatDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "--";
+    return date.toLocaleDateString();
+  }
+
+  function formatDateTime(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "--";
+    return date.toLocaleString();
+  }
+
+  function computeExpectedResolvedAt(item) {
+    if (item.expectedResolvedAt) return item.expectedResolvedAt;
+
+    const baseDate = new Date(item.createdAt || item.date || Date.now());
+    if (Number.isNaN(baseDate.getTime())) return null;
+
+    const level = String(item.priority || item.severity || "medium").toLowerCase();
+    const daysByLevel = {
+      critical: 1,
+      high: 2,
+      medium: 4,
+      low: 7,
+    };
+    const days = daysByLevel[level] || 4;
+    baseDate.setDate(baseDate.getDate() + days);
+    return baseDate.toISOString();
+  }
+
+  async function loadComplaint() {
+    if (!complaintId) {
+      renderNotFound("Missing complaint id in URL.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/${encodeURIComponent(complaintId)}`);
+      if (!res.ok) {
+        renderNotFound("Complaint not found.");
+        return;
+      }
+
+      complaint = await res.json();
+      await Promise.all([loadOfficers(), loadCitizenDetails()]);
+      renderPage();
+    } catch (err) {
+      console.error(err);
+      renderNotFound("Unable to load complaint details.");
+    }
+  }
+
+  async function loadCitizenDetails() {
+    citizenDetails = null;
+    const citizenId = complaint?.citizenId || complaint?.citizen?._id;
+    if (!citizenId) return;
+
+    try {
+      const res = await fetch(`${API_ROOT}/citizens/${encodeURIComponent(citizenId)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      citizenDetails = data?.data || null;
+    } catch (err) {
+      console.error("Failed to load citizen details:", err);
+    }
+  }
+
+  async function loadOfficers() {
+    try {
+      const res = await fetch(`${API_ROOT}/officers`);
+      if (!res.ok) return;
+      officers = await res.json();
+    } catch (err) {
+      console.error("Failed to load officers:", err);
+      officers = [];
+    }
+  }
+
+  function getAssignableOfficers(department) {
+    const active = officers.filter((o) => !o.status || o.status === "Active");
+    if (!department) return active;
+
+    const normalizedDepartment = String(department).toLowerCase();
+    const sameDepartment = active.filter((o) =>
+      String(o.department || "").toLowerCase() === normalizedDepartment
+    );
+
+    return sameDepartment.length > 0 ? sameDepartment : active;
+  }
+
+  function renderNotFound(message) {
+    document.getElementById("page-content").innerHTML = `
+      <div style="text-align:center;padding:80px 20px;">
+        <div style="font-size:3rem;margin-bottom:12px;">&#128269;</div>
+        <h2>Complaint Detail Unavailable</h2>
+        <p style="color:var(--text-secondary);margin:8px 0 24px;">${message}</p>
+        <a href="complaints.html" class="btn btn-primary">Back to Complaints</a>
+      </div>
+    `;
+  }
+
+  function renderPage() {
+    const status = normalizeStatus(complaint.status);
+    const complaintKey = complaint.complaintId || complaint._id;
+    const title = complaint.title || "Untitled Complaint";
+    const description = complaint.description || "No description provided.";
+    const department = complaint.department || complaint.category || "--";
+    const priority = complaint.priority || complaint.severity || "Medium";
+    const filedDate = complaint.createdAt || complaint.date;
+    const expectedResolvedAt = computeExpectedResolvedAt(complaint);
+    const citizenName = citizenDetails?.name || complaint.citizenName || complaint.contactName || complaint.citizen?.name || "Citizen";
+    const citizenId = citizenDetails?._id || complaint.citizenId || complaint.citizen?._id || "--";
+    const assignedTo = complaint.assignedTo || "Not Assigned";
+
+    document.getElementById("breadcrumb").textContent = `${complaintKey} - ${department}`;
+
+    document.getElementById("page-content").innerHTML = `
+      <a href="complaints.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">&#8592; Back to Complaints</a>
+
+      <div class="detail-header">
+        <div>
+          <h2>${title}</h2>
+          <div class="meta">
+            <span class="status-badge ${statusClass(status)}">${status}</span>
+            <span class="priority-badge ${String(priority).toLowerCase()}">${priority}</span>
+            <span style="font-size:0.82rem;color:var(--text-secondary);">&#128197; ${formatDate(filedDate)}</span>
+            <span style="font-size:0.82rem;color:var(--text-secondary);">&#127970; ${department}</span>
+          </div>
+        </div>
+        <span style="font-size:0.85rem;color:var(--text-placeholder);font-weight:700;">${complaintKey}</span>
+      </div>
+
+      <div class="detail-grid">
+        <div class="info-card">
+          <h4>Complaint Information</h4>
+          <div class="info-row"><span class="info-label">Complaint ID</span><span class="info-value">${complaintKey}</span></div>
+          <div class="info-row"><span class="info-label">Department</span><span class="info-value">${department}</span></div>
+          <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="status-badge ${statusClass(status)}">${status}</span></span></div>
+          <div class="info-row"><span class="info-label">Priority</span><span class="info-value"><span class="priority-badge ${String(priority).toLowerCase()}">${priority}</span></span></div>
+          <div class="info-row"><span class="info-label">Date Filed</span><span class="info-value">${formatDate(filedDate)}</span></div>
+          <div class="info-row"><span class="info-label">Assigned To</span><span class="info-value">${assignedTo}</span></div>
+        </div>
+
+        <div class="info-card">
+          <h4>Citizen Information</h4>
+          <div class="info-row"><span class="info-label">Name</span><span class="info-value">${citizenName}</span></div>
+          <div class="info-row"><span class="info-label">Citizen ID</span><span class="info-value">${citizenId}</span></div>
+          <div style="margin-top:16px;">
+            <div style="font-size:0.75rem;font-weight:800;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Description</div>
+            <div class="description-box">${description}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="assign-section">
+        <h4>Assign Officer</h4>
+        <div class="assign-form">
+          <div class="form-group" style="flex:1;">
+            <label>Officer</label>
+            <select id="officer-select" style="height:42px;padding:0 10px;border:1px solid var(--border-light);border-radius:8px;">
+              ${getAssignableOfficers(department).length > 0
+                ? getAssignableOfficers(department).map((o) =>
+                    `<option value="${o.name}">${o.name}${o.designation ? ` - ${o.designation}` : ""}${o.department ? ` (${o.department})` : ""}</option>`
+                  ).join("")
+                : "<option value=''>No officers available</option>"}
+            </select>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="assignOfficer()" style="height:42px;align-self:flex-end;">Assign</button>
+        </div>
+      </div>
+
+      <div class="status-update-section">
+        <h4>Update Status</h4>
+        <div class="status-btns">
+          <button class="status-btn ${status==='Pending'?'active-status':''}" onclick="updateStatus('Pending')">Pending</button>
+          <button class="status-btn ${status==='In Progress'?'active-status':''}" onclick="updateStatus('In Progress')">In Progress</button>
+          <button class="status-btn ${status==='Resolved'?'active-status':''}" onclick="updateStatus('Resolved')">Resolved</button>
+          <button class="status-btn ${status==='Rejected'?'active-status':''}" onclick="rejectComplaint()">Rejected</button>
+        </div>
+      </div>
+
+      <div class="timeline">
+        <h4>Activity Timeline</h4>
+        <div class="timeline-item">
+          <div class="timeline-dot orange"></div>
+          <div class="timeline-content">
+            <div class="event">Complaint Filed</div>
+            <div class="time">${formatDateTime(filedDate)}</div>
+          </div>
+        </div>
+        ${status === "Pending" && expectedResolvedAt ? `
+        <div class="timeline-item">
+          <div class="timeline-dot blue"></div>
+          <div class="timeline-content">
+            <div class="event">Expected Resolution</div>
+            <div class="time">${formatDateTime(expectedResolvedAt)}</div>
+          </div>
+        </div>` : ""}
+        ${status === "In Progress" ? `
+        <div class="timeline-item">
+          <div class="timeline-dot blue"></div>
+          <div class="timeline-content">
+            <div class="event">In Progress</div>
+            <div class="time">${formatDateTime(complaint.updatedAt || filedDate)}</div>
+          </div>
+        </div>` : ""}
+        ${status === "Resolved" ? `
+        <div class="timeline-item">
+          <div class="timeline-dot green"></div>
+          <div class="timeline-content">
+            <div class="event">Resolved</div>
+            <div class="time">${formatDateTime(complaint.resolvedAt || complaint.updatedAt || filedDate)}</div>
+          </div>
+        </div>` : ""}
+        ${status === "Rejected" ? `
+        <div class="timeline-item">
+          <div class="timeline-dot red"></div>
+          <div class="timeline-content">
+            <div class="event">Complaint Rejected</div>
+            <div class="time">${formatDateTime(complaint.updatedAt || filedDate)}</div>
+          </div>
+        </div>` : ""}
+      </div>
+    `;
+  }
+
+  async function assignOfficer() {
+    const officer = document.getElementById("officer-select")?.value?.trim();
+    if (!officer) { alert("Please select an officer"); return; }
+
+    try {
+      const res = await fetch(`${API_BASE}/${encodeURIComponent(complaintId)}/assign`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ officer }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Assign failed");
+      alert("Assigned successfully");
+      await loadComplaint();
+    } catch (err) {
+      alert(err.message || "Assign failed");
+    }
+  }
+
+  async function updateStatus(status) {
+    try {
+      const res = await fetch(`${API_BASE}/${encodeURIComponent(complaintId)}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Status update failed");
+      await loadComplaint();
+    } catch (err) {
+      alert(err.message || "Status update failed");
+    }
+  }
+
+  async function rejectComplaint() {
+    try {
+      const res = await fetch(`${API_BASE}/${encodeURIComponent(complaintId)}/reject`, { method: "PUT" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Reject failed");
+      await loadComplaint();
+    } catch (err) {
+      alert(err.message || "Reject failed");
+    }
+  }
+
+  loadComplaint();
+
+  document.addEventListener("click", (e) => {
+    const profile = document.getElementById("admin-profile");
+    if (profile && !profile.contains(e.target)) {
+      document.getElementById("profile-dropdown").classList.remove("show");
+    }
   });
 </script>
 </body>

@@ -167,11 +167,27 @@
   let statusChart;
 
   function statusClass(status) {
-    if (status === "Pending") return "pill-pending";
-    if (status === "In Progress") return "pill-progress";
-    if (status === "Resolved") return "pill-resolved";
-    if (status === "Rejected") return "pill-rejected";
-    return "pill-pending";
+    const normalized = normalizeStatus(status);
+    if (normalized === "Pending") return "pending";
+    if (normalized === "In Progress") return "in-progress";
+    if (normalized === "Resolved") return "resolved";
+    if (normalized === "Rejected") return "rejected";
+    return "pending";
+  }
+
+  function normalizeStatus(status) {
+    const s = (status || "Pending").toLowerCase();
+    if (s === "pending") return "Pending";
+    if (s === "in progress" || s === "inprogress" || s === "assigned") return "In Progress";
+    if (s === "resolved") return "Resolved";
+    if (s === "rejected") return "Rejected";
+    return status || "Pending";
+  }
+
+  function normalizeDepartment(value, fallback) {
+    const looksLikeObjectId = typeof value === "string" && /^[a-f0-9]{24}$/i.test(value);
+    if (looksLikeObjectId) return fallback || "Department";
+    return value || fallback || "--";
   }
 
   function formatDate(value) {
@@ -253,11 +269,11 @@
     }
 
     body.innerHTML = recent.map((c) => `
-      <tr onclick="window.location.href='complaint.html?id=${c._id}'" style="cursor:pointer;">
-        <td><strong>${c._id}</strong></td>
+      <tr onclick="window.location.href='complaint-detail.html?id=${c._id}'" style="cursor:pointer;">
+        <td><strong>${c.complaintId || c._id}</strong></td>
         <td>${c.title || "--"}</td>
-        <td>${c.department || "--"}</td>
-        <td><span class="meta-pill ${statusClass(c.status)}">${c.status || "Pending"}</span></td>
+        <td>${normalizeDepartment(c.department, c.category)}</td>
+        <td><span class="status-badge ${statusClass(c.status)}">${normalizeStatus(c.status)}</span></td>
         <td>${c.assignedTo || "Not Assigned"}</td>
         <td>${formatDate(c.createdAt)}</td>
       </tr>
