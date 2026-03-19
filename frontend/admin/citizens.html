@@ -78,44 +78,102 @@
   </div>
 </div>
 
-<script src="demo-data.js"></script>
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
-<script>
-  let citizens = [...DEMO_CITIZENS];
 
-  function renderCitizens() {
-    const q = document.getElementById('search-input').value.toLowerCase();
-    let data = [...citizens];
-    if (q) data = data.filter(c =>
+<script>
+let citizens = [];
+
+// 🔥 FETCH FROM BACKEND
+async function fetchCitizens() {
+  try {
+    const res = await fetch("http://localhost:5000/api/users");
+    if (!res.ok) throw new Error("Failed");
+
+    const data = await res.json();
+
+    citizens = data.map(u => ({
+      id: u._id,
+      name: u.name || "No Name",
+      email: u.email || "-",
+      phone: u.phone || "-",
+      totalComplaints: u.totalComplaints || 0,
+      joinDate: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : "-"
+    }));
+
+    renderCitizens();
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('citizens-body').innerHTML =
+      `<tr><td colspan="7">Failed to load citizens</td></tr>`;
+  }
+}
+
+function renderCitizens() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+
+  let data = [...citizens];
+
+  if (q) {
+    data = data.filter(c =>
       c.name.toLowerCase().includes(q) ||
       c.id.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q));
-    document.getElementById('citizens-count').textContent  = `👥 Citizens (${data.length})`;
-    document.getElementById('citizen-total').textContent   = `Total Registered: ${citizens.length}`;
-    document.getElementById('citizens-body').innerHTML = data.map(c => `
-      <tr onclick="window.location.href='citizen-detail.html?id=${c.id}'">
-        <td><strong>${c.id}</strong></td>
-        <td>${c.name}</td>
-        <td>${c.email}</td>
-        <td>${c.phone}</td>
-        <td>${c.totalComplaints}</td>
-        <td>${c.joinDate}</td>
-        <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeCitizen('${c.id}')">Remove</button></td>
-      </tr>`).join('');
+      c.email.toLowerCase().includes(q)
+    );
   }
 
-  function removeCitizen(id) {
-    if (!confirm('Remove this citizen?')) return;
-    citizens = citizens.filter(c => c.id !== id);
-    renderCitizens();
-  }
+  document.getElementById('citizens-count').textContent =
+    `👥 Citizens (${data.length})`;
 
-  renderCitizens();
-  document.addEventListener('click', e => {
-    if (!document.getElementById('admin-profile').contains(e.target))
-      document.getElementById('profile-dropdown').classList.remove('show');
-  });
+  document.getElementById('citizen-total').textContent =
+    `Total Registered: ${citizens.length}`;
+
+  document.getElementById('citizens-body').innerHTML = data.map(c => `
+    <tr onclick="window.location.href='citizen-detail.html?id=${c.id}'">
+      <td><strong>${c.id}</strong></td>
+      <td>${c.name}</td>
+      <td>${c.email}</td>
+      <td>${c.phone}</td>
+      <td>${c.totalComplaints}</td>
+      <td>${c.joinDate}</td>
+      <td>
+        <button class="btn btn-danger btn-sm"
+          onclick="event.stopPropagation(); removeCitizen('${c.id}')">
+          Remove
+        </button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// 🔥 DELETE USER
+async function removeCitizen(id) {
+  if (!confirm("Delete this citizen?")) return;
+
+  try {
+    const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) throw new Error("Delete failed");
+
+    alert("Citizen deleted");
+    fetchCitizens();
+
+  } catch (err) {
+    console.error(err);
+    alert("Error deleting citizen");
+  }
+}
+
+// INIT
+fetchCitizens();
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('admin-profile').contains(e.target))
+    document.getElementById('profile-dropdown').classList.remove('show');
+});
 </script>
 </body>
 </html>

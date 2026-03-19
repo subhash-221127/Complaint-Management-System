@@ -1,77 +1,116 @@
 // routes/complaints.js
 const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const Complaint = require("../models/complaints");
+const Complaint = require("../models/complaints"); // make sure this exists
 
 const router = express.Router();
 
 // ---------------------------
-// Multer Setup
+// GET /api/complaints
 // ---------------------------
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // make sure this folder exists
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+router.get("/complaints", async (req, res) => {
+  try {
+    const complaints = await Complaint.find().sort({ createdAt: -1 });
+
+    // ✅ Fix missing fields for frontend
+    const formatted = complaints.map(c => ({
+      _id: c._id,
+      title: c.title || "-",
+      citizen: c.citizen || "Anonymous",
+      department: c.department || "-",
+      status: c.status || "Pending",
+      priority: c.priority || "Low",
+      createdAt: c.createdAt || new Date()
+    }));
+
+    res.json(formatted);
+
+  } catch (err) {
+    console.error("Error fetching complaints:", err);
+    res.status(500).json({ message: "Error fetching complaints" });
   }
 });
-
-const upload = multer({ storage });
 
 // ---------------------------
 // POST /api/create
+// (Optional: to add complaints via API)
 // ---------------------------
-router.post("/create", upload.single("evidence"), async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
-    const { title, description, location, department, severity } = req.body;
-
-    if (!title || !description || !location || !department) {
+    const { title, description, department, severity, status } = req.body;
+    if (!title || !description || !department) {
       return res.status(400).json({ message: "Please fill all required fields" });
     }
 
-    const year = new Date().getFullYear();
-    const count = await Complaint.countDocuments() + 1;
-    const complaintId = `CMP-${year}-${String(count).padStart(4, "0")}`;
-
     const complaint = new Complaint({
-      complaintId,
-      title,
-      description,
-      location,
-      department,
-      severity: severity || "medium",
-      evidence: req.file ? req.file.filename : null,
-      status: "pending"
-    });
-
-    await complaint.save();
-
-    return res.status(201).json({
-      message: "Complaint submitted successfully",
-      complaintId,
-      complaint
-    });
-  } catch (err) {
-    console.error("Error creating complaint:", err);
-    return res.status(500).json({ message: "Error creating complaint", error: err.message });
-  }
+  title,
+  description,
+  department,
+  citizen: req.body.citizen || "Anonymous",
+  priority: req.body.priority || "Low",
+  status: req.body.status || "Pending",
+  createdAt: new Date()
 });
 
-// ---------------------------
-// GET /api/mycomplaints
-// ---------------------------
-router.get("/mycomplaints", async (req, res) => {
-  try {
-    // TODO: Replace with user email or ID if you implement auth
-    const complaints = await Complaint.find().sort({ createdAt: -1 });
-    return res.json(complaints);
+    await complaint.save();
+    res.status(201).json({ message: "Complaint created", complaint });
   } catch (err) {
-    console.error("Error fetching complaints:", err);
-    return res.status(500).json({ message: "Error fetching complaints", error: err.message });
+    console.error("Error creating complaint:", err);
+    res.status(500).json({ message: err.message });
   }
 });
 
 module.exports = router;
+
+
+
+
+// GET single complaint by ID
+router.get("/complaints/:id", async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+
+    if (!complaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    res.json(complaint);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error fetching complaint" });
+  }
+});
+
+
+// UPDATE complaint status
+router.put("/complaints/:id", async (req, res) => {
+  try {
+    const updatedComplaint = await Complaint.findByIdAndUpdate(
+      req.params.id,
+      { status: req.body.status },
+      { new: true }
+    );
+
+    if (!updatedComplaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    res.json(updatedComplaint);
+
+  } catch (err) {
+    console.error("Error updating complaint:", err);
+    res.status(500).json({ message: "Update failed" });
+  }
+});
+
+// ✅ GET complaints by user
+router.get("/user/:userId", async (req, res) => {
+  try {
+    const complaints = await Complaint.find({
+      citizenId: req.params.userId   // IMPORTANT FIELD
+    }).sort({ createdAt: -1 });
+
+    res.json(complaints);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});

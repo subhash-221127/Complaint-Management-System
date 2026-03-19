@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 
-// Signup
+// SIGNUP
 router.post("/signup", async (req, res) => {
   const { name, email, password, role } = req.body;
 
@@ -13,13 +13,17 @@ router.post("/signup", async (req, res) => {
   try {
     const user = new User({ name, email, password, role });
     await user.save();
-    res.status(201).json({ message: "User created successfully" });
+
+    res.status(201).json({
+      message: "User created successfully",
+      user
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 });
 
-// Login
+// LOGIN
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -28,7 +32,7 @@ router.post("/login", async (req, res) => {
   }
 
   try {
-    const user = await User.findOne({ email, password }); // plain password for now
+    const user = await User.findOne({ email, password });
 
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
@@ -36,7 +40,12 @@ router.post("/login", async (req, res) => {
 
     res.json({
       message: "Login successful",
-      user: { id: user._id, role: user.role, name: user.name }
+      user: {
+        _id: user._id,
+        name: user.name,
+        role: user.role,
+        email: user.email
+      }
     });
 
   } catch (err) {

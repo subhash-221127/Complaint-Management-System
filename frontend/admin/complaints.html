@@ -98,44 +98,117 @@
   </div>
 </div>
 
-<script src="demo-data.js"></script>
+
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
-<script>
-  document.getElementById('dept-filter').innerHTML =
-    '<option value="all">All Departments</option>' +
-    DEPARTMENTS.map(d => `<option value="${d}">${d}</option>`).join('');
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
 
-  function renderComplaints() {
-    let data = [...DEMO_COMPLAINTS];
-    const tf = document.getElementById('time-filter').value;
-    const sf = document.getElementById('status-filter').value;
-    const df = document.getElementById('dept-filter').value;
-    const q  = document.getElementById('search-input').value.toLowerCase();
-    data = filterByTime(data, 'date', tf);
-    if (sf !== 'all') data = data.filter(c => c.status === sf);
-    if (df !== 'all') data = data.filter(c => c.department === df);
-    if (q) data = data.filter(c =>
+<script>
+let ALL_COMPLAINTS = [];
+
+// Fetch data from backend
+async function fetchComplaints() {
+  try {
+    const res = await fetch("http://localhost:5000/api/complaints");
+    if (!res.ok) throw new Error("Failed to fetch");
+
+    const data = await res.json();
+
+    ALL_COMPLAINTS = data.map(c => ({
+      id: c._id,
+      title: c.title || "-",
+      citizen: c.citizen || "Anonymous",
+      department: c.department || "-",
+      status: c.status || "Pending",
+      priority: c.priority || "Low",
+      date: c.createdAt ? new Date(c.createdAt) : new Date()
+    }));
+
+    renderComplaints();
+
+  } catch (err) {
+    console.error(err);
+    document.getElementById('complaints-body').innerHTML =
+      `<tr><td colspan="7">Failed to load complaints</td></tr>`;
+  }
+}
+
+// Populate department dropdown (static)
+document.getElementById('dept-filter').innerHTML = `
+  <option value="all">All Departments</option>
+  <option value="Roads">Roads</option>
+  <option value="Water">Water</option>
+  <option value="Electricity">Electricity</option>
+  <option value="Sanitation">Sanitation</option>
+`;
+
+// 🔥 TIME FILTER FUNCTION (REPLACEMENT)
+function applyTimeFilter(data, filter) {
+  const now = new Date();
+
+  return data.filter(c => {
+    const diff = (now - c.date) / (1000 * 60 * 60 * 24); // days
+
+    if (filter === "today") return diff < 1;
+    if (filter === "this-week") return diff < 7;
+    if (filter === "this-month") return diff < 30;
+    if (filter === "last-6-months") return diff < 180;
+    if (filter === "last-year") return diff < 365;
+
+    return true;
+  });
+}
+
+// Render complaints
+function renderComplaints() {
+  let data = [...ALL_COMPLAINTS];
+
+  const tf = document.getElementById('time-filter').value;
+  const sf = document.getElementById('status-filter').value;
+  const df = document.getElementById('dept-filter').value;
+  const q  = document.getElementById('search-input').value.toLowerCase();
+
+  // Apply filters
+  data = applyTimeFilter(data, tf);
+
+  if (sf !== 'all') data = data.filter(c => c.status === sf);
+  if (df !== 'all') data = data.filter(c => c.department === df);
+
+  if (q) {
+    data = data.filter(c =>
       c.title.toLowerCase().includes(q) ||
       c.id.toLowerCase().includes(q) ||
-      c.citizen.toLowerCase().includes(q));
-    document.getElementById('complaints-count').textContent = `📋 All Complaints (${data.length})`;
-    document.getElementById('complaints-body').innerHTML = data.map(c => `
-      <tr onclick="window.location.href='complaint-detail.html?id=${c.id}'">
-        <td><strong>${c.id}</strong></td>
-        <td>${c.title}</td>
-        <td>${c.citizen}</td>
-        <td>${c.department}</td>
-        <td><span class="status-badge ${c.status.toLowerCase().replace(' ','-')}">${c.status}</span></td>
-        <td><span class="priority-badge ${c.priority.toLowerCase()}">${c.priority}</span></td>
-        <td>${c.date}</td>
-      </tr>`).join('');
+      c.citizen.toLowerCase().includes(q)
+    );
   }
-  renderComplaints();
-  document.addEventListener('click', e => {
-    if (!document.getElementById('admin-profile').contains(e.target))
-      document.getElementById('profile-dropdown').classList.remove('show');
-  });
+
+  // Count
+  document.getElementById('complaints-count').textContent =
+    `📋 All Complaints (${data.length})`;
+
+  // Table render
+  document.getElementById('complaints-body').innerHTML = data.map(c => `
+    <tr onclick="window.location.href='complaint-detail.html?id=${c.id}'">
+      <td><strong>${c.id}</strong></td>
+      <td>${c.title}</td>
+      <td>${c.citizen}</td>
+      <td>${c.department}</td>
+      <td><span class="status-badge ${c.status.toLowerCase().replace(' ','-')}">${c.status}</span></td>
+      <td><span class="priority-badge ${c.priority.toLowerCase()}">${c.priority}</span></td>
+      <td>${c.date.toISOString().split('T')[0]}</td>
+    </tr>
+  `).join('');
+}
+
+// Load data
+fetchComplaints();
+
+// Close dropdown
+document.addEventListener('click', e => {
+  if (!document.getElementById('admin-profile').contains(e.target))
+    document.getElementById('profile-dropdown').classList.remove('show');
+});
 </script>
 </body>
 </html>

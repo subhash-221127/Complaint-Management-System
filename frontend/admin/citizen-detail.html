@@ -54,84 +54,116 @@
   </div>
 </div>
 
-<script src="demo-data.js"></script>
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
+
 <script>
-  const params  = new URLSearchParams(window.location.search);
-  const id      = params.get('id');
-  const citizen = DEMO_CITIZENS.find(c => c.id === id);
+const params = new URLSearchParams(window.location.search);
+const id = params.get('id');
 
-  if (!citizen) {
-    document.getElementById('page-content').innerHTML = `
-      <div style="text-align:center;padding:100px;">
-        <h2>Citizen Not Found</h2>
-        <a href="citizens.html" class="btn btn-primary" style="margin-top:20px;">Back to Citizens</a>
-      </div>`;
-  } else {
-    document.getElementById('breadcrumb').textContent = citizen.name + ' — ' + citizen.id;
-    const initials = citizen.name.split(' ').map(n => n[0]).join('');
-    const citizenComplaints = DEMO_COMPLAINTS.filter(c =>
-      c.citizenId === id || c.citizen === citizen.name);
+async function loadCitizen() {
+  try {
+    // 🔥 Fetch user
+    const userRes = await fetch(`http://localhost:5000/api/users/${id}`);
+    if (!userRes.ok) throw new Error("User not found");
+
+    const citizen = await userRes.json();
+
+    // 🔥 Fetch complaints of that user
+    const compRes = await fetch(`http://localhost:5000/api/complaints/user/${id}`);
+    const complaints = compRes.ok ? await compRes.json() : [];
+
+    const initials = (citizen.name || "U")
+      .split(' ')
+      .map(n => n[0])
+      .join('');
+
+    document.getElementById('breadcrumb').textContent =
+      citizen.name + " — " + citizen._id;
 
     document.getElementById('page-content').innerHTML = `
-      <a href="citizens.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">← Back to Citizens</a>
+      <a href="citizens.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">← Back</a>
 
       <div class="profile-hero">
         <div class="profile-avatar">${initials}</div>
         <div class="profile-info">
           <h2>${citizen.name}</h2>
-          <div class="subtitle">Citizen since ${citizen.joinDate}</div>
-          <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-            <span class="status-badge active" style="padding:5px 12px;font-size:0.8rem;">Active Member</span>
-            <span class="status-badge in-progress" style="padding:5px 12px;font-size:0.8rem;">${citizenComplaints.length} Complaints Filed</span>
+          <div class="subtitle">Citizen since ${
+            citizen.createdAt ? new Date(citizen.createdAt).toLocaleDateString() : "-"
+          }</div>
+          <div style="display:flex;gap:10px;margin-top:14px;">
+            <span class="status-badge active">Active</span>
+            <span class="status-badge in-progress">${complaints.length} Complaints</span>
           </div>
         </div>
       </div>
 
       <div class="detail-grid">
         <div class="info-card">
-          <h4>📞 Contact Information</h4>
-          <div class="info-row"><span class="info-label">Email</span><span class="info-value">${citizen.email}</span></div>
-          <div class="info-row"><span class="info-label">Phone</span><span class="info-value">${citizen.phone}</span></div>
-          <div class="info-row"><span class="info-label">Address</span><span class="info-value">123 City Center, Sector 4</span></div>
+          <h4>📞 Contact</h4>
+          <div class="info-row"><span>Email</span><span>${citizen.email}</span></div>
+          <div class="info-row"><span>Phone</span><span>${citizen.phone || "-"}</span></div>
         </div>
         <div class="info-card">
-          <h4>🆔 Account Details</h4>
-          <div class="info-row"><span class="info-label">Citizen ID</span><span class="info-value">${citizen.id}</span></div>
-          <div class="info-row"><span class="info-label">Join Date</span><span class="info-value">${citizen.joinDate}</span></div>
-          <div class="info-row"><span class="info-label">Last Login</span><span class="info-value">Today at 10:45 AM</span></div>
+          <h4>🆔 Account</h4>
+          <div class="info-row"><span>ID</span><span>${citizen._id}</span></div>
+          <div class="info-row"><span>Joined</span><span>${
+            citizen.createdAt ? new Date(citizen.createdAt).toLocaleDateString() : "-"
+          }</span></div>
         </div>
       </div>
 
       <div class="complaints-table-container">
-        <div class="complaints-table-header">Recent Complaints by ${citizen.name}</div>
+        <div class="complaints-table-header">Complaints</div>
         <table class="data-table">
           <thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Date</th></tr></thead>
           <tbody>
-            ${citizenComplaints.map(c => `
-              <tr onclick="window.location.href='complaint-detail.html?id=${c.id}'">
-                <td><strong>${c.id}</strong></td>
+            ${complaints.map(c => `
+              <tr onclick="window.location.href='complaint-detail.html?id=${c._id}'">
+                <td><strong>${c._id}</strong></td>
                 <td>${c.title}</td>
                 <td><span class="status-badge ${c.status.toLowerCase().replace(' ','-')}">${c.status}</span></td>
-                <td>${c.date}</td>
-              </tr>`).join('') ||
-              '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-secondary);">No complaints found</td></tr>'}
+                <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+              </tr>
+            `).join('') || '<tr><td colspan="4">No complaints</td></tr>'}
           </tbody>
         </table>
       </div>
 
-      <div style="margin-top:8px;display:flex;justify-content:flex-end;gap:14px;margin-bottom:32px;">
-        <button class="btn btn-danger"  onclick="if(confirm('Restrict this user account?')) alert('Account restricted.')">Restrict Account</button>
-        <button class="btn btn-outline" onclick="if(confirm('Delete citizen data?')){ window.location.href='citizens.html'; }">Delete Account</button>
+      <div style="margin-top:20px;text-align:right;">
+        <button class="btn btn-danger" onclick="deleteCitizen()">Delete Citizen</button>
       </div>
     `;
-  }
 
-  document.addEventListener('click', e => {
-    if (!document.getElementById('admin-profile').contains(e.target))
-      document.getElementById('profile-dropdown').classList.remove('show');
-  });
+  } catch (err) {
+    document.getElementById('page-content').innerHTML =
+      `<h2 style="text-align:center">Citizen Not Found</h2>`;
+  }
+}
+
+// 🔥 DELETE
+async function deleteCitizen() {
+  if (!confirm("Delete this citizen?")) return;
+
+  try {
+    await fetch(`http://localhost:5000/api/users/${id}`, {
+      method: "DELETE"
+    });
+
+    alert("Deleted");
+    window.location.href = "citizens.html";
+
+  } catch {
+    alert("Error deleting");
+  }
+}
+
+loadCitizen();
+
+document.addEventListener('click', e => {
+  if (!document.getElementById('admin-profile').contains(e.target))
+    document.getElementById('profile-dropdown').classList.remove('show');
+});
 </script>
 </body>
 </html>
