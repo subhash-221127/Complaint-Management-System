@@ -376,12 +376,13 @@
   </div>
 </aside>
 
+
 <!-- MAIN -->
 <div class="main">
   <header class="header">
     <div class="header-left">
-      <h1 class="page-title">Track Status</h1>
-      <span class="page-sub">Real-time updates on your complaints</span>
+      <h1 class="page-title">Submit a Complaint</h1>
+      <span class="page-sub">Report civic issues — reviewed within 24 hours</span>
     </div>
     <div class="header-right">
       <button class="notif-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
@@ -552,160 +553,7 @@
 </div>
 
 <!-- ✅ FIX: src script and inline script are now properly separated -->
-<script src="citizen-data.js"></script>
-<script>
-
-/* ── Profile dropdown ── */
-function toggleProfile(e) {
-  e.stopPropagation();
-  document.getElementById('profileBtn').classList.toggle('open');
-  document.getElementById('profileDropdown').classList.toggle('open');
-}
-document.addEventListener('click', () => {
-  document.getElementById('profileBtn')?.classList.remove('open');
-  document.getElementById('profileDropdown')?.classList.remove('open');
-});
-
-/* ── Build lookup from complaint data ── */
-const complaints = {};
-CITIZEN_COMPLAINTS.forEach(c => { complaints[c.id] = c; });
-
-function statusBadgeHTML(s) {
-  const map = {
-    pending:    '<span class="badge-status pending"><i class="fa-solid fa-clock"></i> Pending</span>',
-    inprogress: '<span class="badge-status inprogress"><i class="fa-solid fa-rotate"></i> In Progress</span>',
-    resolved:   '<span class="badge-status resolved"><i class="fa-solid fa-circle-check"></i> Resolved</span>',
-    rejected:   '<span class="badge-status rejected"><i class="fa-solid fa-circle-xmark"></i> Withdrawn</span>',
-  };
-  return map[s] || map.pending;
-}
-
-function sevBadgeHTML(s) {
-  return `<span class="sev-badge sev-${s}"><span class="sev-dot"></span>${s.charAt(0).toUpperCase() + s.slice(1)}</span>`;
-}
-
-const STEP_ICONS = {
-  'Submitted':   'fa-paper-plane',
-  'Verified':    'fa-shield-halved',
-  'Assigned':    'fa-user-tie',
-  'In Progress': 'fa-screwdriver-wrench',
-  'Resolved':    'fa-circle-check',
-  'Closed':      'fa-lock',
-};
-
-function buildStepper(timeline) {
-  return timeline.map(t => {
-    const icon = t.state === 'done'
-      ? 'fa-check'
-      : t.state === 'active'
-        ? (STEP_ICONS[t.step] || t.icon || 'fa-circle-dot')
-        : 'fa-circle';
-
-    return `
-      <div class="stepper-step ${t.state === 'pending' ? 'pending-step' : t.state}">
-        <div class="stepper-line"></div>
-        <div class="stepper-dot">
-          <i class="fa-solid ${icon}"></i>
-        </div>
-        <div class="stepper-body">
-          <div class="stepper-title">${t.step}</div>
-          <div class="stepper-desc">${t.desc}</div>
-          ${t.date && t.date !== '—'
-            ? `<div class="stepper-date"><i class="fa-regular fa-clock"></i> ${t.date}</div>`
-            : ''}
-          ${t.note
-            ? `<div class="stepper-note"><i class="fa-solid fa-circle-info"></i> ${t.note}</div>`
-            : ''}
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function track(id) {
-  const key    = id.trim().toUpperCase();
-  const result = document.getElementById('resultSection');
-  const error  = document.getElementById('errorMsg');
-  const c      = complaints[key];
-
-  if (!c) { result.style.display = 'none'; error.style.display = 'flex'; return; }
-  error.style.display = 'none';
-
-  // Summary
-  document.getElementById('sId').textContent     = c.id;
-  document.getElementById('sTitle').textContent  = c.title;
-  document.getElementById('sCat').textContent    = c.category;
-  document.getElementById('sBadge').innerHTML    = statusBadgeHTML(c.status);
-  document.getElementById('sCatVal').textContent = c.category;
-  document.getElementById('sSev').innerHTML      = sevBadgeHTML(c.severity);
-  document.getElementById('sLoc').textContent    = c.location;
-  document.getElementById('sDate').textContent   = c.date;
-  document.getElementById('sDept').textContent   = c.dept || '—';
-  document.getElementById('sEta').textContent    = c.eta  || '—';
-
-  // Officer card
-  const oc = document.getElementById('officerCard');
-  if (c.officer && c.officer !== '—') {
-    oc.style.display = 'flex';
-    document.getElementById('officerInitials').textContent = c.officer.split(' ').map(n => n[0]).join('');
-    document.getElementById('officerName').textContent     = c.officer;
-    document.getElementById('officerDept').textContent     = c.dept || '';
-    if (c.officerPhone) {
-      const ph = document.getElementById('officerPhone');
-      ph.style.display = 'inline-flex';
-      ph.href = 'tel:' + c.officerPhone;
-      document.getElementById('officerPhoneTxt').textContent = c.officerPhone;
-    }
-    if (c.officerEmail) {
-      const em = document.getElementById('officerEmail');
-      em.style.display = 'inline-flex';
-      em.href = 'mailto:' + c.officerEmail;
-      document.getElementById('officerEmailTxt').textContent = c.officerEmail;
-    }
-  } else { oc.style.display = 'none'; }
-
-  // Flipkart stepper
-  document.getElementById('stepper').innerHTML = buildStepper(c.timeline);
-
-  // Rating card
-  document.getElementById('ratingCard').style.display =
-    (c.status === 'resolved' && !c.rated) ? 'block' : 'none';
-
-  result.style.display = 'block';
-  result.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
-
-/* ── Rating ── */
-let trackRating = 0;
-function setTrackRating(n) {
-  trackRating = n;
-  document.querySelectorAll('#trackStars .star').forEach(s => s.classList.toggle('filled', +s.dataset.v <= n));
-}
-function submitTrackRating() {
-  if (!trackRating) { alert('Please select a rating.'); return; }
-  const input = document.getElementById('trackInput');
-  const c = complaints[input.value.trim().toUpperCase()];
-  if (c) { c.rated = true; c.rating = trackRating; }
-  document.getElementById('ratingCard').style.display = 'none';
-  showToast('Thank you for your feedback!', '');
-}
-
-function showToast(msg, sub) {
-  const t = document.getElementById('toast');
-  document.getElementById('toastMsg').textContent = msg;
-  document.getElementById('toastSub').textContent = sub;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-/* ── Init ── */
-document.addEventListener('DOMContentLoaded', () => {
-  const input = document.getElementById('trackInput');
-  document.getElementById('trackBtn').addEventListener('click', () => track(input.value));
-  input.addEventListener('keydown', e => { if (e.key === 'Enter') track(input.value); });
-  document.querySelectorAll('.quick-chip').forEach(chip => {
-    chip.addEventListener('click', () => { input.value = chip.dataset.id; track(chip.dataset.id); });
-  });
-});
-</script>
+<script src="api.js"></script>
+<script src="citizen_track.js"></script>
 </body>
 </html>

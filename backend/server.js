@@ -16,6 +16,9 @@ app.use(express.json());
 // Serve static frontend if needed
 app.use(express.static(path.join(__dirname, "../frontend")));
 
+// Serve uploaded evidence files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 // ---------------------------
 // Routes
 // ---------------------------
@@ -26,10 +29,18 @@ app.use("/api", userRoutes);
 const complaintsRoutes = require("./routes/complaints");
 app.use("/api", complaintsRoutes);
 
+// Officers
+const officerRoutes = require("./routes/officers");
+app.use("/api", officerRoutes);
+
+// Admin
+const adminRoutes = require("./routes/admin");
+app.use("/api", adminRoutes);
+
 // ---------------------------
 // MongoDB Connection
 // ---------------------------
-const MONGO_URI = process.env.MONGO_URI || "mongodb://127.0.0.1:27017/complaint-management-system";
+const MONGO_URI = process.env.MONGO_URI;
 
 function connectToMongo(uri) {
   return mongoose.connect(uri)
