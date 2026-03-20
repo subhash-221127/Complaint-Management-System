@@ -27,5 +27,26 @@ router.post('/signup', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+//Login
+router.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const user = await User.findOne({ email, password });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    res.json({ message: 'Login successful', user: { id: user._id, role: user.role, name: user.name } });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+
+});
 
 module.exports = router;

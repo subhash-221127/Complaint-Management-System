@@ -1,8 +1,10 @@
 // login.js
 
 const form = document.getElementById("login-form");
+const loginForm = document.getElementById('login-form');
+const errorBox = document.getElementById('error-box');
 
-form.addEventListener("submit", async function (e) {
+loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const email    = document.getElementById("email").value.trim();
@@ -22,6 +24,22 @@ form.addEventListener("submit", async function (e) {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ email, password }),
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+
+  if (!email || !password) {
+    errorBox.style.display = 'flex';
+    errorBox.querySelector('#error-text').innerText = 'Please fill all fields';
+    return;
+  }
+
+  errorBox.style.display = 'none';
+
+  try {
+    const res = await fetch('http://localhost:5000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
     });
 
     const data = await res.json();
@@ -79,6 +97,23 @@ function showError(msg) {
     box.id = "error-box";
     box.style.cssText = "margin-top:12px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:14px;";
     form.parentElement.appendChild(box);
+      // Save user info in localStorage or session
+      localStorage.setItem('user', JSON.stringify(data.user));
+
+      // Redirect based on role
+      if (data.user.role === 'admin') window.location.href = 'dashboard.html';
+      else if (data.user.role === 'officer') window.location.href = 'officer.html';
+      else window.location.href = 'citizen.html';
+
+    } else {
+      errorBox.style.display = 'flex';
+      errorBox.querySelector('#error-text').innerText = data.message;
+    }
+
+  } catch (err) {
+    console.error(err);
+    errorBox.style.display = 'flex';
+    errorBox.querySelector('#error-text').innerText = 'Server error. Try again later.';
   }
   box.style.display = "block";
   box.textContent = msg;

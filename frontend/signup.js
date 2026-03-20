@@ -3,6 +3,8 @@
 const form = document.getElementById("signup-form");
 const errorBox = document.getElementById("error-box");
 const successSection = document.getElementById("success-section");
+const form = document.getElementById('signup-form');
+const errorBox = document.getElementById('error-box');
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -12,6 +14,11 @@ form.addEventListener("submit", async (e) => {
   const password = document.getElementById("password").value;
   const confirm = document.getElementById("confirm").value;
   const role = document.getElementById("role").value;
+  const name = document.getElementById('name').value.trim();
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirm = document.getElementById('confirm').value;
+  const role = document.getElementById('role').value;
 
   // Client-side validation
   if (!name || !email || !password || !confirm || !role) {
@@ -35,6 +42,10 @@ form.addEventListener("submit", async (e) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, email, password, role }),
+    const res = await fetch('http://localhost:5000/api/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, role })
     });
 
     const data = await res.json();
@@ -53,6 +64,11 @@ form.addEventListener("submit", async (e) => {
       showError(data.message || "Signup failed. Please try again.");
       btn.textContent = "Create Account";
       btn.disabled = false;
+      alert("Signup successful! Please login.");
+      window.location.href = 'login.html';
+    } else {
+      errorBox.style.display = 'flex';
+      errorBox.querySelector('#error-text').innerText = data.message || data.error;
     }
 
   } catch (err) {
