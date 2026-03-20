@@ -1,54 +1,47 @@
-const form = document.getElementById("login-form");
+// login.js
+const loginForm = document.getElementById('login-form');
+const errorBox = document.getElementById('error-box');
 
-form.addEventListener("submit", async function (e) {
+loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
 
   if (!email || !password) {
-    alert("Please fill all fields");
+    errorBox.style.display = 'flex';
+    errorBox.querySelector('#error-text').innerText = 'Please fill all fields';
     return;
   }
 
+  errorBox.style.display = 'none';
+
   try {
-    const res = await fetch("http://localhost:5000/api/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const res = await fetch('http://localhost:5000/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
 
     const data = await res.json();
 
     if (res.ok) {
-      // Persist user session (used by admin/officer pages)
-      const initials = (data.user.name || "").split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "U";
-      const sessionUser = {
-        id: data.user.id,
-        name: data.user.name,
-        role: data.user.role,
-        email,
-        initials
-      };
-      sessionStorage.setItem("cityfix_user", JSON.stringify(sessionUser));
-      localStorage.setItem("userEmail", email);
+      // Save user info in localStorage or session
+      localStorage.setItem('user', JSON.stringify(data.user));
 
       // Redirect based on role
-      if (data.user.role === "citizen") {
-        window.location.href = "citizen/citizen_dash.html";
-      } else if (data.user.role === "admin") {
-        window.location.href = "admin/departments.html";
-      } else if (data.user.role === "officer") {
-        window.location.href = "officer/complaints.html";
-      } else {
-        alert("User role not recognized");
-      }
+      if (data.user.role === 'admin') window.location.href = 'dashboard.html';
+      else if (data.user.role === 'officer') window.location.href = 'officer.html';
+      else window.location.href = 'citizen.html';
+
     } else {
-      alert(data.message || "Login failed");
+      errorBox.style.display = 'flex';
+      errorBox.querySelector('#error-text').innerText = data.message;
     }
 
   } catch (err) {
     console.error(err);
-    alert("Server error. Try again later.");
+    errorBox.style.display = 'flex';
+    errorBox.querySelector('#error-text').innerText = 'Server error. Try again later.';
   }
 });

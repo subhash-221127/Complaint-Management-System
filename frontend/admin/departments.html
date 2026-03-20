@@ -1,200 +1,355 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CityFix Admin – Departments</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="stylesheet" href="admin.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CityFix Admin – Departments</title>
+<link rel="stylesheet" href="admin.css"/>
 </head>
+
 <body>
 <div class="admin-layout">
 
-  <aside class="sidebar">
-    <a href="dashboard.html" class="sidebar-logo">
-      <div class="logo-icon">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
-          stroke-linecap="round">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-          <circle cx="12" cy="10" r="3" />
-        </svg>
-      </div>
-      <span class="logo-text">City<span>Fix</span></span>
+<!-- ================= SIDEBAR ================= -->
+<aside class="sidebar">
+  <a href="dashboard.html" class="sidebar-logo">
+    <div class="logo-icon">📍</div>
+    <span class="logo-text">City<span>Fix</span></span>
+  </a>
+
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
+    <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints</a>
+    <a href="officers.html" class="sidebar-link"><span class="icon">👮</span> Officers</a>
+    <a href="citizens.html" class="sidebar-link"><span class="icon">👥</span> Citizens</a>
+    <a href="departments.html" class="sidebar-link active"><span class="icon">🏢</span> Departments</a>
+    <a href="officer-requests.html" class="sidebar-link">
+      <span class="icon">📩</span> Officer Requests <span id="req-count" class="badge">0</span>
     </a>
-    <nav class="sidebar-nav">
-      <a href="dashboard.html"  class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-      <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> Complaints <span class="badge">18</span></a>
-      <a href="officers.html"   class="sidebar-link"><span class="icon">👮</span> Officers</a>
-      <a href="citizens.html"   class="sidebar-link"><span class="icon">👥</span> Citizens</a>
-      <a href="departments.html" class="sidebar-link active"><span class="icon">🏢</span> Departments</a>
-      <a href="officer-requests.html" class="sidebar-link"><span class="icon">📩</span> Officer Requests <span class="badge">4</span></a>
-    </nav>
-    <div class="sidebar-footer">
-      <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">🚪</span> Logout</a>
-    </div>
-  </aside>
+  </nav>
 
-  <div class="main-content">
-    <header class="topbar">
-      <div class="topbar-left">
-        <h1 id="page-title">Departments</h1>
-        <span class="breadcrumb" id="page-breadcrumb">All Departments</span>
-      </div>
-      <div class="topbar-right">
-        <button class="theme-toggle" onclick="toggleTheme()"><span id="theme-icon">🌙</span></button>
-        <div class="admin-profile" id="admin-profile" onclick="document.getElementById('profile-dropdown').classList.toggle('show')">
-          <div class="admin-avatar" id="admin-avatar">AD</div>
-          <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
-          <div class="profile-dropdown" id="profile-dropdown">
-            <a href="#">👤 My Profile</a>
-            <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
-          </div>
-        </div>
-      </div>
-    </header>
+  <div class="sidebar-footer">
+    <a href="../login.html" class="sidebar-link" onclick="logout()">
+      <span class="icon">🚪</span> Logout
+    </a>
+  </div>
+</aside>
 
-    <div class="page-content">
-      <!-- Department List -->
-      <div id="dept-list-view">
-        <div class="dept-grid" id="dept-grid"></div>
+<!-- ================= MAIN ================= -->
+<div class="main-content">
+
+<header class="topbar">
+  <div class="topbar-left">
+    <h1 id="page-title">Departments</h1>
+    <span class="breadcrumb">All Departments</span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
+    <div class="admin-profile" onclick="toggleProfile()">
+      <div class="admin-avatar" id="admin-avatar">A</div>
+      <div class="admin-info">
+        <div class="name" id="admin-name">Admin</div>
       </div>
 
-      <!-- Department Detail -->
-      <div id="dept-detail-view" class="hidden">
-        <button class="btn btn-outline btn-sm" onclick="showDeptList()" style="margin-bottom:20px;">← Back to Departments</button>
-        <div class="stats-grid" id="dept-stats"></div>
-
-        <div class="filter-bar">
-          <label>📅 Time:</label>
-          <select id="dept-time-filter" onchange="renderDeptComplaints()">
-            <option value="all">All Time</option>
-            <option value="today">Today</option>
-            <option value="this-month">This Month</option>
-            <option value="this-year">This Year</option>
-          </select>
-          <label>📌 Status:</label>
-          <select id="dept-status-filter" onchange="renderDeptComplaints()">
-            <option value="all">All</option>
-            <option value="Pending">Pending</option>
-            <option value="In Progress">In Progress</option>
-            <option value="Resolved">Resolved</option>
-          </select>
-        </div>
-
-        <div class="section-card">
-          <div class="section-card-header"><h3 id="dept-complaints-title">Complaints</h3></div>
-          <div class="section-card-body">
-            <table class="data-table">
-              <thead><tr><th>ID</th><th>Title</th><th>Citizen</th><th>Status</th><th>Priority</th><th>Date</th></tr></thead>
-              <tbody id="dept-complaints-body"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="section-card">
-          <div class="section-card-header"><h3>Officers in this Department</h3></div>
-          <div class="section-card-body">
-            <table class="data-table">
-              <thead><tr><th>Name</th><th>Designation</th><th>Status</th><th>Cases</th></tr></thead>
-              <tbody id="dept-officers-body"></tbody>
-            </table>
-          </div>
-        </div>
+      <div class="profile-dropdown" id="dropdown">
+        <a href="">👤 My Profile</a>
+        <a href="../login.html" onclick="logout()">🚪 Logout</a>
       </div>
     </div>
   </div>
+</header>
+
+<div class="page-content">
+
+<!-- LIST -->
+<div id="list-view">
+  <div class="dept-grid" id="grid"></div>
 </div>
 
-<script src="demo-data.js"></script>
-<script src="theme.js"></script>
-<script src="admin-auth.js"></script>
+<!-- DETAIL -->
+<div id="detail-view" class="hidden">
+
+<button class="btn btn-outline btn-sm" onclick="back()">← Back to Departments</button>
+
+<div class="stats-grid" id="stats"></div>
+
+<div class="filter-bar">
+  <label>📅 Time:</label>
+  <select id="timeFilter" onchange="loadComplaints()">
+    <option value="all">All</option>
+    <option value="today">Today</option>
+    <option value="month">Month</option>
+    <option value="year">Year</option>
+  </select>
+
+  <label>📌 Status:</label>
+  <select id="statusFilter" onchange="loadComplaints()">
+    <option value="all">All</option>
+    <option>Pending</option>
+    <option>In Progress</option>
+    <option>Resolved</option>
+  </select>
+</div>
+
+<div class="section-card">
+  <div class="section-card-header"><h3>Complaints</h3></div>
+  <table class="data-table">
+    <thead>
+      <tr><th>ID</th><th>Title</th><th>Citizen</th><th>Status</th><th>Priority</th><th>Date</th></tr>
+    </thead>
+    <tbody id="complaints"></tbody>
+  </table>
+</div>
+
+<div class="section-card">
+  <div class="section-card-header"><h3>Officers</h3></div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Name</th><th>Designation</th><th>Status</th><th>Cases</th></tr>
+    </thead>
+    <tbody id="officers"></tbody>
+  </table>
+</div>
+
+<button class="btn btn-danger" onclick="deleteDept()">Delete Department</button>
+
+</div>
+</div>
+</div>
+</div>
+
 <script>
-  let selectedDept = null;
+let currentDept=null;
 
-  function renderDeptGrid() {
-    document.getElementById('dept-grid').innerHTML = DEPARTMENTS.map(dept => {
-      const complaints = DEMO_COMPLAINTS.filter(c => c.department === dept);
-      const officers   = DEMO_OFFICERS.filter(o => o.department === dept);
-      const resolved   = complaints.filter(c => c.status === 'Resolved').length;
-      const pending    = complaints.filter(c => c.status === 'Pending').length;
-      return `
-        <div class="dept-card" onclick="showDeptDetail('${dept}')">
-          <h4>🏢 ${dept}</h4>
-          <div class="dept-stat"><span class="label">Total Complaints</span><span class="value">${complaints.length}</span></div>
-          <div class="dept-stat"><span class="label">Resolved</span><span class="value" style="color:var(--success)">${resolved}</span></div>
-          <div class="dept-stat"><span class="label">Pending</span><span class="value" style="color:var(--warning)">${pending}</span></div>
-          <div class="dept-stat"><span class="label">Officers</span><span class="value">${officers.length}</span></div>
-          <div class="dept-stat"><span class="label">Active Officers</span><span class="value" style="color:var(--success)">${officers.filter(o=>o.status==='Active').length}</span></div>
-        </div>`;
-    }).join('');
+// ================= LOAD DEPARTMENTS =================
+async function loadDepts(){
+  const res = await fetch("http://localhost:5000/api/departments");
+  const depts = await res.json();
+
+  let html = "";
+
+  for (let d of depts) {
+    const statsRes = await fetch(`http://localhost:5000/api/departments/${d._id}/stats`);
+    const data = await statsRes.json();
+
+    const s = data.stats;
+
+    html += `
+      <div class="dept-card" onclick="openDept('${d._id}')">
+        <h4>🏢 ${d.name}</h4>
+
+        <div class="dept-row">
+          <span>Total Complaints</span>
+          <b>${s.totalComplaints}</b>
+        </div>
+
+        <div class="dept-row">
+          <span>Resolved</span>
+          <b style="color:green">${s.resolvedComplaints}</b>
+        </div>
+
+        <div class="dept-row">
+          <span>Pending</span>
+          <b style="color:orange">${s.pendingComplaints}</b>
+        </div>
+
+        <div class="dept-row">
+          <span>In Progress</span>
+          <b style="color:purple">${s.inProgressComplaints || 0}</b>
+        </div>
+
+        <div class="dept-row">
+          <span>Officers</span>
+          <b>${s.totalOfficers}</b>
+        </div>
+
+        <div class="dept-row">
+          <span>Active Officers</span>
+          <b style="color:green">${s.activeOfficers}</b>
+        </div>
+      </div>
+    `;
   }
 
-  function showDeptDetail(dept) {
-    selectedDept = dept;
-    document.getElementById('dept-list-view').classList.add('hidden');
-    document.getElementById('dept-detail-view').classList.remove('hidden');
-    document.getElementById('page-title').textContent      = dept;
-    document.getElementById('page-breadcrumb').textContent = 'Department Overview';
+  html += `
+    <div class="dept-card add-card" onclick="addDept()">
+      <h4>➕ Add Department</h4>
+    </div>
+  `;
 
-    const complaints = DEMO_COMPLAINTS.filter(c => c.department === dept);
-    const officers   = DEMO_OFFICERS.filter(o => o.department === dept);
-    const total      = complaints.length;
-    const resolved   = complaints.filter(c => c.status === 'Resolved').length;
-    const pending    = complaints.filter(c => c.status === 'Pending').length;
-    const ip         = complaints.filter(c => c.status === 'In Progress').length;
+  document.getElementById("grid").innerHTML = html;
+}
 
-    document.getElementById('dept-stats').innerHTML = `
-      <div class="stat-card blue">  <div class="stat-card-header"><div class="stat-card-icon blue">📋</div></div>  <div class="stat-value">${total}</div>    <div class="stat-label">Total Complaints</div></div>
-      <div class="stat-card green"> <div class="stat-card-header"><div class="stat-card-icon green">✅</div></div>  <div class="stat-value">${resolved}</div> <div class="stat-label">Resolved</div></div>
-      <div class="stat-card orange"><div class="stat-card-header"><div class="stat-card-icon orange">⏳</div></div><div class="stat-value">${pending}</div>  <div class="stat-label">Pending</div></div>
-      <div class="stat-card purple"><div class="stat-card-header"><div class="stat-card-icon purple">🔄</div></div><div class="stat-value">${ip}</div>       <div class="stat-label">In Progress</div></div>
-      <div class="stat-card blue">  <div class="stat-card-header"><div class="stat-card-icon blue">👮</div></div>  <div class="stat-value">${officers.length}</div><div class="stat-label">Total Officers</div></div>`;
+// ================= ADD =================
+async function addDept(){
+  const name = prompt("Enter department name");
 
-    document.getElementById('dept-officers-body').innerHTML = officers.map(o => `
-      <tr onclick="window.location.href='officer-detail.html?id=${o.id}'">
-        <td>${o.name}</td>
-        <td>${o.designation}</td>
-        <td><span class="status-badge ${o.status.toLowerCase().replace(' ','-')}">${o.status}</span></td>
-        <td>${o.casesResolved}/${o.casesHandled}</td>
-      </tr>`).join('') ||
-      '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-secondary);">No officers in this department</td></tr>';
-
-    renderDeptComplaints();
+  if (!name || name.trim() === "") {
+    alert("Department name is required ❌");
+    return;
   }
 
-  function renderDeptComplaints() {
-    let data = DEMO_COMPLAINTS.filter(c => c.department === selectedDept);
-    const tf = document.getElementById('dept-time-filter').value;
-    const sf = document.getElementById('dept-status-filter').value;
-    data = filterByTime(data, 'date', tf);
-    if (sf !== 'all') data = data.filter(c => c.status === sf);
-    document.getElementById('dept-complaints-title').textContent = `Complaints (${data.length})`;
-    document.getElementById('dept-complaints-body').innerHTML = data.map(c => `
-      <tr onclick="window.location.href='complaint-detail.html?id=${c.id}'">
-        <td><strong>${c.id}</strong></td>
-        <td>${c.title}</td>
-        <td>${c.citizen}</td>
-        <td><span class="status-badge ${c.status.toLowerCase().replace(' ','-')}">${c.status}</span></td>
-        <td><span class="priority-badge ${c.priority.toLowerCase()}">${c.priority}</span></td>
-        <td>${c.date}</td>
-      </tr>`).join('') ||
-      '<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-secondary);">No complaints found</td></tr>';
-  }
+  try {
+    const res = await fetch("http://localhost:5000/api/departments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name: name.trim() })
+    });
 
-  function showDeptList() {
-    selectedDept = null;
-    document.getElementById('dept-detail-view').classList.add('hidden');
-    document.getElementById('dept-list-view').classList.remove('hidden');
-    document.getElementById('page-title').textContent      = 'Departments';
-    document.getElementById('page-breadcrumb').textContent = 'All Departments';
-  }
+    const data = await res.json();
 
-  renderDeptGrid();
-  document.addEventListener('click', e => {
-    if (!document.getElementById('admin-profile').contains(e.target))
-      document.getElementById('profile-dropdown').classList.remove('show');
+    if (!res.ok) {
+      alert(data.error || "Failed to add department ❌");
+      return;
+    }
+
+    alert("Department added successfully ✅");
+
+    loadDepts(); // refresh UI
+
+  } catch (err) {
+    console.error(err);
+    alert("Server not responding ❌");
+  }
+}
+
+// ================= DELETE =================
+async function deleteDept(){
+  if(!confirm("Delete?"))return;
+
+  await fetch(`http://localhost:5000/api/departments/${currentDept}`,{
+    method:"DELETE"
   });
+
+  back();
+  loadDepts();
+}
+
+// ================= OPEN =================
+async function openDept(id){
+  currentDept=id;
+  document.getElementById("list-view").classList.add("hidden");
+  document.getElementById("detail-view").classList.remove("hidden");
+
+  const res=await fetch(`http://localhost:5000/api/departments/${id}/stats`);
+  const data=await res.json();
+
+  document.getElementById("page-title").innerText=data.department.name;
+
+  document.getElementById("stats").innerHTML=`
+  <div class="stat-card blue">
+    <div class="stat-card-icon">📋</div>
+    <div class="stat-value">${data.stats.totalComplaints}</div>
+    <div class="stat-label">Total Complaints</div>
+  </div>
+
+  <div class="stat-card green">
+    <div class="stat-card-icon">✅</div>
+    <div class="stat-value">${data.stats.resolvedComplaints}</div>
+    <div class="stat-label">Resolved</div>
+  </div>
+
+  <div class="stat-card orange">
+    <div class="stat-card-icon">⏳</div>
+    <div class="stat-value">${data.stats.pendingComplaints}</div>
+    <div class="stat-label">Pending</div>
+  </div>
+
+  <div class="stat-card purple">
+    <div class="stat-card-icon">🔄</div>
+    <div class="stat-value">${data.stats.inProgressComplaints}</div>
+    <div class="stat-label">In Progress</div>
+  </div>
+
+  <div class="stat-card blue">
+    <div class="stat-card-icon">👮</div>
+    <div class="stat-value">${data.stats.totalOfficers}</div>
+    <div class="stat-label">Officers</div>
+  </div>
+`;
+
+  loadComplaints();
+  loadOfficers();
+}
+
+// ================= COMPLAINTS =================
+async function loadComplaints(){
+  let res=await fetch(`http://localhost:5000/api/complaints?department=${currentDept}`);
+  let data=await res.json();
+
+  const tf=document.getElementById("timeFilter").value;
+  const sf=document.getElementById("statusFilter").value;
+
+  data=data.filter(c=>{
+    const d=new Date(c.date);
+    const now=new Date();
+
+    if(tf==="today" && d.toDateString()!==now.toDateString())return false;
+    if(tf==="month" && d.getMonth()!==now.getMonth())return false;
+    if(tf==="year" && d.getFullYear()!==now.getFullYear())return false;
+
+    if(sf!=="all" && c.status!==sf)return false;
+
+    return true;
+  });
+
+  document.getElementById("complaints").innerHTML=data.map(c=>`
+    <tr>
+      <td>${c._id}</td>
+      <td>${c.title}</td>
+      <td>${c.citizen?.name || "Unknown"}</td>
+      <td><span class="status-badge ${c.status.toLowerCase().replace(' ','-')}">${c.status}</span></td>
+      <td>${c.priority}</td>
+      <td>${new Date(c.date).toLocaleDateString()}</td>
+    </tr>
+  `).join("");
+}
+
+// ================= OFFICERS =================
+async function loadOfficers(){
+  const res=await fetch(`http://localhost:5000/api/officers?department=${currentDept}`);
+  const data=await res.json();
+
+  document.getElementById("officers").innerHTML=data.map(o=>`
+    <tr>
+      <td>${o.name}</td>
+      <td>${o.designation}</td>
+      <td>${o.active?"Active":"Inactive"}</td>
+      <td>${o.casesResolved}/${o.casesHandled}</td>
+    </tr>
+  `).join("");
+}
+
+// ================= BACK =================
+function back(){
+  document.getElementById("detail-view").classList.add("hidden");
+  document.getElementById("list-view").classList.remove("hidden");
+}
+
+// ================= THEME =================
+function toggleTheme(){
+  const html=document.documentElement;
+  html.dataset.theme=html.dataset.theme==="dark"?"light":"dark";
+}
+
+// ================= PROFILE =================
+function toggleProfile(){
+  document.getElementById("dropdown").classList.toggle("show");
+}
+
+// ================= LOGOUT =================
+function logout(){
+  localStorage.clear();
+}
+
+
+// ================= INIT =================
+loadDepts();
 </script>
+
 </body>
 </html>
