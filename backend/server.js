@@ -37,10 +37,30 @@ const storage = multer.diskStorage({
     cb(null, Date.now() + '-' + Math.round(Math.random() * 1e9) + path.extname(file.originalname))
 });
 const upload = multer({ storage });
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ===========================
-// AUTH
+// STATIC FILES
+// ===========================
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+// ===========================
+// ROUTES (from route files)
+// ===========================
+const userRoutes = require("./routes/auth");
+app.use("/api", userRoutes);
+
+const complaintsRoutes = require("./routes/complaints");
+app.use("/api", complaintsRoutes);
+
+const officerRoutes = require("./routes/officers");
+app.use("/api", officerRoutes);
+
+const adminRoutes = require("./routes/admin");
+app.use("/api", adminRoutes);
+
+// ===========================
+// AUTH (inline fallbacks)
 // ===========================
 
 // Signup
@@ -72,41 +92,6 @@ app.post('/api/login', async (req, res) => {
 
     const user = await User.findOne({ email, password });
 
-// Serve static frontend if needed
-app.use(express.static(path.join(__dirname, "../frontend")));
-
-// Serve uploaded evidence files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
-// ---------------------------
-// Routes
-// ---------------------------
-const userRoutes = require("./routes/auth"); // your login/signup routes
-app.use("/api", userRoutes);
-
-// Complaints
-const complaintsRoutes = require("./routes/complaints");
-app.use("/api", complaintsRoutes);
-
-// Officers
-const officerRoutes = require("./routes/officers");
-app.use("/api", officerRoutes);
-
-// Admin
-const adminRoutes = require("./routes/admin");
-app.use("/api", adminRoutes);
-
-// ---------------------------
-// MongoDB Connection
-// ---------------------------
-const MONGO_URI = process.env.MONGO_URI;
-
-function connectToMongo(uri) {
-  return mongoose.connect(uri)
-    .then(() => console.log(`MongoDB connected (${uri})`))
-    .catch(err => {
-      console.error(`MongoDB connection error (${uri}):`, err);
-      throw err;
     if (!user)
       return res.status(401).json({ message: 'Invalid credentials' });
 
@@ -171,7 +156,7 @@ app.delete('/api/departments/:id', async (req, res) => {
 });
 
 // ===========================
-// DEPARTMENT STATS (🔥 FIXED)
+// DEPARTMENT STATS
 // ===========================
 app.get('/api/departments/:id/stats', async (req, res) => {
   try {
@@ -220,7 +205,7 @@ app.get('/api/departments/:id/stats', async (req, res) => {
 });
 
 // ===========================
-// COMPLAINTS (🔥 FIXED)
+// COMPLAINTS (inline)
 // ===========================
 
 // CREATE
@@ -231,7 +216,7 @@ app.post('/api/complaints', upload.single('evidence'), async (req, res) => {
     const complaint = new Complaint({
       title,
       description,
-      department, // MUST BE ID
+      department,
       citizen,
       priority,
       evidence: req.file ? req.file.path : null
@@ -273,7 +258,7 @@ app.get('/api/complaints', async (req, res) => {
 });
 
 // ===========================
-// OFFICERS
+// OFFICERS (inline)
 // ===========================
 app.get('/api/officers', async (req, res) => {
   try {
@@ -309,4 +294,4 @@ app.get('/api/officer-requests/count', async (req, res) => {
 // SERVER START
 // ===========================
 const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

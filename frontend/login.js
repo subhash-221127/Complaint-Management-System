@@ -1,10 +1,9 @@
 // login.js
 
 const form = document.getElementById("login-form");
-const loginForm = document.getElementById('login-form');
-const errorBox = document.getElementById('error-box');
+const errorBox = document.getElementById("error-box");
 
-loginForm.addEventListener('submit', async (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const email    = document.getElementById("email").value.trim();
@@ -15,6 +14,8 @@ loginForm.addEventListener('submit', async (e) => {
     return;
   }
 
+  hideError();
+
   const btn = form.querySelector(".submit-btn");
   btn.textContent = "Signing in…";
   btn.disabled = true;
@@ -24,22 +25,6 @@ loginForm.addEventListener('submit', async (e) => {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
       body:    JSON.stringify({ email, password }),
-  const email = document.getElementById('email').value.trim();
-  const password = document.getElementById('password').value;
-
-  if (!email || !password) {
-    errorBox.style.display = 'flex';
-    errorBox.querySelector('#error-text').innerText = 'Please fill all fields';
-    return;
-  }
-
-  errorBox.style.display = 'none';
-
-  try {
-    const res = await fetch('http://localhost:5000/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
     });
 
     const data = await res.json();
@@ -50,7 +35,7 @@ loginForm.addEventListener('submit', async (e) => {
         .split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "U";
 
       const sessionUser = {
-        id:         data.user.id,          // MongoDB _id — used as citizenId in complaint submit
+        id:         data.user.id,
         name:       data.user.name,
         email:      data.user.email,
         role:       data.user.role,
@@ -59,10 +44,11 @@ loginForm.addEventListener('submit', async (e) => {
         initials,
       };
 
-      // Store in both sessionStorage (preferred) and localStorage (fallback)
-      sessionStorage.setItem("cityfix_user", JSON.stringify(sessionUser));
-      localStorage.setItem("cityfix_user",   JSON.stringify(sessionUser));
-      localStorage.setItem("userEmail",      data.user.email);
+      // Store token + session in both sessionStorage and localStorage
+      sessionStorage.setItem("cityfix_user",  JSON.stringify(sessionUser));
+      localStorage.setItem("cityfix_user",    JSON.stringify(sessionUser));
+      localStorage.setItem("userEmail",       data.user.email);
+      if (data.token) localStorage.setItem("cityfix_token", data.token);
 
       // Redirect based on role
       if (data.user.role === "citizen") {
@@ -91,30 +77,12 @@ loginForm.addEventListener('submit', async (e) => {
 });
 
 function showError(msg) {
-  let box = document.getElementById("error-box");
-  if (!box) {
-    box = document.createElement("div");
-    box.id = "error-box";
-    box.style.cssText = "margin-top:12px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:14px;";
-    form.parentElement.appendChild(box);
-      // Save user info in localStorage or session
-      localStorage.setItem('user', JSON.stringify(data.user));
+  if (!errorBox) return;
+  errorBox.style.display = "flex";
+  const txt = document.getElementById("error-text");
+  if (txt) txt.innerText = msg;
+}
 
-      // Redirect based on role
-      if (data.user.role === 'admin') window.location.href = 'dashboard.html';
-      else if (data.user.role === 'officer') window.location.href = 'officer.html';
-      else window.location.href = 'citizen.html';
-
-    } else {
-      errorBox.style.display = 'flex';
-      errorBox.querySelector('#error-text').innerText = data.message;
-    }
-
-  } catch (err) {
-    console.error(err);
-    errorBox.style.display = 'flex';
-    errorBox.querySelector('#error-text').innerText = 'Server error. Try again later.';
-  }
-  box.style.display = "block";
-  box.textContent = msg;
+function hideError() {
+  if (errorBox) errorBox.style.display = "none";
 }
