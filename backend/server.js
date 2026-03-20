@@ -72,6 +72,41 @@ app.post('/api/login', async (req, res) => {
 
     const user = await User.findOne({ email, password });
 
+// Serve static frontend if needed
+app.use(express.static(path.join(__dirname, "../frontend")));
+
+// Serve uploaded evidence files
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// ---------------------------
+// Routes
+// ---------------------------
+const userRoutes = require("./routes/auth"); // your login/signup routes
+app.use("/api", userRoutes);
+
+// Complaints
+const complaintsRoutes = require("./routes/complaints");
+app.use("/api", complaintsRoutes);
+
+// Officers
+const officerRoutes = require("./routes/officers");
+app.use("/api", officerRoutes);
+
+// Admin
+const adminRoutes = require("./routes/admin");
+app.use("/api", adminRoutes);
+
+// ---------------------------
+// MongoDB Connection
+// ---------------------------
+const MONGO_URI = process.env.MONGO_URI;
+
+function connectToMongo(uri) {
+  return mongoose.connect(uri)
+    .then(() => console.log(`MongoDB connected (${uri})`))
+    .catch(err => {
+      console.error(`MongoDB connection error (${uri}):`, err);
+      throw err;
     if (!user)
       return res.status(401).json({ message: 'Invalid credentials' });
 

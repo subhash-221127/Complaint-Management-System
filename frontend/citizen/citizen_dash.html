@@ -4,9 +4,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Citizen Complaint Portal</title>
-  <link rel="stylesheet" href="style.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <title>CityFix — Citizen Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="citizen.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
 
@@ -14,7 +15,7 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
-    <a href="../index.html" class="sidebar-logo">
+    <a href="#" class="sidebar-logo">
       <div class="logo-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
           stroke-linecap="round">
@@ -24,230 +25,205 @@
       </div>
       <span class="logo-text">City<span>Fix</span></span>
     </a>
-
-    
     <nav class="sidebar-nav">
-      <a href="citizen_dash.html" class="sidebar-link"><span class="icon">📊</span> Dashboard</a>
-      <a href="citizen_dash.html" class="sidebar-link active"><span class="icon">📋</span> New Complaint <span class="badge">18</span></a>
-      <a href="Mycomplaints.html"   class="sidebar-link"><span class="icon">👮</span> My Complaints</a>
-      <a href="Trackstatus.html"   class="sidebar-link"><span class="icon">👥</span> Track Status</a>
+      <a href="citizen_dash.html" class="sidebar-link active"><span class="icon">📊</span> Dashboard</a>
+      <a href="citizen_submit.html" class="sidebar-link"><span class="icon">📋</span> New Complaint</a>
+      <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
+      <a href="citizen_track.html" class="sidebar-link"><span class="icon">📍</span> Track Status</a>
     </nav>
-    
-
     <div class="sidebar-footer">
-      <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">🚪</span> Logout</a>
+      <a href="login.html" class="sidebar-link"><span class="icon">🚪</span> Logout</a>
     </div>
   </aside>
 
   <!-- MAIN -->
   <div class="main">
 
-    <!-- HEADER -->
     <header class="header">
-      <div>
-        <h1 class="page-title">Submit a Complaint</h1>
-        <p class="page-sub">Report civic issues — reviewed within 24 hours</p>
+      <div class="header-left">
+        <h1 class="page-title">Dashboard</h1>
+        <span class="page-sub">Good morning, Jane 👋</span>
       </div>
       <div class="header-right">
-        <button class="icon-btn"><i class="fa-solid fa-bell"></i></button>
-        <div class="profile-chip">
-          <div class="chip-avatar">JD</div>
-          <span>Jane Doe</span>
+        <button class="notif-btn" id="notifBtn">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-dot"></span>
+        </button>
+        <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="chip-avatar">JD</div>
+            <div class="profile-btn-info">
+              <span class="profile-btn-name">Jane Doe</span>
+              <span class="profile-btn-role">Citizen</span>
+            </div>
+            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+          </button>
+          <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-user-header">
+              <div class="dropdown-user-row">
+                <div class="dropdown-user-avatar">JD</div>
+                <div>
+                  <div class="dropdown-user-name">Jane Doe</div>
+                  <div class="dropdown-user-email">jane@email.com</div>
+                </div>
+              </div>
+              <div class="dropdown-user-tags">
+                <span class="dropdown-user-tag">Citizen</span>
+                <span class="dropdown-user-tag">Springfield</span>
+              </div>
+            </div>
+            <div class="dropdown-items">
+              <a href="#" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+              <div class="dropdown-divider"></div>
+              <a href="../login.html" class="dropdown-item logout-item">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </header>
 
-    <!-- CONTENT -->
     <div class="content">
 
-      <!-- STATS ROW -->
+      <!-- STATS -->
       <div class="stats-row">
-        <div class="stat-card">
-          <i class="fa-solid fa-circle-check stat-icon green"></i>
+        <div class="stat-card c-navy">
+          <div class="stat-icon navy"><i class="fa-solid fa-file-lines"></i></div>
           <div>
-            <p class="stat-num">247</p>
-            <p class="stat-lbl">Resolved</p>
+            <p class="stat-num" id="s-total">8</p>
+            <p class="stat-lbl">Total Filed</p>
           </div>
         </div>
-        <div class="stat-card">
-          <i class="fa-solid fa-clock stat-icon orange"></i>
+        <div class="stat-card c-orange">
+          <div class="stat-icon orange"><i class="fa-solid fa-clock"></i></div>
           <div>
-            <p class="stat-num">18</p>
+            <p class="stat-num" id="s-pending">3</p>
             <p class="stat-lbl">Pending</p>
           </div>
         </div>
-        <div class="stat-card">
-          <i class="fa-solid fa-star stat-icon lavender"></i>
+        <div class="stat-card c-blue">
+          <div class="stat-icon blue"><i class="fa-solid fa-rotate"></i></div>
           <div>
-            <p class="stat-num">4.8</p>
-            <p class="stat-lbl">Avg. Rating</p>
+            <p class="stat-num" id="s-progress">2</p>
+            <p class="stat-lbl">In Progress</p>
           </div>
         </div>
-        <div class="stat-card">
-          <i class="fa-solid fa-users stat-icon blue"></i>
+        <div class="stat-card c-green">
+          <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
           <div>
-            <p class="stat-num">1,340</p>
-            <p class="stat-lbl">Total Users</p>
+            <p class="stat-num" id="s-resolved">3</p>
+            <p class="stat-lbl">Resolved</p>
+          </div>
+        </div>
+        <div class="stat-card c-purple">
+          <div class="stat-icon purple"><i class="fa-solid fa-stopwatch"></i></div>
+          <div>
+            <p class="stat-num">2.4d</p>
+            <p class="stat-lbl">Avg. Resolution</p>
           </div>
         </div>
       </div>
 
-      <!-- FORM GRID -->
-      <div class="form-grid">
+      <!-- TWO COLUMN LAYOUT -->
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;">
 
-        <!-- LEFT -->
-        <div class="col">
-
-          <!-- Category & Severity -->
-          <div class="card">
-            <div class="card-head">
-              <i class="fa-solid fa-tags card-icon"></i>
-              <h2>Category & Severity</h2>
+        <!-- LEFT: MY COMPLAINTS -->
+        <div>
+          <!-- Filters -->
+          <div class="toolbar">
+            <div class="search-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="searchInput" placeholder="Search complaints…" />
             </div>
-
-            <label class="label">Complaint Category <span class="req">*</span></label>
-            <div class="select-wrap">
-              <select class="input" id="categorySelect">
-                <option value="">— Select a category —</option>
-                <option>Roads & Potholes</option>
-                <option>Water & Sewage</option>
-                <option>Electricity & Lighting</option>
-                <option>Garbage & Sanitation</option>
-                <option>Public Safety</option>
-                <option>Noise Pollution</option>
-                <option>Parks & Recreation</option>
-                <option>Other</option>
-              </select>
-              <i class="fa-solid fa-chevron-down arr"></i>
-            </div>
-
-            <label class="label" style="margin-top:16px;">Severity Level <span class="req">*</span></label>
-            <div class="sev-row">
-              <button class="sev low" data-sev="low"> <i class="fa-solid fa-circle-check"></i> Low </button>
-              <button class="sev medium active" data-sev="medium"> <i class="fa-solid fa-circle-exclamation"></i> Medium
-              </button>
-              <button class="sev high" data-sev="high"> <i class="fa-solid fa-triangle-exclamation"></i> High </button>
-              <button class="sev critical" data-sev="critical"> <i class="fa-solid fa-radiation"></i> Critical </button>
-            </div>
+            <select class="filter-sel" id="statusFilter">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="inprogress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+            <select class="filter-sel" id="categoryFilter">
+              <option value="">All Categories</option>
+              <option>Roads &amp; Potholes</option>
+              <option>Electricity &amp; Lighting</option>
+              <option>Garbage &amp; Sanitation</option>
+              <option>Water &amp; Sewage</option>
+              <option>Parks &amp; Recreation</option>
+              <option>Noise Pollution</option>
+              <option>Public Safety</option>
+            </select>
+            <select class="filter-sel" id="dateFilter">
+              <option value="">All Time</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
           </div>
 
-          <!-- Description -->
-          <div class="card">
-            <div class="card-head">
-              <i class="fa-solid fa-pen-nib card-icon"></i>
-              <h2>Description</h2>
-            </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:0.82rem;font-weight:700;color:var(--muted);" id="listCount">8 complaints</span>
+            <a href="citizen_submit.html" class="btn btn-orange btn-sm"><i class="fa-solid fa-plus"></i> New
+              Complaint</a>
+          </div>
 
-            <label class="label">Complaint Title <span class="req">*</span></label>
-            <input class="input" type="text" placeholder="e.g. Large pothole on Main Street" />
-
-            <label class="label" style="margin-top:14px;">Details <span class="req">*</span></label>
-            <div style="position:relative;">
-              <textarea class="input textarea" id="descBox" maxlength="600"
-                placeholder="Describe the issue clearly — location, impact, when noticed…"></textarea>
-              <span class="char-count"><span id="cc">0</span>/600</span>
-            </div>
-
-            <label class="label" style="margin-top:14px;">Attach Photos / Videos</label>
-            <input type="file" id="fileInput" accept="image/*,video/*" multiple style="display:none" />
-            <div class="upload-box" id="uploadBox">
-              <i class="fa-solid fa-cloud-arrow-up" id="uploadIcon"></i>
-              <p id="uploadText">Drag &amp; drop or <span class="upload-link">browse files</span></p>
-              <small id="uploadSub">JPG, PNG, MP4 · Max 10 MB</small>
-              <div class="file-list" id="fileList"></div>
-            </div>
+          <div id="complaintList"></div>
+          <div class="empty-state" id="emptyState" style="display:none;">
+            <i class="fa-solid fa-folder-open"></i>
+            <p>No complaints found</p>
+            <small>Try adjusting your filters</small>
           </div>
         </div>
 
-        <!-- RIGHT -->
-        <div class="col">
+        <!-- RIGHT COLUMN -->
+        <div>
 
-          <!-- Location -->
-          <div class="card">
-            <div class="card-head">
-              <i class="fa-solid fa-location-dot card-icon"></i>
-              <h2>Incident Location</h2>
+          <!-- NEARBY COMPLAINTS MAP -->
+          <div class="section-card" style="margin-bottom:16px;">
+            <div class="section-card-header">
+              <h3>📍 Nearby Complaints</h3>
+              <span style="font-size:0.75rem;color:var(--muted);">Your area</span>
             </div>
-
-            <button class="locate-btn" id="locateBtn">
-              <i class="fa-solid fa-crosshairs"></i> Use My Current Location
-            </button>
-
-            <div class="map-box" id="mapBox">
-              <div class="map-bg"></div>
-              <div class="road rh" style="top:38%"></div>
-              <div class="road rh" style="top:62%"></div>
-              <div class="road rv" style="left:32%"></div>
-              <div class="road rv" style="left:66%"></div>
-              <div class="blk" style="top:14%;left:8%;width:20%;height:16%"></div>
-              <div class="blk" style="top:14%;left:36%;width:24%;height:16%"></div>
-              <div class="blk" style="top:14%;left:70%;width:20%;height:16%"></div>
-              <div class="blk" style="top:42%;left:8%;width:18%;height:14%"></div>
-              <div class="blk green" style="top:42%;left:36%;width:24%;height:14%"></div>
-              <div class="blk" style="top:42%;left:70%;width:20%;height:14%"></div>
-              <div class="blk" style="top:66%;left:8%;width:18%;height:14%"></div>
-              <div class="blk" style="top:66%;left:36%;width:24%;height:14%"></div>
-              <div class="pin" id="pin">
-                <div class="pin-head"></div>
-                <div class="pin-tip"></div>
+            <div style="padding:14px;">
+              <div class="nearby-map" id="nearbyMap">
+                <div class="map-bg"></div>
+                <!-- Roads -->
+                <div class="road rh" style="top:38%"></div>
+                <div class="road rh" style="top:62%"></div>
+                <div class="road rv" style="left:32%"></div>
+                <div class="road rv" style="left:66%"></div>
+                <!-- Blocks -->
+                <div class="blk" style="top:10%;left:6%;width:20%;height:22%"></div>
+                <div class="blk" style="top:10%;left:36%;width:24%;height:22%"></div>
+                <div class="blk" style="top:10%;left:70%;width:22%;height:22%"></div>
+                <div class="blk green" style="top:42%;left:6%;width:20%;height:14%"></div>
+                <div class="blk" style="top:42%;left:36%;width:24%;height:14%"></div>
+                <div class="blk" style="top:42%;left:70%;width:22%;height:14%"></div>
+                <div class="blk" style="top:66%;left:6%;width:20%;height:18%"></div>
+                <div class="blk" style="top:66%;left:36%;width:24%;height:18%"></div>
+                <div class="blk" style="top:66%;left:70%;width:22%;height:18%"></div>
+                <!-- You are here -->
+                <div
+                  style="position:absolute;left:49%;top:39%;transform:translate(-50%,-50%);width:16px;height:16px;background:var(--navy);border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 4px rgba(26,60,110,0.2);z-index:5;">
+                </div>
+                <!-- Complaint dots populated by JS -->
+                <div id="mapDots"></div>
+                <div class="map-tooltip" id="mapTooltip"></div>
               </div>
-              <div class="zoom-ctrl">
-                <button id="zi"><i class="fa-solid fa-plus"></i></button>
-                <span id="zl">14</span>
-                <button id="zo"><i class="fa-solid fa-minus"></i></button>
-              </div>
-              <span class="map-hint">Click map to place pin</span>
-            </div>
-
-            <div class="field-row">
-              <div style="flex:1">
-                <label class="label">Street Address</label>
-                <input class="input" id="addr" type="text" placeholder="Auto-filled from map" />
-              </div>
-              <div style="width:110px">
-                <label class="label">Pincode</label>
-                <input class="input" id="pin2" type="text" placeholder="000000" />
-              </div>
-            </div>
-            <div class="field-row" style="margin-top:10px;">
-              <div style="flex:1">
-                <label class="label">City</label>
-                <input class="input" id="city" type="text" placeholder="City" />
-              </div>
-              <div style="flex:1">
-                <label class="label">District</label>
-                <input class="input" id="dist" type="text" placeholder="District" />
+              <div class="map-legend">
+                <span><span class="legend-dot" style="background:var(--blue)"></span>Pending</span>
+                <span><span class="legend-dot" style="background:var(--amber)"></span>In Progress</span>
+                <span><span class="legend-dot" style="background:var(--green)"></span>Resolved</span>
+                <span><span class="legend-dot" style="background:var(--navy)"></span>You</span>
               </div>
             </div>
           </div>
 
-          <!-- Contact -->
-          <div class="card">
-            <div class="card-head">
-              <i class="fa-solid fa-address-card card-icon"></i>
-              <h2>Contact Info</h2>
+          <!-- QUICK STATS BREAKDOWN -->
+          <div class="section-card">
+            <div class="section-card-header">
+              <h3>📊 Resolution Progress</h3>
             </div>
-
-            <div class="field-row">
-              <div style="flex:1">
-                <label class="label">Full Name <span class="req">*</span></label>
-                <input class="input" type="text" value="Jane Doe" />
-              </div>
-              <div style="flex:1">
-                <label class="label">Mobile <span class="req">*</span></label>
-                <input class="input" type="tel" placeholder="+91 00000 00000" />
-              </div>
-            </div>
-            <div style="margin-top:10px;">
-              <label class="label">Email</label>
-              <input class="input" type="email" placeholder="you@example.com" />
-            </div>
-            <label class="check-row" style="margin-top:12px;">
-              <input type="checkbox" checked /> Notify me via SMS on status updates
-            </label>
-            <label class="check-row">
-              <input type="checkbox" checked /> I confirm this complaint is accurate
-            </label>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:12px;" id="breakdownList"></div>
           </div>
 
         </div>
@@ -255,22 +231,29 @@
     </div>
   </div>
 
-  <!-- FAB -->
-  <button class="fab" id="fabBtn">
-    <i class="fa-solid fa-paper-plane"></i>
-    <span>Submit Complaint</span>
-  </button>
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <span class="modal-id" id="modalId"></span>
+          <h3 id="modalTitle"></h3>
+        </div>
+        <button class="modal-close" id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
 
   <!-- TOAST -->
   <div class="toast" id="toast">
     <i class="fa-solid fa-circle-check"></i>
-    <div>
-      <strong>Submitted!</strong>
-      <small>ID: CMP-2024-7891</small>
-    </div>
+    <div><strong id="toastMsg">Done!</strong><small id="toastSub"></small></div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- ✅ FIX: src script and inline script are now properly separated -->
+  <script src="api.js"></script>
+  <script src="citizen_dash.js"></script>
 </body>
 
 </html>

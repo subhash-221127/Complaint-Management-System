@@ -1,7 +1,7 @@
-// models/User.js
+// models/Admin.js
 const mongoose = require("mongoose");
 
-const UserSchema = new mongoose.Schema(
+const AdminSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -15,25 +15,11 @@ const UserSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
-    phone: {
-      type: String,
-      trim: true,
-      default: "",
-    },
     password: {
       type: String,
       required: true,
     },
-    address: {
-      type: String,
-      default: "",
-      trim: true,
-    },
-    role: {
-      type: String,
-      enum: ["citizen"],
-      default: "citizen",
-    },
+    
     isActive: {
       type: Boolean,
       default: true,
@@ -42,4 +28,4 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", UserSchema);
+module.exports = mongoose.model("Admin", AdminSchema);

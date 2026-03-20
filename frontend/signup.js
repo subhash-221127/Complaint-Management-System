@@ -1,32 +1,47 @@
 // signup.js
+
+const form = document.getElementById("signup-form");
+const errorBox = document.getElementById("error-box");
+const successSection = document.getElementById("success-section");
 const form = document.getElementById('signup-form');
 const errorBox = document.getElementById('error-box');
 
-form.addEventListener('submit', async (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  const name = document.getElementById("name").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+  const confirm = document.getElementById("confirm").value;
+  const role = document.getElementById("role").value;
   const name = document.getElementById('name').value.trim();
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
   const confirm = document.getElementById('confirm').value;
   const role = document.getElementById('role').value;
 
-  // Validation
+  // Client-side validation
   if (!name || !email || !password || !confirm || !role) {
-    errorBox.style.display = 'flex';
-    errorBox.querySelector('#error-text').innerText = 'Please fill all fields';
-    return;
+    return showError("Please fill in all fields");
   }
-
+  if (password.length < 6) {
+    return showError("Password must be at least 6 characters");
+  }
   if (password !== confirm) {
-    errorBox.style.display = 'flex';
-    errorBox.querySelector('#error-text').innerText = 'Passwords do not match';
-    return;
+    return showError("Passwords do not match");
   }
 
-  errorBox.style.display = 'none';
+  hideError();
+
+  const btn = form.querySelector(".submit-btn");
+  btn.textContent = "Creating account…";
+  btn.disabled = true;
 
   try {
+    const res = await fetch("http://localhost:5000/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role }),
     const res = await fetch('http://localhost:5000/api/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -36,6 +51,19 @@ form.addEventListener('submit', async (e) => {
     const data = await res.json();
 
     if (res.ok) {
+      // Show brief success message then redirect to login
+      if (successSection) {
+        const msgEl = document.getElementById("success-msg");
+        if (msgEl) msgEl.textContent = "Account created! Redirecting to login…";
+        successSection.style.display = "block";
+      }
+      setTimeout(() => {
+        window.location.href = "login.html";
+      }, 1500);
+    } else {
+      showError(data.message || "Signup failed. Please try again.");
+      btn.textContent = "Create Account";
+      btn.disabled = false;
       alert("Signup successful! Please login.");
       window.location.href = 'login.html';
     } else {
@@ -44,8 +72,20 @@ form.addEventListener('submit', async (e) => {
     }
 
   } catch (err) {
-    console.error(err);
-    errorBox.style.display = 'flex';
-    errorBox.querySelector('#error-text').innerText = 'Server error. Try again later.';
+    console.error("Signup error:", err);
+    showError("Cannot connect to server. Is the backend running on port 5000?");
+    btn.textContent = "Create Account";
+    btn.disabled = false;
   }
 });
+
+function showError(msg) {
+  if (!errorBox) return;
+  errorBox.style.display = "flex";
+  const txt = document.getElementById("error-text");
+  if (txt) txt.innerText = msg;
+}
+
+function hideError() {
+  if (errorBox) errorBox.style.display = "none";
+}
