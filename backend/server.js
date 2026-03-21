@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 dotenv.config();
 
@@ -51,6 +52,8 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Internal Server Error", error: err.message });
 });
 =======
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
 const path = require("path");
 
 dotenv.config();
@@ -123,4 +126,7 @@ connectToMongo(MONGO_URI)
 // ---------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+<<<<<<< HEAD
 >>>>>>> main
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb

@@ -1,4 +1,3 @@
-// routes/auth.js
 const express          = require("express");
 const router           = require("express").Router();
 const bcrypt           = require("bcryptjs");
@@ -357,4 +356,3 @@ router.post("/auth/google/signup", async (req, res) => {
   }
 });
 
-module.exports = router;

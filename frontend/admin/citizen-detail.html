@@ -55,6 +55,7 @@
 </div>
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
 
@@ -85,6 +86,8 @@ async function loadCitizen() {
     document.getElementById('page-content').innerHTML = `
       <a href="citizens.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">← Back</a>
 =======
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
 <script src="demo-data.js"></script>
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
@@ -107,12 +110,16 @@ async function loadCitizen() {
 
     document.getElementById('page-content').innerHTML = `
       <a href="citizens.html" class="btn btn-outline btn-sm" style="margin-bottom:20px;">← Back to Citizens</a>
+<<<<<<< HEAD
 >>>>>>> main
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
 
       <div class="profile-hero">
         <div class="profile-avatar">${initials}</div>
         <div class="profile-info">
           <h2>${citizen.name}</h2>
+<<<<<<< HEAD
 <<<<<<< HEAD
           <div class="subtitle">Citizen since ${
             citizen.createdAt ? new Date(citizen.createdAt).toLocaleDateString() : "-"
@@ -121,17 +128,23 @@ async function loadCitizen() {
             <span class="status-badge active">Active</span>
             <span class="status-badge in-progress">${complaints.length} Complaints</span>
 =======
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
           <div class="subtitle">Citizen since ${citizen.joinDate}</div>
           <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
             <span class="status-badge active" style="padding:5px 12px;font-size:0.8rem;">Active Member</span>
             <span class="status-badge in-progress" style="padding:5px 12px;font-size:0.8rem;">${citizenComplaints.length} Complaints Filed</span>
+<<<<<<< HEAD
 >>>>>>> main
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
           </div>
         </div>
       </div>
 
       <div class="detail-grid">
         <div class="info-card">
+<<<<<<< HEAD
 <<<<<<< HEAD
           <h4>📞 Contact</h4>
           <div class="info-row"><span>Email</span><span>${citizen.email}</span></div>
@@ -144,6 +157,8 @@ async function loadCitizen() {
             citizen.createdAt ? new Date(citizen.createdAt).toLocaleDateString() : "-"
           }</span></div>
 =======
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
           <h4>📞 Contact Information</h4>
           <div class="info-row"><span class="info-label">Email</span><span class="info-value">${citizen.email}</span></div>
           <div class="info-row"><span class="info-label">Phone</span><span class="info-value">${citizen.phone}</span></div>
@@ -154,11 +169,15 @@ async function loadCitizen() {
           <div class="info-row"><span class="info-label">Citizen ID</span><span class="info-value">${citizen.id}</span></div>
           <div class="info-row"><span class="info-label">Join Date</span><span class="info-value">${citizen.joinDate}</span></div>
           <div class="info-row"><span class="info-label">Last Login</span><span class="info-value">Today at 10:45 AM</span></div>
+<<<<<<< HEAD
 >>>>>>> main
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
         </div>
       </div>
 
       <div class="complaints-table-container">
+<<<<<<< HEAD
 <<<<<<< HEAD
         <div class="complaints-table-header">Complaints</div>
         <table class="data-table">
@@ -173,6 +192,8 @@ async function loadCitizen() {
               </tr>
             `).join('') || '<tr><td colspan="4">No complaints</td></tr>'}
 =======
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
         <div class="complaints-table-header">Recent Complaints by ${citizen.name}</div>
         <table class="data-table">
           <thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Date</th></tr></thead>
@@ -185,11 +206,15 @@ async function loadCitizen() {
                 <td>${c.date}</td>
               </tr>`).join('') ||
               '<tr><td colspan="4" style="text-align:center;padding:20px;color:var(--text-secondary);">No complaints found</td></tr>'}
+<<<<<<< HEAD
 >>>>>>> main
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
           </tbody>
         </table>
       </div>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
       <div style="margin-top:20px;text-align:right;">
         <button class="btn btn-danger" onclick="deleteCitizen()">Delete Citizen</button>
@@ -226,6 +251,8 @@ document.addEventListener('click', e => {
     document.getElementById('profile-dropdown').classList.remove('show');
 });
 =======
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
       <div style="margin-top:8px;display:flex;justify-content:flex-end;gap:14px;margin-bottom:32px;">
         <button class="btn btn-danger"  onclick="if(confirm('Restrict this user account?')) alert('Account restricted.')">Restrict Account</button>
         <button class="btn btn-outline" onclick="if(confirm('Delete citizen data?')){ window.location.href='citizens.html'; }">Delete Account</button>
@@ -237,7 +264,10 @@ document.addEventListener('click', e => {
     if (!document.getElementById('admin-profile').contains(e.target))
       document.getElementById('profile-dropdown').classList.remove('show');
   });
+<<<<<<< HEAD
 >>>>>>> main
+=======
+>>>>>>> 0b02f2ad843c285d0c8d1cd84620fbc0c70d05bb
 </script>
 </body>
 </html>
