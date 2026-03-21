@@ -6,7 +6,7 @@ const Department = require("../models/Department");
 // GET all active departments
 router.get("/departments", async (_req, res) => {
   try {
-    const departments = await Department.find({ isActive: true }).sort({ name: 1 });
+    const departments = await Department.find({}).sort({ name: 1 });
     res.json(departments);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch departments", error: err.message });

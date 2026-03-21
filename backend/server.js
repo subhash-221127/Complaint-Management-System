@@ -38,6 +38,10 @@ app.use("/api", complaintsRoutes);
 const officerRoutes = require("./routes/officers");
 app.use("/api", officerRoutes);
 
+// Departments
+const departmentRoutes = require("./routes/departments");
+app.use("/api", departmentRoutes);
+
 // Admin
 const adminRoutes = require("./routes/admin");
 app.use("/api", adminRoutes);

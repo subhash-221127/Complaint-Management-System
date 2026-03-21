@@ -14,7 +14,7 @@ function statusBadgeHTML(s) {
     in_progress:'<span class="badge-status inprogress"><i class="fa-solid fa-rotate"></i> In Progress</span>',
     inprogress: '<span class="badge-status inprogress"><i class="fa-solid fa-rotate"></i> In Progress</span>',
     resolved:   '<span class="badge-status resolved"><i class="fa-solid fa-circle-check"></i> Resolved</span>',
-    rejected:   '<span class="badge-status rejected"><i class="fa-solid fa-circle-xmark"></i> Withdrawn</span>',
+    rejected:   '<span class="badge-status rejected"><i class="fa-solid fa-circle-xmark"></i> Rejected</span>',
   };
   return map[s] || map.pending;
 }
@@ -44,7 +44,8 @@ const STEP_ICONS = {
 
 function buildTimeline(timeline) {
   return timeline.map((t, i) => {
-    const stateClass = t.state === "pending" ? "pending-step" : t.state;
+    let stateClass = t.state === "pending" ? "pending-step" : t.state;
+    if (t.step === "Rejected" && t.state === "done") stateClass += " rejected-step";
     const dotIcon = t.state === "done"
       ? "fa-check"
       : t.state === "active"
@@ -163,6 +164,7 @@ function normalizeComplaint(c) {
     mobile:      sessionUser.phone || "—",
     email:       sessionUser.email || "—",
     timeline:    c.timeline || buildBasicTimeline(c.status),
+    rejectionReason: c.rejectionReason || '',
   };
 }
 
@@ -175,9 +177,19 @@ function buildBasicTimeline(status) {
     { step: "Resolved",    icon: "fa-circle-check",       state: "pending", date: "—", desc: "Pending.",             note: "" },
     { step: "Closed",      icon: "fa-lock",               state: "pending", date: "—", desc: "Pending.",             note: "" },
   ];
-  if (status === "pending")              { steps[0].state = "done"; steps[1].state = "active"; }
-  if (status === "in_progress" || status === "inprogress") { steps[0].state = "done"; steps[1].state = "done"; steps[2].state = "done"; steps[3].state = "active"; }
-  if (status === "resolved")             { steps.slice(0, 5).forEach(s => s.state = "done"); steps[5].state = "active"; }
+  if (status === "pending")   { steps[0].state = "done"; steps[1].state = "active"; }
+  if (status === "assigned")  { steps[0].state = "done"; steps[1].state = "done"; steps[2].state = "active"; }
+  if (status === "in_progress" || status === "inprogress") {
+    steps[0].state = "done"; steps[1].state = "done"; steps[2].state = "done"; steps[3].state = "active";
+  }
+  if (status === "resolved") { steps.slice(0, 5).forEach(s => s.state = "done"); steps[5].state = "active"; }
+  if (status === "rejected") {
+    return [
+      { step: "Submitted", icon: "fa-paper-plane",  state: "done",   date: "—", desc: "Complaint received.", note: "" },
+      { step: "Rejected",  icon: "fa-circle-xmark", state: "done",   date: "—", desc: "Rejected by admin.",  note: "" },
+      { step: "Closed",    icon: "fa-lock",          state: "active", date: "—", desc: "Case closed.",        note: "" },
+    ];
+  }
   return steps;
 }
 
@@ -272,6 +284,15 @@ function renderDetail(c) {
         <div class="hg-item"><span class="hg-label"><i class="fa-solid fa-building"></i> Department</span><span class="hg-val">${c.dept || "—"}</span></div>
       </div>
     </div>
+
+    ${c.status === 'rejected' && c.rejectionReason ? `
+    <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:14px;padding:16px 20px;margin-bottom:20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:1rem;">❌</span>
+        <span style="font-size:0.75rem;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:0.08em;">Rejection Reason</span>
+      </div>
+      <div style="font-size:0.9rem;color:#7f1d1d;line-height:1.6;">${c.rejectionReason}</div>
+    </div>` : ''}
 
     ${officerHTML}
 
