@@ -1110,3 +1110,92 @@ body {
   .topbar { padding: 0 16px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── Action cards (complaint detail) ─────────────────────────── */
+.action-card {
+  border-radius: 16px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  border: 1.5px solid var(--card-border);
+  background: var(--card);
+}
+.action-card h4 { margin-bottom: 12px; font-size: 1rem; }
+
+.action-card.green {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: #86efac;
+}
+.action-card.green h4 { color: #16a34a; }
+
+.action-card.red {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: #fca5a5;
+}
+.action-card.red h4 { color: #dc2626; }
+
+.action-card.darkred {
+  background: rgba(190, 18, 60, 0.06);
+  border-color: #fda4af;
+}
+.action-card.darkred h4 { color: #be123c; }
+
+/* Reject textarea inside action-card.red */
+.reject-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid #fca5a5;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  background: var(--bg-input, #fff);
+  resize: vertical;
+  min-height: 80px;
+  outline: none;
+  margin-bottom: 12px;
+  display: block;
+}
+.reject-textarea:focus {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+}
+
+/* Rejection reason display box (inside action-card.red) */
+.rejection-reason-box {
+  background: rgba(239, 68, 68, 0.06);
+  border: 1px solid #fca5a5;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-top: 8px;
+}
+.rejection-reason-box .rlabel {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #dc2626;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 5px;
+}
+.rejection-reason-box .rtext {
+  font-size: 0.9rem;
+  color: #7f1d1d;
+  line-height: 1.6;
+}
+
+/* Assigned officer card inside assign section */
+.assigned-officer-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(34, 197, 94, 0.06);
+  border: 1.5px solid #86efac;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+}
+.assigned-avatar-detail {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: #22c55e; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.85rem; flex-shrink: 0;
+}

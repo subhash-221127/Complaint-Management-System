@@ -23,7 +23,7 @@ function statusBadgeHTML(s) {
     inprogress: ["badge-status inprogress", "fa-rotate",       "In Progress"],
     assigned:   ["badge-status inprogress", "fa-user-tie",     "Assigned"],
     resolved:   ["badge-status resolved",   "fa-circle-check", "Resolved"],
-    rejected:   ["badge-status rejected",   "fa-circle-xmark", "Withdrawn"],
+    rejected:   ["badge-status rejected",   "fa-circle-xmark", "Rejected"],
   };
   const [cls, ico, lbl] = map[s] || map.pending;
   return `<span class="${cls}"><i class="fa-solid ${ico}"></i> ${lbl}</span>`;

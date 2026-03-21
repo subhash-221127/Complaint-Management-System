@@ -26,6 +26,21 @@ router.get("/officers", async (_req, res) => {
   }
 });
 
+// ── GET officers by department name (MUST be before /:id) ──────
+// GET /api/officers/by-department/:deptName
+// Returns active officers for a given department name
+router.get("/officers/by-department/:deptName", async (req, res) => {
+  try {
+    const officers = await Officer.find({
+      departmentName: req.params.deptName,
+      status: "Active"
+    }).sort({ name: 1 });
+    res.json(officers);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch officers by department", error: err.message });
+  }
+});
+
 // ── GET single officer by officerId (e.g. OFF001) ──────────────
 router.get("/officers/:id", async (req, res) => {
   try {
@@ -87,7 +102,6 @@ router.post("/officers", async (req, res) => {
       casesResolved:  0,
     });
 
-    // Keep department officer counts in sync
     await Department.findByIdAndUpdate(dept._id, {
       $inc: { totalOfficers: 1, activeOfficers: 1 }
     });
@@ -118,7 +132,6 @@ router.delete("/officers/:id", async (req, res) => {
     const deleted = await Officer.findOneAndDelete({ officerId: req.params.id });
     if (!deleted) return res.status(404).json({ message: "Officer not found" });
 
-    // Keep department officer counts in sync
     await Department.findByIdAndUpdate(deleted.department, {
       $inc: {
         totalOfficers:  -1,
@@ -132,10 +145,10 @@ router.delete("/officers/:id", async (req, res) => {
   }
 });
 
-// ── PATCH /officers/:id/status  —  Admin changes officer status ──
+// ── PATCH /officers/:id/status ─────────────────────────────────
 router.patch("/officers/:id/status", async (req, res) => {
   try {
-    const { status } = req.body; // "Active" | "On Leave" | "Inactive"
+    const { status } = req.body;
     const officer = await Officer.findOne({ officerId: req.params.id });
     if (!officer) return res.status(404).json({ message: "Officer not found" });
 
@@ -145,7 +158,6 @@ router.patch("/officers/:id/status", async (req, res) => {
     officer.status = status;
     await officer.save();
 
-    // Update department active officer count if Active state changed
     if (isActive && !wasActive) {
       await Department.findByIdAndUpdate(officer.department, { $inc: { activeOfficers: 1 } });
     } else if (!isActive && wasActive) {
