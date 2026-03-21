@@ -381,6 +381,22 @@ router.patch("/complaint/:id/status", async (req, res) => {
           { $inc: { casesResolved: 1 } }
         );
       }
+      // Send resolved email to citizen (non-fatal)
+      try {
+        const freshComplaint = await Complaint.findById(req.params.id);
+        const citizen = await User.findById(complaint.citizenId);
+        if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+          await transporter.sendMail({
+            from:    "CityFix <" + process.env.EMAIL_USER + ">",
+            to:      citizen.email,
+            subject: "Complaint Resolved - " + complaint.complaintId + " | CityFix",
+            html:    buildResolvedEmail(citizen, freshComplaint || complaint),
+          });
+          console.log("Resolved email sent to " + citizen.email);
+        }
+      } catch (emailErr) {
+        console.error("Resolved email failed (non-fatal):", emailErr.message);
+      }
     }
 
     if (status === "rejected") {
