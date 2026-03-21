@@ -78,6 +78,7 @@
   </div>
 </div>
 
+<<<<<<< HEAD
 <script src="theme.js"></script>
 <script src="admin-auth.js"></script>
 
@@ -174,6 +175,46 @@ document.addEventListener('click', e => {
   if (!document.getElementById('admin-profile').contains(e.target))
     document.getElementById('profile-dropdown').classList.remove('show');
 });
+=======
+<script src="demo-data.js"></script>
+<script src="theme.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+  let citizens = [...DEMO_CITIZENS];
+
+  function renderCitizens() {
+    const q = document.getElementById('search-input').value.toLowerCase();
+    let data = [...citizens];
+    if (q) data = data.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      c.id.toLowerCase().includes(q) ||
+      c.email.toLowerCase().includes(q));
+    document.getElementById('citizens-count').textContent  = `👥 Citizens (${data.length})`;
+    document.getElementById('citizen-total').textContent   = `Total Registered: ${citizens.length}`;
+    document.getElementById('citizens-body').innerHTML = data.map(c => `
+      <tr onclick="window.location.href='citizen-detail.html?id=${c.id}'">
+        <td><strong>${c.id}</strong></td>
+        <td>${c.name}</td>
+        <td>${c.email}</td>
+        <td>${c.phone}</td>
+        <td>${c.totalComplaints}</td>
+        <td>${c.joinDate}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeCitizen('${c.id}')">Remove</button></td>
+      </tr>`).join('');
+  }
+
+  function removeCitizen(id) {
+    if (!confirm('Remove this citizen?')) return;
+    citizens = citizens.filter(c => c.id !== id);
+    renderCitizens();
+  }
+
+  renderCitizens();
+  document.addEventListener('click', e => {
+    if (!document.getElementById('admin-profile').contains(e.target))
+      document.getElementById('profile-dropdown').classList.remove('show');
+  });
+>>>>>>> main
 </script>
 </body>
 </html>
