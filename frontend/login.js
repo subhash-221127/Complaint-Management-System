@@ -1,9 +1,8 @@
 // login.js
 
 const form = document.getElementById("login-form");
-const errorBox = document.getElementById("error-box");
 
-form.addEventListener("submit", async (e) => {
+form.addEventListener("submit", async function (e) {
   e.preventDefault();
 
   const email    = document.getElementById("email").value.trim();
@@ -13,8 +12,6 @@ form.addEventListener("submit", async (e) => {
     showError("Please fill all fields");
     return;
   }
-
-  hideError();
 
   const btn = form.querySelector(".submit-btn");
   btn.textContent = "Signing in…";
@@ -35,7 +32,7 @@ form.addEventListener("submit", async (e) => {
         .split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "U";
 
       const sessionUser = {
-        id:         data.user.id,
+        id:         data.user.id,          // MongoDB _id — used as citizenId in complaint submit
         name:       data.user.name,
         email:      data.user.email,
         role:       data.user.role,
@@ -44,11 +41,10 @@ form.addEventListener("submit", async (e) => {
         initials,
       };
 
-      // Store token + session in both sessionStorage and localStorage
-      sessionStorage.setItem("cityfix_user",  JSON.stringify(sessionUser));
-      localStorage.setItem("cityfix_user",    JSON.stringify(sessionUser));
-      localStorage.setItem("userEmail",       data.user.email);
-      if (data.token) localStorage.setItem("cityfix_token", data.token);
+      // Store in both sessionStorage (preferred) and localStorage (fallback)
+      sessionStorage.setItem("cityfix_user", JSON.stringify(sessionUser));
+      localStorage.setItem("cityfix_user",   JSON.stringify(sessionUser));
+      localStorage.setItem("userEmail",      data.user.email);
 
       // Redirect based on role
       if (data.user.role === "citizen") {
@@ -77,12 +73,13 @@ form.addEventListener("submit", async (e) => {
 });
 
 function showError(msg) {
-  if (!errorBox) return;
-  errorBox.style.display = "flex";
-  const txt = document.getElementById("error-text");
-  if (txt) txt.innerText = msg;
-}
-
-function hideError() {
-  if (errorBox) errorBox.style.display = "none";
+  let box = document.getElementById("error-box");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "error-box";
+    box.style.cssText = "margin-top:12px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;color:#dc2626;font-size:14px;";
+    form.parentElement.appendChild(box);
+  }
+  box.style.display = "block";
+  box.textContent = msg;
 }

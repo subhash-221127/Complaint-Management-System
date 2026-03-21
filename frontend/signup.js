@@ -50,7 +50,7 @@ form.addEventListener("submit", async (e) => {
         window.location.href = "login.html";
       }, 1500);
     } else {
-      showError(data.message || data.error || "Signup failed. Please try again.");
+      showError(data.message || "Signup failed. Please try again.");
       btn.textContent = "Create Account";
       btn.disabled = false;
     }
