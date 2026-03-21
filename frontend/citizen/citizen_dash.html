@@ -4,9 +4,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<<<<<<< HEAD
   <title>Citizen Complaint Portal</title>
   <link rel="stylesheet" href="style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+=======
+  <title>CityFix — Citizen Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="citizen.css" />
+>>>>>>> main
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
 </head>
 
@@ -14,7 +21,11 @@
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
+<<<<<<< HEAD
     <a href="../index.html" class="sidebar-logo">
+=======
+    <a href="#" class="sidebar-logo">
+>>>>>>> main
       <div class="logo-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"
           stroke-linecap="round">
@@ -24,6 +35,7 @@
       </div>
       <span class="logo-text">City<span>Fix</span></span>
     </a>
+<<<<<<< HEAD
 
     
     <nav class="sidebar-nav">
@@ -36,12 +48,23 @@
 
     <div class="sidebar-footer">
       <a href="../login.html" class="sidebar-link" onclick="doLogout(event)"><span class="icon">🚪</span> Logout</a>
+=======
+    <nav class="sidebar-nav">
+      <a href="citizen_dash.html" class="sidebar-link active"><span class="icon">📊</span> Dashboard</a>
+      <a href="citizen_submit.html" class="sidebar-link"><span class="icon">📋</span> New Complaint</a>
+      <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
+      <a href="citizen_track.html" class="sidebar-link"><span class="icon">📍</span> Track Status</a>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="sidebar-link"><span class="icon">🚪</span> Logout</a>
+>>>>>>> main
     </div>
   </aside>
 
   <!-- MAIN -->
   <div class="main">
 
+<<<<<<< HEAD
     <!-- HEADER -->
     <header class="header">
       <div>
@@ -53,10 +76,55 @@
         <div class="profile-chip">
           <div class="chip-avatar">JD</div>
           <span>Jane Doe</span>
+=======
+    <header class="header">
+      <div class="header-left">
+        <h1 class="page-title">Dashboard</h1>
+        <span class="page-sub">Good morning, Jane 👋</span>
+      </div>
+      <div class="header-right">
+        <button class="notif-btn" id="notifBtn">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-dot"></span>
+        </button>
+        <div style="position:relative;">
+          <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+            <div class="chip-avatar">JD</div>
+            <div class="profile-btn-info">
+              <span class="profile-btn-name">Jane Doe</span>
+              <span class="profile-btn-role">Citizen</span>
+            </div>
+            <i class="fa-solid fa-chevron-down profile-chevron"></i>
+          </button>
+          <div class="profile-dropdown" id="profileDropdown">
+            <div class="dropdown-user-header">
+              <div class="dropdown-user-row">
+                <div class="dropdown-user-avatar">JD</div>
+                <div>
+                  <div class="dropdown-user-name">Jane Doe</div>
+                  <div class="dropdown-user-email">jane@email.com</div>
+                </div>
+              </div>
+              <div class="dropdown-user-tags">
+                <span class="dropdown-user-tag">Citizen</span>
+                <span class="dropdown-user-tag">Springfield</span>
+              </div>
+            </div>
+            <div class="dropdown-items">
+              <a href="#" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
+              <div class="dropdown-divider"></div>
+              <a href="../login.html" class="dropdown-item logout-item">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </a>
+            </div>
+          </div>
+>>>>>>> main
         </div>
       </div>
     </header>
 
+<<<<<<< HEAD
     <!-- CONTENT -->
     <div class="content">
 
@@ -88,10 +156,50 @@
           <div>
             <p class="stat-num">1,340</p>
             <p class="stat-lbl">Total Users</p>
+=======
+    <div class="content">
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card c-navy">
+          <div class="stat-icon navy"><i class="fa-solid fa-file-lines"></i></div>
+          <div>
+            <p class="stat-num" id="s-total">8</p>
+            <p class="stat-lbl">Total Filed</p>
+          </div>
+        </div>
+        <div class="stat-card c-orange">
+          <div class="stat-icon orange"><i class="fa-solid fa-clock"></i></div>
+          <div>
+            <p class="stat-num" id="s-pending">3</p>
+            <p class="stat-lbl">Pending</p>
+          </div>
+        </div>
+        <div class="stat-card c-blue">
+          <div class="stat-icon blue"><i class="fa-solid fa-rotate"></i></div>
+          <div>
+            <p class="stat-num" id="s-progress">2</p>
+            <p class="stat-lbl">In Progress</p>
+          </div>
+        </div>
+        <div class="stat-card c-green">
+          <div class="stat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+          <div>
+            <p class="stat-num" id="s-resolved">3</p>
+            <p class="stat-lbl">Resolved</p>
+          </div>
+        </div>
+        <div class="stat-card c-purple">
+          <div class="stat-icon purple"><i class="fa-solid fa-stopwatch"></i></div>
+          <div>
+            <p class="stat-num">2.4d</p>
+            <p class="stat-lbl">Avg. Resolution</p>
+>>>>>>> main
           </div>
         </div>
       </div>
 
+<<<<<<< HEAD
       <!-- FORM GRID -->
       <div class="form-grid">
 
@@ -217,10 +325,101 @@
               <div style="flex:1">
                 <label class="label">District</label>
                 <input class="input" id="dist" type="text" placeholder="District" />
+=======
+      <!-- TWO COLUMN LAYOUT -->
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;">
+
+        <!-- LEFT: MY COMPLAINTS -->
+        <div>
+          <!-- Filters -->
+          <div class="toolbar">
+            <div class="search-wrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="searchInput" placeholder="Search complaints…" />
+            </div>
+            <select class="filter-sel" id="statusFilter">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="inprogress">In Progress</option>
+              <option value="resolved">Resolved</option>
+            </select>
+            <select class="filter-sel" id="categoryFilter">
+              <option value="">All Categories</option>
+              <option>Roads &amp; Potholes</option>
+              <option>Electricity &amp; Lighting</option>
+              <option>Garbage &amp; Sanitation</option>
+              <option>Water &amp; Sewage</option>
+              <option>Parks &amp; Recreation</option>
+              <option>Noise Pollution</option>
+              <option>Public Safety</option>
+            </select>
+            <select class="filter-sel" id="dateFilter">
+              <option value="">All Time</option>
+              <option value="week">This Week</option>
+              <option value="month">This Month</option>
+            </select>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+            <span style="font-size:0.82rem;font-weight:700;color:var(--muted);" id="listCount">8 complaints</span>
+            <a href="citizen_submit.html" class="btn btn-orange btn-sm"><i class="fa-solid fa-plus"></i> New
+              Complaint</a>
+          </div>
+
+          <div id="complaintList"></div>
+          <div class="empty-state" id="emptyState" style="display:none;">
+            <i class="fa-solid fa-folder-open"></i>
+            <p>No complaints found</p>
+            <small>Try adjusting your filters</small>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div>
+
+          <!-- NEARBY COMPLAINTS MAP -->
+          <div class="section-card" style="margin-bottom:16px;">
+            <div class="section-card-header">
+              <h3>📍 Nearby Complaints</h3>
+              <span style="font-size:0.75rem;color:var(--muted);">Your area</span>
+            </div>
+            <div style="padding:14px;">
+              <div class="nearby-map" id="nearbyMap">
+                <div class="map-bg"></div>
+                <!-- Roads -->
+                <div class="road rh" style="top:38%"></div>
+                <div class="road rh" style="top:62%"></div>
+                <div class="road rv" style="left:32%"></div>
+                <div class="road rv" style="left:66%"></div>
+                <!-- Blocks -->
+                <div class="blk" style="top:10%;left:6%;width:20%;height:22%"></div>
+                <div class="blk" style="top:10%;left:36%;width:24%;height:22%"></div>
+                <div class="blk" style="top:10%;left:70%;width:22%;height:22%"></div>
+                <div class="blk green" style="top:42%;left:6%;width:20%;height:14%"></div>
+                <div class="blk" style="top:42%;left:36%;width:24%;height:14%"></div>
+                <div class="blk" style="top:42%;left:70%;width:22%;height:14%"></div>
+                <div class="blk" style="top:66%;left:6%;width:20%;height:18%"></div>
+                <div class="blk" style="top:66%;left:36%;width:24%;height:18%"></div>
+                <div class="blk" style="top:66%;left:70%;width:22%;height:18%"></div>
+                <!-- You are here -->
+                <div
+                  style="position:absolute;left:49%;top:39%;transform:translate(-50%,-50%);width:16px;height:16px;background:var(--navy);border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 4px rgba(26,60,110,0.2);z-index:5;">
+                </div>
+                <!-- Complaint dots populated by JS -->
+                <div id="mapDots"></div>
+                <div class="map-tooltip" id="mapTooltip"></div>
+              </div>
+              <div class="map-legend">
+                <span><span class="legend-dot" style="background:var(--blue)"></span>Pending</span>
+                <span><span class="legend-dot" style="background:var(--amber)"></span>In Progress</span>
+                <span><span class="legend-dot" style="background:var(--green)"></span>Resolved</span>
+                <span><span class="legend-dot" style="background:var(--navy)"></span>You</span>
+>>>>>>> main
               </div>
             </div>
           </div>
 
+<<<<<<< HEAD
           <!-- Contact -->
           <div class="card">
             <div class="card-head">
@@ -248,6 +447,14 @@
             <label class="check-row">
               <input type="checkbox" checked /> I confirm this complaint is accurate
             </label>
+=======
+          <!-- QUICK STATS BREAKDOWN -->
+          <div class="section-card">
+            <div class="section-card-header">
+              <h3>📊 Resolution Progress</h3>
+            </div>
+            <div style="padding:16px;display:flex;flex-direction:column;gap:12px;" id="breakdownList"></div>
+>>>>>>> main
           </div>
 
         </div>
@@ -255,15 +462,32 @@
     </div>
   </div>
 
+<<<<<<< HEAD
   <!-- FAB -->
   <button class="fab" id="fabBtn">
     <i class="fa-solid fa-paper-plane"></i>
     <span>Submit Complaint</span>
   </button>
+=======
+  <!-- DETAIL MODAL -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <span class="modal-id" id="modalId"></span>
+          <h3 id="modalTitle"></h3>
+        </div>
+        <button class="modal-close" id="modalClose"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="modalBody" class="modal-body"></div>
+    </div>
+  </div>
+>>>>>>> main
 
   <!-- TOAST -->
   <div class="toast" id="toast">
     <i class="fa-solid fa-circle-check"></i>
+<<<<<<< HEAD
     <div>
       <strong>Submitted!</strong>
       <small>ID: CMP-2024-7891</small>
@@ -274,3 +498,14 @@
 </body>
 
 </html>
+=======
+    <div><strong id="toastMsg">Done!</strong><small id="toastSub"></small></div>
+  </div>
+
+  <!-- ✅ FIX: src script and inline script are now properly separated -->
+  <script src="api.js"></script>
+  <script src="citizen_dash.js"></script>
+</body>
+
+</html>
+>>>>>>> main
