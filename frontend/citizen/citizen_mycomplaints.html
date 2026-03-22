@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
   <meta charset="UTF-8" />
@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="citizen.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <script src="../admin/theme.js"></script>
 </head>
 
 <body>
@@ -41,8 +42,10 @@
         <span class="page-sub">All complaints submitted by you</span>
       </div>
       <div class="header-right">
-        <button class="notif-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
-        <div style="position:relative;">
+          <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
+          <span id="theme-icon">🌙</span>
+        </button>
+      <div style="position:relative;">
           <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
             <div class="chip-avatar">JD</div>
             <div class="profile-btn-info">
@@ -66,7 +69,7 @@
               </div>
             </div>
             <div class="dropdown-items">
-              <a href="#" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
               <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
               <div class="dropdown-divider"></div>
               <a href="../login.html" class="dropdown-item logout-item"><i class="fa-solid fa-right-from-bracket"></i>
@@ -94,13 +97,6 @@
         </select>
         <select class="filter-sel" id="categoryFilter">
           <option value="">All Categories</option>
-          <option>Roads &amp; Potholes</option>
-          <option>Electricity &amp; Lighting</option>
-          <option>Garbage &amp; Sanitation</option>
-          <option>Water &amp; Sewage</option>
-          <option>Parks &amp; Recreation</option>
-          <option>Noise Pollution</option>
-          <option>Public Safety</option>
         </select>
         <select class="filter-sel" id="dateFilter">
           <option value="">All Time</option>
@@ -192,7 +188,23 @@
   </div>
 
   <script src="api.js"></script>
-  <script src="citizen_mycomplaints.js"></script>
+  <script src="citizen_mycomplaints.js">
+// Load department names into category filter
+(async function() {
+  try {
+    const res   = await fetch('/api/departments');
+    const depts = await res.json();
+    const sel   = document.getElementById('categoryFilter');
+    if (sel && Array.isArray(depts)) {
+      depts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name; opt.textContent = d.name;
+        sel.appendChild(opt);
+      });
+    }
+  } catch(e) { console.error('Failed to load categories', e); }
+})();
+</script>
 </body>
 
 </html>
