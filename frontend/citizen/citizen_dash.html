@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="citizen.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
-  <script src="../admin/theme.js"></script>
 </head>
 
 <body>
@@ -32,6 +31,9 @@
       <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
       <a href="citizen_track.html" class="sidebar-link"><span class="icon">📍</span> Track Status</a>
     </nav>
+    <div class="sidebar-footer">
+      <a href="login.html" class="sidebar-link"><span class="icon">🚪</span> Logout</a>
+    </div>
   </aside>
 
   <!-- MAIN -->
@@ -43,10 +45,11 @@
         <span class="page-sub">Good morning, Jane 👋</span>
       </div>
       <div class="header-right">
-          <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
-          <span id="theme-icon">🌙</span>
+        <button class="notif-btn" id="notifBtn">
+          <i class="fa-solid fa-bell"></i>
+          <span class="notif-dot"></span>
         </button>
-      <div style="position:relative;">
+        <div style="position:relative;">
           <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
             <div class="chip-avatar">JD</div>
             <div class="profile-btn-info">
@@ -70,7 +73,7 @@
               </div>
             </div>
             <div class="dropdown-items">
-              <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="#" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
               <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
               <div class="dropdown-divider"></div>
               <a href="../login.html" class="dropdown-item logout-item">
@@ -114,7 +117,8 @@
             <p class="stat-lbl">Resolved</p>
           </div>
         </div>
-        </div>
+
+      </div>
 
       <!-- TWO COLUMN LAYOUT -->
       <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;">

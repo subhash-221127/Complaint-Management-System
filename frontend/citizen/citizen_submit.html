@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -20,7 +20,6 @@
       flex-shrink: 0;
     }
   </style>
-  <script src="../admin/theme.js"></script>
 </head>
 <body>
 
@@ -41,6 +40,9 @@
     <a href="citizen_mycomplaints.html" class="sidebar-link"><span class="icon">📁</span> My Complaints</a>
     <a href="citizen_track.html"        class="sidebar-link"><span class="icon">📍</span> Track Status</a>
   </nav>
+  <div class="sidebar-footer">
+    <a href="login.html" class="sidebar-link"><span class="icon">🚪</span> Logout</a>
+  </div>
 </aside>
 
 <!-- MAIN -->
@@ -51,11 +53,9 @@
       <span class="page-sub">Report civic issues — reviewed within 24 hours</span>
     </div>
     <div class="header-right">
+      <button class="notif-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
       <div style="position:relative;">
-        <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
-        <span id="theme-icon">🌙</span>
-      </button>
-      <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+        <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
           <div class="chip-avatar">JD</div>
           <div class="profile-btn-info">
             <span class="profile-btn-name">Jane Doe</span>
@@ -78,7 +78,7 @@
             </div>
           </div>
           <div class="dropdown-items">
-            <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+            <a href="#" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
             <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
             <div class="dropdown-divider"></div>
             <a href="../login.html" class="dropdown-item logout-item">
