@@ -145,13 +145,6 @@
             </select>
             <select class="filter-sel" id="categoryFilter">
               <option value="">All Categories</option>
-              <option>Roads &amp; Potholes</option>
-              <option>Electricity &amp; Lighting</option>
-              <option>Garbage &amp; Sanitation</option>
-              <option>Water &amp; Sewage</option>
-              <option>Parks &amp; Recreation</option>
-              <option>Noise Pollution</option>
-              <option>Public Safety</option>
             </select>
             <select class="filter-sel" id="dateFilter">
               <option value="">All Time</option>
@@ -253,7 +246,23 @@
 
   <!-- ✅ FIX: src script and inline script are now properly separated -->
   <script src="api.js"></script>
-  <script src="citizen_dash.js"></script>
+  <script src="citizen_dash.js">
+// Load department names into category filter
+(async function() {
+  try {
+    const res   = await fetch('/api/departments');
+    const depts = await res.json();
+    const sel   = document.getElementById('categoryFilter');
+    if (sel && Array.isArray(depts)) {
+      depts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name; opt.textContent = d.name;
+        sel.appendChild(opt);
+      });
+    }
+  } catch(e) { console.error('Failed to load categories', e); }
+})();
+</script>
 </body>
 
 </html>

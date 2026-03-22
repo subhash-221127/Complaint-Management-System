@@ -2,39 +2,102 @@
 const express    = require("express");
 const router     = express.Router();
 const Department = require("../models/Department");
+const Complaint  = require("../models/Complaint");
+const Officer    = require("../models/Officer");
 
-// GET all active departments
+// Helper: build a filter that matches complaints for a department
+// Tries exact name first, falls back to first-keyword regex for legacy complaints
+async function buildDeptFilter(deptName) {
+  const exact = await Complaint.countDocuments({ department: deptName });
+  if (exact > 0) return { department: deptName };
+  // Legacy complaints may be stored with different names (e.g. "Roads & Potholes")
+  const kw = deptName.split(/[\s&,]+/).find(function(w) { return w.length > 3; }) || deptName;
+  return { department: new RegExp(kw, "i") };
+}
+
+// GET /api/departments — ALL departments with live computed stats
 router.get("/departments", async (_req, res) => {
   try {
     const departments = await Department.find({}).sort({ name: 1 });
-    res.json(departments);
+
+    const enriched = await Promise.all(departments.map(async function(dept) {
+      try {
+        const deptFilter = await buildDeptFilter(dept.name);
+
+        const results = await Promise.all([
+          Complaint.countDocuments(deptFilter),
+          Complaint.countDocuments(Object.assign({}, deptFilter, { status: "resolved" })),
+          Complaint.countDocuments(Object.assign({}, deptFilter, { status: "pending" })),
+          Complaint.countDocuments(Object.assign({}, deptFilter, { status: { $in: ["assigned", "in_progress"] } })),
+          Officer.countDocuments({ departmentName: dept.name }),
+          Officer.countDocuments({ departmentName: dept.name, status: "Active" }),
+        ]);
+
+        return Object.assign({}, dept.toObject(), {
+          totalComplaints:      results[0],
+          resolvedComplaints:   results[1],
+          pendingComplaints:    results[2],
+          inProgressComplaints: results[3],
+          totalOfficers:        results[4],
+          activeOfficers:       results[5],
+        });
+      } catch (e) {
+        console.error("Stats error for dept:", dept.name, e.message);
+        return Object.assign({}, dept.toObject(), {
+          totalComplaints: 0, resolvedComplaints: 0, pendingComplaints: 0,
+          inProgressComplaints: 0, totalOfficers: 0, activeOfficers: 0,
+        });
+      }
+    }));
+
+    res.json(enriched);
   } catch (err) {
+    console.error("GET /departments error:", err.message);
     res.status(500).json({ message: "Failed to fetch departments", error: err.message });
   }
 });
 
-// GET single department
+// GET /api/departments/:id — single department with live stats
 router.get("/departments/:id", async (req, res) => {
   try {
     const dept = await Department.findById(req.params.id);
     if (!dept) return res.status(404).json({ message: "Department not found" });
-    res.json(dept);
+
+    const deptFilter = await buildDeptFilter(dept.name);
+
+    const results = await Promise.all([
+      Complaint.countDocuments(deptFilter),
+      Complaint.countDocuments(Object.assign({}, deptFilter, { status: "resolved" })),
+      Complaint.countDocuments(Object.assign({}, deptFilter, { status: "pending" })),
+      Complaint.countDocuments(Object.assign({}, deptFilter, { status: { $in: ["assigned", "in_progress"] } })),
+      Officer.countDocuments({ departmentName: dept.name }),
+      Officer.countDocuments({ departmentName: dept.name, status: "Active" }),
+    ]);
+
+    res.json(Object.assign({}, dept.toObject(), {
+      totalComplaints:      results[0],
+      resolvedComplaints:   results[1],
+      pendingComplaints:    results[2],
+      inProgressComplaints: results[3],
+      totalOfficers:        results[4],
+      activeOfficers:       results[5],
+    }));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// POST create department
+// POST /api/departments — create new department
 router.post("/departments", async (req, res) => {
   try {
-    const { name, code, description } = req.body;
-    if (!name || !code) {
-      return res.status(400).json({ message: "Name and code are required." });
+    const { name, description } = req.body;
+    if (!name) {
+      return res.status(400).json({ message: "Department name is required." });
     }
-    const existing = await Department.findOne({ $or: [{ name: name.trim() }, { code: code.trim().toUpperCase() }] });
-    if (existing) return res.status(409).json({ message: "Department with this name or code already exists." });
+    const existing = await Department.findOne({ name: name.trim() });
+    if (existing) return res.status(409).json({ message: "Department '" + name + "' already exists." });
 
-    const dept = await Department.create({ name: name.trim(), code: code.trim().toUpperCase(), description });
+    const dept = await Department.create({ name: name.trim(), description: description || "" });
     res.status(201).json({ message: "Department created", department: dept });
   } catch (err) {
     if (err.code === 11000) return res.status(409).json({ message: "Duplicate name or code." });
@@ -42,12 +105,12 @@ router.post("/departments", async (req, res) => {
   }
 });
 
-// DELETE department (soft delete)
+// DELETE /api/departments/:id — permanently delete
 router.delete("/departments/:id", async (req, res) => {
   try {
-    const dept = await Department.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
-    if (!dept) return res.status(404).json({ message: "Department not found" });
-    res.json({ message: "Department removed" });
+    const dept = await Department.findByIdAndDelete(req.params.id);
+    if (!dept) return res.status(404).json({ message: "Department not found." });
+    res.json({ message: '"' + dept.name + '" deleted successfully.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

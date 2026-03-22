@@ -108,14 +108,6 @@
           <div class="select-wrap">
             <select class="input" id="categorySelect">
               <option value="">— Select a category —</option>
-              <option>Roads &amp; Potholes</option>
-              <option>Water &amp; Sewage</option>
-              <option>Electricity &amp; Lighting</option>
-              <option>Garbage &amp; Sanitation</option>
-              <option>Public Safety</option>
-              <option>Noise Pollution</option>
-              <option>Parks &amp; Recreation</option>
-              <option>Other</option>
             </select>
             <i class="fa-solid fa-chevron-down arr"></i>
           </div>
@@ -248,5 +240,22 @@
 
 <script src="api.js"></script>
 <script src="citizen_submit.js"></script>
+<script>
+// Load departments from DB into category dropdown
+(async function() {
+  try {
+    const res   = await fetch('/api/departments');
+    const depts = await res.json();
+    const sel   = document.getElementById('categorySelect');
+    if (sel && Array.isArray(depts)) {
+      depts.forEach(d => {
+        const opt = document.createElement('option');
+        opt.value = d.name; opt.textContent = d.name;
+        sel.appendChild(opt);
+      });
+    }
+  } catch(e) { console.error('Failed to load departments', e); }
+})();
+</script>
 </body>
 </html>
