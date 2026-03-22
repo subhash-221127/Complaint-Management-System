@@ -288,16 +288,29 @@
       var allComplaints = await results[1].json();
       var allOfficers   = await results[2].json();
 
-      // Filter to this department only
-      // Flexible match: exact OR first-keyword match for legacy complaint categories
-      var _dn = dept.name.toLowerCase();
-      var _kw = _dn.split(/[\s&]+/).filter(function(w){ return w.length > 3; })[0] || _dn;
+      // LEGACY_MAP: same logic as backend — match both new and old category names
+      var LEGACY_MAP = {
+        'Roads & Infrastructure': ['roads','potholes','infrastructure'],
+        'Water Supply':           ['water','sewage'],
+        'Electricity':            ['electricity','lighting'],
+        'Sanitation':             ['sanitation','garbage'],
+        'Parks & Recreation':     ['parks','recreation'],
+        'Public Safety':          ['safety','public safety','noise'],
+      };
+
+      var keywords = LEGACY_MAP[dept.name];
       complaints = allComplaints.filter(function(c){
         if (!c.department) return false;
-        var _cd = c.department.toLowerCase();
-        return _cd === _dn || _cd.includes(_kw) || _dn.includes(_cd.split(/[\s&]+/).filter(function(w){ return w.length>3; })[0]||_cd);
+        var cd = c.department.toLowerCase();
+        // Exact match
+        if (cd === dept.name.toLowerCase()) return true;
+        // Keyword match for legacy names
+        if (keywords) {
+          return keywords.some(function(kw){ return cd.includes(kw); });
+        }
+        return false;
       });
-      officers   = allOfficers.filter(function(o){ return o.departmentName === dept.name; });
+      officers = allOfficers.filter(function(o){ return o.departmentName === dept.name; });
 
       render();
     } catch(err) {
