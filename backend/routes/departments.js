@@ -7,12 +7,25 @@ const Officer    = require("../models/Officer");
 
 // Helper: build a filter that matches complaints for a department
 // Tries exact name first, falls back to first-keyword regex for legacy complaints
-async function buildDeptFilter(deptName) {
-  const exact = await Complaint.countDocuments({ department: deptName });
-  if (exact > 0) return { department: deptName };
-  // Legacy complaints may be stored with different names (e.g. "Roads & Potholes")
-  const kw = deptName.split(/[\s&,]+/).find(function(w) { return w.length > 3; }) || deptName;
-  return { department: new RegExp(kw, "i") };
+// Known legacy name mappings: DB name → old citizen category names
+const LEGACY_MAP = {
+  "Roads & Infrastructure": ["Roads", "Potholes", "Infrastructure"],
+  "Water Supply":           ["Water", "Sewage"],
+  "Electricity":            ["Electricity", "Lighting"],
+  "Sanitation":             ["Sanitation", "Garbage"],
+  "Parks & Recreation":     ["Parks", "Recreation"],
+  "Public Safety":          ["Safety", "Public Safety", "Noise"],
+};
+
+function buildDeptFilter(deptName) {
+  const keywords = LEGACY_MAP[deptName];
+  if (keywords) {
+    // Match any complaint whose department contains ANY of the keywords
+    const pattern = keywords.join("|");
+    return { department: new RegExp(pattern, "i") };
+  }
+  // Unknown department: exact match only
+  return { department: deptName };
 }
 
 // GET /api/departments — ALL departments with live computed stats
@@ -22,7 +35,7 @@ router.get("/departments", async (_req, res) => {
 
     const enriched = await Promise.all(departments.map(async function(dept) {
       try {
-        const deptFilter = await buildDeptFilter(dept.name);
+        const deptFilter = buildDeptFilter(dept.name);
 
         const results = await Promise.all([
           Complaint.countDocuments(deptFilter),
@@ -63,7 +76,7 @@ router.get("/departments/:id", async (req, res) => {
     const dept = await Department.findById(req.params.id);
     if (!dept) return res.status(404).json({ message: "Department not found" });
 
-    const deptFilter = await buildDeptFilter(dept.name);
+    const deptFilter = buildDeptFilter(dept.name);
 
     const results = await Promise.all([
       Complaint.countDocuments(deptFilter),
