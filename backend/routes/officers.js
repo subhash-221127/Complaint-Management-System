@@ -109,7 +109,7 @@ router.get("/officers/:id/complaints", async (req, res) => {
     if (!officer) return res.status(404).json({ message: "Officer not found" });
 
     const complaints = await Complaint.find({ officerId: officer._id })
-      .populate("citizenId", "name email")
+      .populate("citizenId", "name email phone")
       .sort({ createdAt: -1 });
 
     res.json(complaints);

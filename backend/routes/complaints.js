@@ -276,7 +276,7 @@ router.get("/mycomplaints", async (req, res) => {
 
     const complaints = await Complaint
       .find({ citizenId: userId })
-      .populate("officerId", "name designation departmentName")
+      .populate("officerId", "name designation departmentName phone email")
       .sort({ createdAt: -1 });
 
     return res.json(complaints);
@@ -295,11 +295,13 @@ router.get("/complaint/:id", async (req, res) => {
 
     let complaint = await Complaint
       .findOne({ complaintId: id.toUpperCase() })
-      .populate("officerId", "name designation departmentName");
+      .populate("officerId", "name designation departmentName phone email")
+      .populate("citizenId", "name email phone");
     if (!complaint) {
       complaint = await Complaint
         .findById(id)
-        .populate("officerId", "name designation departmentName")
+        .populate("officerId", "name designation departmentName phone email")
+        .populate("citizenId", "name email phone")
         .catch(() => null);
     }
 
@@ -332,7 +334,7 @@ router.patch("/complaint/:id/assign", async (req, res) => {
         assignedAt: new Date(),
       },
       { new: true }
-    ).populate("officerId", "name designation departmentName");
+    ).populate("officerId", "name designation departmentName phone email");
 
     if (!complaint) return res.status(404).json({ message: "Complaint not found" });
 
