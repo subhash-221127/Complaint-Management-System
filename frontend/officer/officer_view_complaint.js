@@ -250,20 +250,6 @@ function renderOfficerDetail(c) {
           <button class="btn-full btn-full-green" id="resolve-btn" onclick="submitResolve('${c._id}')">
             <i class="fa-solid fa-circle-check"></i> Mark as Resolved &amp; Close
           </button>
-          <div style="border-top:1px solid var(--slate-100);padding-top:12px;">
-            <button class="btn-full btn-full-red" onclick="showRejectPanel()">
-              <i class="fa-solid fa-ban"></i> Reject Complaint
-            </button>
-            <div id="reject-panel" style="display:none;margin-top:10px;">
-              <label style="font-size:0.78rem;font-weight:700;color:var(--slate-500);display:block;margin-bottom:6px;">
-                Rejection Justification <span style="color:var(--red);">*</span>
-              </label>
-              <textarea class="rejection-textarea" id="reject-reason" placeholder="Explain why you are rejecting this complaint…" rows="3"></textarea>
-              <button class="btn-full btn-full-red" style="margin-top:10px;" onclick="submitReject('${c._id}')">
-                <i class="fa-solid fa-circle-xmark"></i> Confirm Rejection
-              </button>
-            </div>
-          </div>
         </div>
       </div>`;
   } else if (c.status === 'resolved') {
@@ -546,29 +532,38 @@ async function sendMessage(mongoId) {
   const text = input.value.trim();
   const authorName = SESSION.name || SESSION.email || 'Officer';
 
+  // Disable input while sending
+  input.disabled = true;
+
   try {
-    await fetch(`${BASE_URL}/api/complaint/${mongoId}/comment`, {
+    const resp = await fetch(`${BASE_URL}/api/complaint/${mongoId}/comment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author: authorName, text }),
+      body: JSON.stringify({ author: authorName, role: 'officer', text }),
     });
+    if (!resp.ok) throw new Error('Failed to send');
+
+    input.value = '';
+    const list = document.getElementById('commentList');
+    // Remove the "no messages" placeholder if present
+    const emptyMsg = list.querySelector('p');
+    if (emptyMsg) emptyMsg.remove();
+
+    const now = new Date().toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    const div = document.createElement('div');
+    div.className = 'comment-item comment-officer';
+    div.innerHTML = `
+      <div class="comment-meta"><strong>${authorName}</strong><span>${now}</span></div>
+      <div class="comment-text">${text}</div>`;
+    list.appendChild(div);
+    list.scrollTop = list.scrollHeight;
+    showOfficerToast('Message sent.');
   } catch (err) {
-    console.warn('Comment API:', err);
+    showOfficerToast('Failed to send message. Try again.', 'error');
+  } finally {
+    input.disabled = false;
+    input.focus();
   }
-
-  input.value = '';
-  const list = document.getElementById('commentList');
-  // Remove the "no messages" placeholder if present
-  const emptyMsg = list.querySelector('p');
-  if (emptyMsg) emptyMsg.remove();
-
-  const div = document.createElement('div');
-  div.className = 'comment-item';
-  div.innerHTML = `
-    <div class="comment-meta"><strong>${authorName}</strong><span>Just now</span></div>
-    <div class="comment-text">${text}</div>`;
-  list.appendChild(div);
-  showOfficerToast('Message sent to citizen.');
 }
 
 // ── Toast ──────────────────────────────────────────────────────

@@ -195,7 +195,7 @@ function filterComplaints() {
   list.style.display  = 'flex';
 
   list.innerHTML = filtered.map(c => `
-    <div class="complaint-card" onclick="openModal('${c._id}')">
+    <div class="complaint-card" onclick="window.location.href='officer_view_complaint.html?id=${c._id}'" style="cursor:pointer;">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div class="complaint-card-left" style="flex:1;">
           <div style="font-size:0.72rem;font-weight:700;color:var(--slate-400);margin-bottom:4px;">${c.id}</div>
@@ -211,11 +211,8 @@ function filterComplaints() {
             ${severityBadge(c.severity)}
           </div>
         </div>
-        <div class="card-actions" onclick="event.stopPropagation()" style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0;">
-          ${c.status === 'assigned'    ? `<button class="btn-sm btn-primary-sm" onclick="updateStatus('${c._id}','in_progress')"><i class="fa-solid fa-play"></i> Accept</button><button class="btn-sm btn-outline-sm" style="color:var(--red);border-color:var(--red-light);" onclick="rejectAssignment('${c._id}')"><i class="fa-solid fa-ban"></i> Decline</button>` : ''}
-          ${c.status === 'in_progress' ? `<button class="btn-sm btn-green-sm" onclick="updateStatus('${c._id}','resolved')"><i class="fa-solid fa-check"></i> Resolve</button>` : ''}
-          ${c.status === 'resolved'    ? `<span style="font-size:0.78rem;color:var(--green);font-weight:700;"><i class="fa-solid fa-circle-check"></i> Completed</span>` : ''}
-          <button class="btn-sm btn-outline-sm" style="background:rgba(26,60,110,0.08);color:var(--navy);border-color:rgba(26,60,110,0.18);" onclick="window.location.href='officer_view_complaint.html?id=${c._id}'"><i class="fa-solid fa-eye"></i> View</button>
+        <div style="flex-shrink:0;color:var(--slate-400);">
+          <i class="fa-solid fa-chevron-right"></i>
         </div>
       </div>
     </div>

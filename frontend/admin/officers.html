@@ -57,7 +57,7 @@
           <div class="admin-avatar" id="admin-avatar">AD</div>
           <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
           <div class="profile-dropdown" id="profile-dropdown">
-            <a href="#">&#128100; My Profile</a>
+            <a href="profile.html">&#128100; My Profile</a>
             <a href="../login.html" onclick="doLogout(event)">&#128682; Logout</a>
           </div>
         </div>
@@ -71,7 +71,7 @@
         <select id="status-filter" onchange="applyFilters()">
           <option value="all">All Status</option>
           <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
+          <option value="On Leave">On Leave</option>
         </select>
         <label>Department:</label>
         <select id="dept-filter" onchange="applyFilters()">
@@ -86,7 +86,7 @@
       <div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
         <div class="stat-card blue"><div class="stat-card-header"><div class="stat-card-icon blue">&#128110;</div></div><div class="stat-value" id="total-count">...</div><div class="stat-label">Total Officers</div></div>
         <div class="stat-card green"><div class="stat-card-header"><div class="stat-card-icon green">&#10003;</div></div><div class="stat-value" id="active-count">...</div><div class="stat-label">Active</div></div>
-        <div class="stat-card red"><div class="stat-card-header"><div class="stat-card-icon red">&#10007;</div></div><div class="stat-value" id="inactive-count">...</div><div class="stat-label">Inactive</div></div>
+        <div class="stat-card orange"><div class="stat-card-header"><div class="stat-card-icon orange">&#9200;</div></div><div class="stat-value" id="inactive-count">...</div><div class="stat-label">On Leave</div></div>
       </div>
 
       <div class="section-card">
@@ -151,7 +151,7 @@
   }
 
   function statusBadge(s) {
-    const cls = { 'Active':'active', 'Inactive':'rejected' };
+    const cls = { 'Active':'active', 'On Leave':'warning' };
     return '<span class="status-badge ' + (cls[s] || 'pending') + '">' + s + '</span>';
   }
 
@@ -175,7 +175,7 @@
 
     document.getElementById('total-count').textContent    = allOfficers.length;
     document.getElementById('active-count').textContent   = allOfficers.filter(o => o.status === 'Active').length;
-    document.getElementById('inactive-count').textContent = allOfficers.filter(o => o.status === 'Inactive').length;
+    document.getElementById('inactive-count').textContent = allOfficers.filter(o => o.status === 'On Leave').length;
     document.getElementById('officers-count').textContent = 'Officers (' + data.length + ')';
 
     if (!data.length) {

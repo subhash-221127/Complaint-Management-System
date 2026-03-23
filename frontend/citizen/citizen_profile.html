@@ -206,6 +206,7 @@
   <div class="toast" id="toast"></div>
 
 <script>
+  var BASE_URL = "http://localhost:5000";
   // ── Auth guard ─────────────────────────────────────────────
   var user = JSON.parse(sessionStorage.getItem('cityfix_user') || localStorage.getItem('cityfix_user') || '{}');
   if (!user || !user.id) window.location.replace('../login.html');
@@ -261,7 +262,7 @@
     var btn = document.getElementById('save-btn');
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
-      var res  = await fetch('/api/auth/update-profile', {
+      var res  = await fetch(BASE_URL + '/api/auth/update-profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: user.id, name: name, phone: phone, address: addr })
@@ -424,7 +425,7 @@
     var btn = document.getElementById('pw-btn');
     btn.disabled = true; btn.textContent = 'Changing…';
     try {
-      var res  = await fetch('/api/auth/change-password', {
+      var res  = await fetch(BASE_URL + '/api/auth/change-password', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: user.id, currentPassword: curr, newPassword: newPw })
@@ -446,8 +447,8 @@
   async function init() {
     try {
       var results = await Promise.all([
-        fetch('/api/auth/me?id=' + user.id),
-        fetch('/api/complaints/citizen/' + user.id)
+        fetch(BASE_URL + '/api/auth/me?id=' + user.id),
+        fetch(BASE_URL + '/api/mycomplaints?userId=' + user.id)
       ]);
 
       var dbUser     = await results[0].json();

@@ -132,7 +132,7 @@
           <div class="admin-avatar" id="admin-avatar">AD</div>
           <div class="admin-info"><div class="name" id="admin-name">Admin User</div><div class="role">Administrator</div></div>
           <div class="profile-dropdown" id="profile-dropdown">
-            <a href="#">👤 My Profile</a>
+            <a href="profile.html">👤 My Profile</a>
             <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
           </div>
         </div>
@@ -158,7 +158,7 @@
   }
 
   function statusBadge(s) {
-    var cls = { 'Active':'active', 'Inactive':'rejected' };
+    var cls = { 'Active':'active', 'On Leave':'warning' };
     return '<span class="status-badge ' + (cls[s] || 'pending') + '">' + s + '</span>';
   }
 

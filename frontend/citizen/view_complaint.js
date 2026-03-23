@@ -151,8 +151,8 @@ function normalizeComplaint(c) {
     status:      c.status === "in_progress" ? "inprogress" : (c.status || "pending"),
     officer: c.officerId?.name || "—",
     dept:       c.department || "—",
-    officerPhone: c.officerPhone || null,
-    officerEmail: c.officerEmail || null,
+    officerPhone: c.officerId?.phone || null,
+    officerEmail: c.officerId?.email || null,
     evidence:    c.evidencePaths?.[0] || null,
     rated:       c.rated || false,
     canReopen:   c.status === "resolved",
@@ -497,11 +497,47 @@ function showToast(msg) {
 
 // Profile dropdown handled by citizen-shell.js
 
+function populateUserUI() {
+  const user = JSON.parse(sessionStorage.getItem('cityfix_user') || localStorage.getItem('cityfix_user') || '{}');
+  if (!user || !user.name) return;
+  const initials = user.name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const chipAvatar = document.querySelector('.chip-avatar');
+  if (chipAvatar) chipAvatar.textContent = initials;
+  const profileBtnName = document.querySelector('.profile-btn-name');
+  if (profileBtnName) profileBtnName.textContent = user.name;
+  const dropAvatar = document.querySelector('.dropdown-user-avatar');
+  if (dropAvatar) dropAvatar.textContent = initials;
+  const dropName = document.querySelector('.dropdown-user-name');
+  if (dropName) dropName.textContent = user.name;
+  const dropEmail = document.querySelector('.dropdown-user-email');
+  if (dropEmail) dropEmail.textContent = user.email || '';
+}
+
+function toggleProfile(e) {
+  e.stopPropagation();
+  document.getElementById('profileBtn').classList.toggle('open');
+  document.getElementById('profileDropdown').classList.toggle('open');
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  const icon = document.getElementById('theme-icon');
+  if (icon) icon.textContent = isDark ? '🌙' : '☀️';
+}
+
+document.addEventListener('click', () => {
+  document.getElementById('profileBtn')?.classList.remove('open');
+  document.getElementById('profileDropdown')?.classList.remove('open');
+});
+
 // -----------------------------------------------
 // 10. INIT — read ?id= and fetch from backend
 // -----------------------------------------------
 
 document.addEventListener("DOMContentLoaded", async () => {
+  populateUserUI();
   const params  = new URLSearchParams(window.location.search);
   const id      = params.get("id");  // this is MongoDB _id
 
