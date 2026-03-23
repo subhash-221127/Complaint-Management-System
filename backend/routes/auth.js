@@ -266,7 +266,7 @@ router.post("/login", async (req, res) => {
     if (officer) {
       const match = await bcrypt.compare(password, officer.password);
       if (!match) return res.status(401).json({ message: "Invalid credentials." });
-      if (officer.status === "Inactive") return res.status(403).json({ message: "Account is inactive." });
+      if (officer.status === "On Leave") return res.status(403).json({ message: "Your account is currently on leave. Please contact admin." });
       const token = generateToken({ id: officer._id, officerId: officer.officerId, role: "officer" });
       return res.json({
         message: "Login successful", token,
@@ -316,7 +316,7 @@ router.post("/auth/google", async (req, res) => {
 
     const officer = await Officer.findOne({ email: lower });
     if (officer) {
-      if (officer.status === "Inactive") return res.status(403).json({ message: "Account is inactive." });
+      if (officer.status === "On Leave") return res.status(403).json({ message: "Your account is currently on leave. Please contact admin." });
       const token = generateToken({ id: officer._id, role: "officer" });
       return res.json({ token, user: { id: officer._id, name: officer.name, email: officer.email, role: "officer" } });
     }
@@ -354,6 +354,88 @@ router.post("/auth/google/signup", async (req, res) => {
 
   } catch (err) {
     res.status(401).json({ message: "Google signup failed", error: err.message });
+  }
+});
+
+
+// ── GET /api/auth/me?id=<userId> ──────────────────────────────
+router.get("/auth/me", async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ message: "User ID required." });
+    const user = await User.findById(id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found." });
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── PATCH /api/auth/update-profile ───────────────────────────
+router.patch("/auth/update-profile", async (req, res) => {
+  try {
+    const { id, name, phone, address } = req.body;
+    if (!id) return res.status(400).json({ message: "User ID required." });
+    const updated = await User.findByIdAndUpdate(
+      id, { name, phone, address }, { new: true, runValidators: true }
+    ).select("-password");
+    if (!updated) return res.status(404).json({ message: "User not found." });
+    res.json({ message: "Profile updated successfully.", user: updated });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── PATCH /api/auth/change-password ──────────────────────────
+// Works for Citizen, Admin
+router.patch("/auth/change-password", async (req, res) => {
+  try {
+    const { id, currentPassword, newPassword } = req.body;
+    if (!id || !currentPassword || !newPassword)
+      return res.status(400).json({ message: "All fields are required." });
+    if (newPassword.length < 6)
+      return res.status(400).json({ message: "New password must be at least 6 characters." });
+
+    // Try Admin first, then Citizen
+    let account = await Admin.findById(id);
+    if (!account) account = await User.findById(id);
+    if (!account) return res.status(404).json({ message: "Account not found." });
+
+    const match = await bcrypt.compare(currentPassword, account.password);
+    if (!match) return res.status(401).json({ message: "Current password is incorrect." });
+    account.password = await bcrypt.hash(newPassword, 10);
+    await account.save();
+    res.json({ message: "Password changed successfully." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── GET /api/admin/me?id=<adminId> ───────────────────────────
+router.get("/admin/me", async (req, res) => {
+  try {
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ message: "Admin ID required." });
+    const admin = await Admin.findById(id).select("-password");
+    if (!admin) return res.status(404).json({ message: "Admin not found." });
+    res.json(admin);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── PATCH /api/admin/me ──────────────────────────────────────
+router.patch("/admin/me", async (req, res) => {
+  try {
+    const { id, name } = req.body;
+    if (!id) return res.status(400).json({ message: "Admin ID required." });
+    const updated = await Admin.findByIdAndUpdate(
+      id, { name }, { new: true }
+    ).select("-password");
+    if (!updated) return res.status(404).json({ message: "Admin not found." });
+    res.json({ message: "Profile updated.", admin: updated });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
 });
 

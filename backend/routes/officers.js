@@ -259,7 +259,7 @@ router.delete("/officers/:id", async (req, res) => {
 // ── PATCH /officers/:id/status ─────────────────────────────────
 router.patch("/officers/:id/status", async (req, res) => {
   try {
-    const { status } = req.body; // "Active" | "On Leave" | "Inactive"
+    const { status } = req.body; // "Active" | "On Leave"
     // Try to find by officerId string (e.g. "OFF031") first, then by MongoDB _id
     let officer = await Officer.findOne({ officerId: req.params.id });
     if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {

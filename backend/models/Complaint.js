@@ -43,6 +43,15 @@ const complaintSchema = new mongoose.Schema({
   assignedAt:  { type: Date, default: null },
   resolvedAt:  { type: Date, default: null },
 
+  comments: [
+    {
+      author:    { type: String, default: 'Unknown' },
+      role:      { type: String, default: 'officer' }, // 'officer' | 'admin'
+      text:      { type: String, required: true },
+      createdAt: { type: Date,   default: Date.now },
+    }
+  ],
+
 }, { timestamps: true });
 
 // Auto-generate complaint ID before first save (Mongoose v9 — no next())
