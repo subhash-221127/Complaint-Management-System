@@ -200,6 +200,62 @@ function buildConfirmationEmail(citizen, complaint) {
 }
 
 // ─────────────────────────────────────────────
+// Email template — Complaint Resolved
+// ─────────────────────────────────────────────
+function buildResolvedEmail(citizen, complaint) {
+  const resolvedAt = complaint.resolvedAt
+    ? new Date(complaint.resolvedAt).toLocaleString("en-IN", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : new Date().toLocaleString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);max-width:600px;width:100%;">
+        <tr>
+          <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:36px 40px;text-align:center;">
+            <span style="font-size:24px;font-weight:700;color:#fff;">City<span style="color:#93c5fd;">Fix</span></span>
+            <p style="color:#bfdbfe;margin:8px 0 0;font-size:14px;">Complaint Management System</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f0fdf4;border-bottom:2px solid #bbf7d0;padding:20px 40px;text-align:center;">
+            <span style="font-size:32px;">✅</span>
+            <h2 style="margin:8px 0 4px;color:#15803d;font-size:20px;font-weight:700;">Complaint Resolved!</h2>
+            <p style="margin:0;color:#166534;font-size:14px;">Your complaint has been successfully resolved.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 20px;color:#374151;font-size:15px;">Dear <strong>${citizen.name}</strong>,</p>
+            <p style="margin:0 0 20px;color:#374151;font-size:14px;line-height:1.7;">
+              We are pleased to inform you that your complaint <strong style="color:#2563eb;">${complaint.complaintId}</strong> has been resolved.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+              <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;width:130px;">Complaint ID</td><td style="font-size:14px;font-weight:700;color:#2563eb;">${complaint.complaintId}</td></tr>
+              <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Title</td><td style="font-size:14px;color:#111827;">${complaint.title}</td></tr>
+              <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Department</td><td style="font-size:14px;color:#111827;">${complaint.department}</td></tr>
+              <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Resolved On</td><td style="font-size:14px;color:#111827;">${resolvedAt}</td></tr>
+            </table>
+            <p style="font-size:13px;color:#6b7280;text-align:center;">Thank you for using CityFix to report civic issues.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">CityFix — Automated notification. Do not reply.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+// ─────────────────────────────────────────────
 // POST /api/create  —  Submit a complaint
 // ─────────────────────────────────────────────
 router.post("/create", upload.single("evidence"), async (req, res) => {
@@ -432,6 +488,144 @@ router.patch("/complaint/:id/withdraw", async (req, res) => {
     );
 
     res.json({ message: "Complaint withdrawn" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// PATCH /api/complaint/:id/reject-assignment
+// Officer declines the assignment — complaint goes back to pending
+// ─────────────────────────────────────────────
+router.patch("/complaint/:id/reject-assignment", async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    // Decrement officer's casesHandled since they are returning it
+    if (complaint.officerId) {
+      await Officer.findByIdAndUpdate(complaint.officerId, {
+        $inc: { casesHandled: -1 }
+      });
+    }
+
+    complaint.officerId  = null;
+    complaint.status     = "pending";
+    complaint.assignedAt = null;
+    await complaint.save();
+
+    res.json({ message: "Assignment declined. Complaint returned to queue." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// PATCH /api/complaint/:id/officer-reject
+// Officer rejects the complaint with a reason
+// ─────────────────────────────────────────────
+router.patch("/complaint/:id/officer-reject", async (req, res) => {
+  try {
+    const { rejectionReason } = req.body;
+    if (!rejectionReason || !rejectionReason.trim()) {
+      return res.status(400).json({ message: "A rejection reason is required." });
+    }
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    complaint.status          = "rejected";
+    complaint.rejectionReason = rejectionReason.trim();
+    await complaint.save();
+
+    // Update department counters
+    await Department.findOneAndUpdate(
+      { name: complaint.department },
+      { $inc: { pendingComplaints: -1 } }
+    );
+
+    res.json({ message: "Complaint rejected.", complaint });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// PATCH /api/complaint/:id/resolve
+// Officer marks complaint resolved (with optional evidence upload)
+// ─────────────────────────────────────────────
+router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    complaint.status     = "resolved";
+    complaint.resolvedAt = new Date();
+
+    if (req.file) {
+      complaint.evidencePaths.push(req.file.filename);
+    }
+
+    await complaint.save();
+
+    // Update department and officer counters
+    await Department.findOneAndUpdate(
+      { name: complaint.department },
+      { $inc: { resolvedComplaints: 1, pendingComplaints: -1 } }
+    );
+    if (complaint.officerId) {
+      await Officer.findByIdAndUpdate(complaint.officerId, {
+        $inc: { casesResolved: 1 }
+      });
+    }
+
+    // Send resolved email to citizen (non-fatal)
+    try {
+      const citizen = await User.findById(complaint.citizenId);
+      if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        await transporter.sendMail({
+          from:    `"CityFix" <${process.env.EMAIL_USER}>`,
+          to:      citizen.email,
+          subject: `✅ Complaint Resolved – ${complaint.complaintId} | CityFix`,
+          html:    buildResolvedEmail(citizen, complaint),
+        });
+        console.log(`Resolved email sent to ${citizen.email}`);
+      }
+    } catch (emailErr) {
+      console.error("Resolved email failed (non-fatal):", emailErr.message);
+    }
+
+    res.json({ message: "Complaint resolved successfully.", complaint });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// POST /api/complaint/:id/comment
+// Officer or admin posts a comment/message
+// ─────────────────────────────────────────────
+router.post("/complaint/:id/comment", async (req, res) => {
+  try {
+    const { author, text, role } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Comment text is required." });
+    }
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    const comment = {
+      author:    author    || "Unknown",
+      role:      role      || "officer",
+      text:      text.trim(),
+      createdAt: new Date(),
+    };
+
+    complaint.comments.push(comment);
+    await complaint.save();
+
+    res.json({ message: "Comment added.", comment });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

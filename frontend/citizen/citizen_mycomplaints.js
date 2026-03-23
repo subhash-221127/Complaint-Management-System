@@ -47,7 +47,6 @@ function sevBadgeHTML(s) {
 
 function normalizeComplaint(c) {
   // location is stored as { address, lat, lng } object in MongoDB
-  const locationStr = c.location?.address || c.location || "—";
 
   return {
     id:          c.complaintId || c._id,
@@ -56,7 +55,7 @@ function normalizeComplaint(c) {
     description: c.description || "",
     category:    c.department || c.category || "Other",
     severity:    c.severity || "medium",
-    location:    locationStr,
+    location:    c.location?.address || (typeof c.location === 'string' ? c.location : '') || "—",
     date:        c.createdAt
                    ? new Date(c.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })
                    : "—",
@@ -126,7 +125,7 @@ function renderTable() {
   document.getElementById("complaintsTable").style.display = "table";
 
   tbody.innerHTML = data.map(c => `
-    <tr>
+    <tr style="cursor:pointer;" onclick="window.location.href='view_complaint.html?id=${encodeURIComponent(c._id)}'">
       <td><span style="font-family:monospace;font-weight:700;color:var(--navy);font-size:0.78rem;">${c.id}</span></td>
       <td>
         <div style="font-weight:700;font-size:0.875rem;">${c.title}</div>
@@ -144,11 +143,8 @@ function renderTable() {
           ? `<div style="font-size:0.8rem;font-weight:600;">${c.officer}</div><div style="font-size:0.72rem;color:var(--muted);">${c.dept}</div>`
           : `<span style="font-size:0.75rem;color:var(--light);">Not assigned</span>`}
       </td>
-      <td>
+      <td onclick="event.stopPropagation()">
         <div style="display:flex;gap:5px;flex-wrap:wrap;">
-          <button class="view-btn" onclick="window.location.href='view_complaint.html?id=${encodeURIComponent(c._id)}'">
-            <i class="fa-solid fa-eye"></i> View
-          </button>
           ${c.status === "pending" ? `<button class="btn btn-danger btn-sm" onclick="openWithdraw('${c._id}')"><i class="fa-solid fa-ban"></i></button>` : ""}
           ${c.status === "resolved" && !c.rated ? `<button class="btn btn-green btn-sm" onclick="openRating('${c._id}')"><i class="fa-solid fa-star"></i></button>` : ""}
           ${c.status === "resolved" && c.canReopen ? `<button class="btn btn-outline btn-sm" onclick="reopenComplaint('${c._id}')"><i class="fa-solid fa-rotate-left"></i></button>` : ""}

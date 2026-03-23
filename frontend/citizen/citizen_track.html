@@ -379,15 +379,15 @@
 <div class="main">
   <header class="header">
     <div class="header-left">
-      <h1 class="page-title">Submit a Complaint</h1>
-      <span class="page-sub">Report civic issues — reviewed within 24 hours</span>
+      <h1 class="page-title">Track Status</h1>
+      <span class="page-sub">Track your complaint in real time</span>
     </div>
     <div class="header-right">
-      <div style="position:relative;">
-        <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
+      <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
         <span id="theme-icon">🌙</span>
       </button>
-      <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
+      <div style="position:relative;">
+        <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
           <div class="chip-avatar">JD</div>
           <div class="profile-btn-info">
             <span class="profile-btn-name">Jane Doe</span>
@@ -406,7 +406,6 @@
             </div>
             <div class="dropdown-user-tags">
               <span class="dropdown-user-tag">Citizen</span>
-              <span class="dropdown-user-tag">Springfield</span>
             </div>
           </div>
           <div class="dropdown-items">
@@ -469,7 +468,6 @@
           <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-location-dot"></i> Location</span><span class="sg-val" id="sLoc"></span></div>
           <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-calendar"></i> Filed On</span><span class="sg-val" id="sDate"></span></div>
           <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-building"></i> Department</span><span class="sg-val" id="sDept"></span></div>
-          <div class="sg-item"><span class="sg-label"><i class="fa-solid fa-clock"></i> ETA</span><span class="sg-val" id="sEta"></span></div>
         </div>
       </div>
 

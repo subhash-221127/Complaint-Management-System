@@ -70,7 +70,7 @@
             <div class="role">Administrator</div>
           </div>
           <div class="profile-dropdown" id="profile-dropdown">
-            <a href="#">👤 My Profile</a>
+            <a href="profile.html">👤 My Profile</a>
             <a href="../login.html" onclick="doLogout(event)">🚪 Logout</a>
           </div>
         </div>
@@ -315,6 +315,15 @@
           '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Reassign to a different officer:</div>'
         : '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;font-weight:600;">Select a department and officer to handle this complaint:</div>';
 
+      // Only show reject option if complaint is still pending (not yet assigned)
+      const rejectSection = !officer
+        ? '<div class="action-card red"><h4>❌ Reject Complaint</h4>' +
+          '<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">Provide a reason — this will be shown to the citizen.</p>' +
+          '<textarea id="reject-reason" class="reject-textarea" placeholder="e.g. This complaint is a duplicate of CMP-2026-0012, or outside our jurisdiction…"></textarea>' +
+          '<button class="btn btn-danger btn-sm" id="reject-btn" onclick="rejectComplaint()">❌ Reject Complaint</button>' +
+          '</div>'
+        : '';
+
       actionSection =
         '<div class="assign-section"><h4>👮 Assign Officer</h4>' +
         currentlyAssigned +
@@ -325,12 +334,7 @@
         '<select id="officer-select"><option value="">Loading officers…</option></select></div>' +
         '<button class="btn btn-primary btn-sm" id="assign-btn" onclick="assignOfficer()" style="height:42px;align-self:flex-end;min-width:100px;">✅ Assign</button>' +
         '</div></div>' +
-        // Reject section
-        '<div class="action-card red"><h4>❌ Reject Complaint</h4>' +
-        '<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">Provide a reason — this will be shown to the citizen.</p>' +
-        '<textarea id="reject-reason" class="reject-textarea" placeholder="e.g. This complaint is a duplicate of CMP-2026-0012, or outside our jurisdiction…"></textarea>' +
-        '<button class="btn btn-danger btn-sm" id="reject-btn" onclick="rejectComplaint()">❌ Reject Complaint</button>' +
-        '</div>';
+        rejectSection;
     }
 
     // ── Delete section (resolved/rejected only) ────────────────

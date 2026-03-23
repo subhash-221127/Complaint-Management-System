@@ -45,15 +45,14 @@ function normalizeComplaint(c) {
     title:    c.title || "Untitled",
     category: c.department || c.category || "—",
     severity: c.severity || "medium",
-    location: c.location || "—",
+    location: c.location?.address || (typeof c.location === 'string' ? c.location : '') || "—",
     date:     c.createdAt ? new Date(c.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—",
     status:   c.status === "in_progress" ? "inprogress" : (c.status || "pending"),
     officer:  c.officerId?.name || "—",
     dept:     c.department || "—",
-    eta:      c.eta || "—",
     rated:    c.rated || false,
-    officerPhone: c.officerPhone || null,
-    officerEmail: c.officerEmail || null,
+    officerPhone: c.officerId?.phone || null,
+    officerEmail: c.officerId?.email || null,
     timeline: c.timeline || buildBasicTimeline(c.status),
   };
 }
@@ -121,7 +120,6 @@ function populateResult(c) {
   document.getElementById("sLoc").textContent    = c.location;
   document.getElementById("sDate").textContent   = c.date;
   document.getElementById("sDept").textContent   = c.dept;
-  document.getElementById("sEta").textContent    = c.eta;
 
   // Officer card (show only if assigned)
   const oc = document.getElementById("officerCard");

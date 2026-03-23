@@ -15,7 +15,7 @@ const OfficerSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["Active", "Inactive"],
+      enum: ["Active", "On Leave"],
       default: "Active",
     },
     joinDate: { type: String, required: true },

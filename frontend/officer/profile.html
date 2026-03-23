@@ -478,7 +478,7 @@
           ? '<span class="status-dot active"><span class="status-dot-circle"></span> Active</span>'
           : o.status === 'On Leave'
             ? '<span class="status-dot" style="background:rgba(245,158,11,0.12);color:#b45309;"><span class="status-dot-circle" style="background:#f59e0b;"></span> On Leave</span>'
-            : '<span class="status-dot inactive"><span class="status-dot-circle"></span> Inactive</span>';
+            : '<span class="status-dot inactive"><span class="status-dot-circle"></span> On Leave</span>';
       }
 
       // Stat blocks
@@ -516,8 +516,8 @@
       btn.style.background = 'rgba(245,158,11,0.2)';
       btn.style.color      = '#fbbf24';
     } else {
-      btn.style.background = 'rgba(239,68,68,0.15)';
-      btn.style.color      = '#f87171';
+      btn.style.background = 'rgba(245,158,11,0.2)';
+      btn.style.color      = '#fbbf24';
     }
   }
 
@@ -551,7 +551,7 @@
           ? '<span class="status-dot active"><span class="status-dot-circle"></span> Active</span>'
           : newStatus === 'On Leave'
             ? '<span class="status-dot" style="background:rgba(245,158,11,0.12);color:#b45309;"><span class="status-dot-circle" style="background:#f59e0b;"></span> On Leave</span>'
-            : '<span class="status-dot inactive"><span class="status-dot-circle"></span> Inactive</span>';
+            : '<span class="status-dot inactive"><span class="status-dot-circle"></span> On Leave</span>';
       }
 
       showToast(`Status updated to ${newStatus}`, 'success');
