@@ -282,4 +282,49 @@ router.get("/admin/citizens", async (_req, res) => {
   }
 });
 
+
+// ─────────────────────────────────────────────────────────────────
+// GET /api/admin/citizens/:id — single citizen with complaint count
+// ─────────────────────────────────────────────────────────────────
+router.get("/admin/citizens/:id", async (req, res) => {
+  try {
+    const citizen = await User.findById(req.params.id);
+    if (!citizen) return res.status(404).json({ message: "Citizen not found." });
+    const complaintCount = await Complaint.countDocuments({ citizenId: req.params.id });
+    res.json({ ...citizen.toObject(), complaintCount });
+  } catch (err) {
+    if (err.name === "CastError") return res.status(400).json({ message: "Invalid citizen ID." });
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// GET /api/admin/citizens/:id/complaints — all complaints by citizen
+// ─────────────────────────────────────────────────────────────────
+router.get("/admin/citizens/:id/complaints", async (req, res) => {
+  try {
+    const complaints = await Complaint.find({ citizenId: req.params.id })
+      .populate("officerId", "name designation departmentName")
+      .sort({ createdAt: -1 });
+    res.json(complaints);
+  } catch (err) {
+    if (err.name === "CastError") return res.status(400).json({ message: "Invalid citizen ID." });
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────
+// DELETE /api/admin/citizens/:id — remove citizen account
+// ─────────────────────────────────────────────────────────────────
+router.delete("/admin/citizens/:id", async (req, res) => {
+  try {
+    const citizen = await User.findByIdAndDelete(req.params.id);
+    if (!citizen) return res.status(404).json({ message: "Citizen not found." });
+    res.json({ message: "Citizen account deleted." });
+  } catch (err) {
+    if (err.name === "CastError") return res.status(400).json({ message: "Invalid citizen ID." });
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;

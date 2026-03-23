@@ -1,12 +1,12 @@
 // routes/officers.js
-const express    = require("express");
-const router     = express.Router();
-const bcrypt     = require("bcryptjs");
-const crypto     = require("crypto");
+const express = require("express");
+const router = express.Router();
+const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const nodemailer = require("nodemailer");
-const Officer    = require("../models/Officer");
+const Officer = require("../models/Officer");
 const Department = require("../models/Department");
-const Complaint  = require("../models/Complaint");
+const Complaint = require("../models/Complaint");
 
 // ── Nodemailer transporter ─────────────────────────────────────
 const transporter = nodemailer.createTransport({
@@ -85,11 +85,13 @@ router.get("/officers/by-department/:deptName", async (req, res) => {
   }
 });
 
-// ── GET single officer by officerId ───────────────────────────
+// ── GET single officer by officerId or _id ───────────────────────
 router.get("/officers/:id", async (req, res) => {
   try {
-    const officer = await Officer.findOne({ officerId: req.params.id })
-      .populate("department", "name code");
+    let officer = await Officer.findOne({ officerId: req.params.id }).populate("department", "name code");
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id).populate("department", "name code");
+    }
     if (!officer) return res.status(404).json({ message: "Officer not found" });
     res.json(officer);
   } catch (err) {
@@ -100,7 +102,10 @@ router.get("/officers/:id", async (req, res) => {
 // ── GET complaints assigned to an officer ──────────────────────
 router.get("/officers/:id/complaints", async (req, res) => {
   try {
-    const officer = await Officer.findOne({ officerId: req.params.id });
+    let officer = await Officer.findOne({ officerId: req.params.id });
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id);
+    }
     if (!officer) return res.status(404).json({ message: "Officer not found" });
 
     const complaints = await Complaint.find({ officerId: officer._id })
@@ -130,7 +135,7 @@ router.post("/officers", async (req, res) => {
     if (existingEmail) return res.status(409).json({ message: `Email "${email}" is already registered.` });
 
     const officerId = await generateOfficerId();
-    const hashed    = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, 10);
 
     // No token needed for creation (plain credentials sent by email)
 
@@ -139,15 +144,15 @@ router.post("/officers", async (req, res) => {
       name,
       email,
       phone,
-      password:       hashed,
+      password: hashed,
       designation,
-      department:     dept._id,
+      department: dept._id,
       departmentName: dept.name,
       joinDate,
-      status:         "Active",
-      casesHandled:   0,
-      casesResolved:  0,
-      passwordSet:    false,
+      status: "Active",
+      casesHandled: 0,
+      casesResolved: 0,
+      passwordSet: false,
     });
 
     await Department.findByIdAndUpdate(dept._id, {
@@ -160,10 +165,10 @@ router.post("/officers", async (req, res) => {
     try {
       if (officer.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         await transporter.sendMail({
-          from:    "CityFix <" + process.env.EMAIL_USER + ">",
-          to:      officer.email,
+          from: "CityFix <" + process.env.EMAIL_USER + ">",
+          to: officer.email,
           subject: "Welcome to CityFix - Your Login Credentials | " + officer.officerId,
-          html:    buildWelcomeEmail(officer, password),
+          html: buildWelcomeEmail(officer, password),
         });
         console.log("Welcome email sent to officer: " + officer.email);
       }
@@ -183,7 +188,7 @@ router.post("/officers", async (req, res) => {
 router.get("/officers/verify-token/:token", async (req, res) => {
   try {
     const officer = await Officer.findOne({
-      resetToken:       req.params.token,
+      resetToken: req.params.token,
       resetTokenExpiry: { $gt: new Date() }, // not expired
     });
 
@@ -211,7 +216,7 @@ router.post("/officers/set-password", async (req, res) => {
     }
 
     const officer = await Officer.findOne({
-      resetToken:       token,
+      resetToken: token,
       resetTokenExpiry: { $gt: new Date() },
     });
 
@@ -220,10 +225,10 @@ router.post("/officers/set-password", async (req, res) => {
     }
 
     // Update password and clear the token
-    officer.password        = await bcrypt.hash(password, 10);
-    officer.resetToken      = null;
+    officer.password = await bcrypt.hash(password, 10);
+    officer.resetToken = null;
     officer.resetTokenExpiry = null;
-    officer.passwordSet     = true;
+    officer.passwordSet = true;
     await officer.save();
 
     res.json({ message: "Password set successfully! You can now log in to CityFix." });
@@ -240,7 +245,7 @@ router.delete("/officers/:id", async (req, res) => {
 
     await Department.findByIdAndUpdate(deleted.department, {
       $inc: {
-        totalOfficers:  -1,
+        totalOfficers: -1,
         activeOfficers: deleted.status === "Active" ? -1 : 0,
       },
     });
@@ -254,8 +259,12 @@ router.delete("/officers/:id", async (req, res) => {
 // ── PATCH /officers/:id/status ─────────────────────────────────
 router.patch("/officers/:id/status", async (req, res) => {
   try {
-    const { status } = req.body; // "Active" | "Inactive"
-    const officer = await Officer.findOne({ officerId: req.params.id });
+    const { status } = req.body; // "Active" | "On Leave" | "Inactive"
+    // Try to find by officerId string (e.g. "OFF031") first, then by MongoDB _id
+    let officer = await Officer.findOne({ officerId: req.params.id });
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id);
+    }
     if (!officer) return res.status(404).json({ message: "Officer not found" });
 
     const wasActive = officer.status === "Active";
@@ -271,6 +280,35 @@ router.patch("/officers/:id/status", async (req, res) => {
     }
 
     res.json({ message: "Officer status updated", officer });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── PATCH /api/officers/:id/change-password ────────────────────
+router.patch("/officers/:id/change-password", async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Both current and new password are required." });
+    }
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: "New password must be at least 8 characters." });
+    }
+
+    let officer = await Officer.findOne({ officerId: req.params.id }).select("+password");
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id).select("+password");
+    }
+    if (!officer) return res.status(404).json({ message: "Officer not found." });
+
+    const match = await bcrypt.compare(currentPassword, officer.password);
+    if (!match) return res.status(401).json({ message: "Current password is incorrect." });
+
+    officer.password = await bcrypt.hash(newPassword, 10);
+    await officer.save();
+
+    res.json({ message: "Password updated successfully." });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
