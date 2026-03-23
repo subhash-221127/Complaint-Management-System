@@ -1,12 +1,12 @@
 // routes/complaints.js
-const express = require("express");
-const multer = require("multer");
-const path = require("path");
-const nodemailer = require("nodemailer");
-const Complaint = require("../models/Complaint");
-const User = require("../models/User");
-const Department = require("../models/Department");
-const Officer = require("../models/Officer");
+const express      = require("express");
+const multer       = require("multer");
+const path         = require("path");
+const nodemailer   = require("nodemailer");
+const Complaint    = require("../models/Complaint");
+const User         = require("../models/User");
+const Department   = require("../models/Department");
+const Officer      = require("../models/Officer");
 
 const router = express.Router();
 
@@ -15,7 +15,7 @@ const router = express.Router();
 // ─────────────────────────────────────────────
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => {
+  filename:    (req, file, cb) => {
     const unique = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, unique + path.extname(file.originalname));
   },
@@ -44,9 +44,9 @@ function buildConfirmationEmail(citizen, complaint) {
   });
 
   const severityColor = {
-    low: "#16a34a",
-    medium: "#d97706",
-    high: "#dc2626",
+    low:      "#16a34a",
+    medium:   "#d97706",
+    high:     "#dc2626",
     critical: "#7c3aed",
   }[complaint.severity] || "#d97706";
 
@@ -218,7 +218,7 @@ router.post("/create", upload.single("evidence"), async (req, res) => {
       title,
       description,
       department,
-      severity: severity || "medium",
+      severity:  severity || "medium",
       citizenId: citizenId,
       location: {
         address: location,
@@ -241,10 +241,10 @@ router.post("/create", upload.single("evidence"), async (req, res) => {
       const citizen = await User.findById(citizenId);
       if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         await transporter.sendMail({
-          from: `"CityFix" <${process.env.EMAIL_USER}>`,
-          to: citizen.email,
+          from:    `"CityFix" <${process.env.EMAIL_USER}>`,
+          to:      citizen.email,
           subject: `✅ Complaint Submitted – ${complaint.complaintId} | CityFix`,
-          html: buildConfirmationEmail(citizen, complaint),
+          html:    buildConfirmationEmail(citizen, complaint),
         });
         console.log(`Confirmation email sent to ${citizen.email}`);
       }
@@ -254,9 +254,9 @@ router.post("/create", upload.single("evidence"), async (req, res) => {
     }
 
     return res.status(201).json({
-      message: "Complaint submitted successfully",
+      message:     "Complaint submitted successfully",
       complaintId: complaint.complaintId,
-      _id: complaint._id,
+      _id:         complaint._id,
       complaint,
     });
 
@@ -295,13 +295,11 @@ router.get("/complaint/:id", async (req, res) => {
 
     let complaint = await Complaint
       .findOne({ complaintId: id.toUpperCase() })
-      .populate("officerId", "name designation departmentName")
-      .populate("citizenId", "name email phone");
+      .populate("officerId", "name designation departmentName");
     if (!complaint) {
       complaint = await Complaint
         .findById(id)
         .populate("officerId", "name designation departmentName")
-        .populate("citizenId", "name email phone")
         .catch(() => null);
     }
 
@@ -329,8 +327,8 @@ router.patch("/complaint/:id/assign", async (req, res) => {
     const complaint = await Complaint.findByIdAndUpdate(
       req.params.id,
       {
-        status: "assigned",
-        officerId: officer._id,
+        status:     "assigned",
+        officerId:  officer._id,
         assignedAt: new Date(),
       },
       { new: true }
@@ -389,10 +387,10 @@ router.patch("/complaint/:id/status", async (req, res) => {
         const citizen = await User.findById(complaint.citizenId);
         if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
           await transporter.sendMail({
-            from: "CityFix <" + process.env.EMAIL_USER + ">",
-            to: citizen.email,
+            from:    "CityFix <" + process.env.EMAIL_USER + ">",
+            to:      citizen.email,
             subject: "Complaint Resolved - " + complaint.complaintId + " | CityFix",
-            html: buildResolvedEmail(citizen, freshComplaint || complaint),
+            html:    buildResolvedEmail(citizen, freshComplaint || complaint),
           });
           console.log("Resolved email sent to " + citizen.email);
         }

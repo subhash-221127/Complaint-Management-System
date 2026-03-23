@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
   <meta charset="UTF-8" />
@@ -595,6 +595,7 @@
       }
     }
   </style>
+  <script src="../admin/theme.js"></script>
 </head>
 
 <body>
@@ -617,9 +618,6 @@
       <a href="citizen_mycomplaints.html" class="sidebar-link active"><span class="icon">📁</span> My Complaints</a>
       <a href="citizen_track.html" class="sidebar-link"><span class="icon">📍</span> Track Status</a>
     </nav>
-    <div class="sidebar-footer">
-      <a href="login.html" class="sidebar-link"><span class="icon">🚪</span> Logout</a>
-    </div>
   </aside>
 
   <!-- MAIN -->
@@ -630,8 +628,10 @@
         <span class="page-sub" id="headerSub">Loading…</span>
       </div>
       <div class="header-right">
-        <button class="notif-btn"><i class="fa-solid fa-bell"></i><span class="notif-dot"></span></button>
-        <div style="position:relative;">
+          <button class="notif-btn" onclick="toggleTheme()" title="Toggle dark mode" style="font-size:1rem;">
+          <span id="theme-icon">🌙</span>
+        </button>
+      <div style="position:relative;">
           <button class="profile-btn" id="profileBtn" onclick="toggleProfile(event)">
             <div class="chip-avatar">JD</div>
             <div class="profile-btn-info">
@@ -655,7 +655,7 @@
               </div>
             </div>
             <div class="dropdown-items">
-              <a href="#" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
+              <a href="citizen_profile.html" class="dropdown-item"><i class="fa-solid fa-user"></i> My Profile</a>
               <a href="citizen_dash.html" class="dropdown-item"><i class="fa-solid fa-chart-line"></i> Dashboard</a>
               <div class="dropdown-divider"></div>
               <a href="login.html" class="dropdown-item logout-item">

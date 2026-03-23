@@ -212,15 +212,14 @@ function renderBreakdown(data) {
   data.forEach(c => { cats[c.category] = (cats[c.category] || 0) + 1; });
   if (!Object.keys(cats).length) { el.innerHTML = "<p style='color:var(--muted);font-size:0.85rem;'>No data yet.</p>"; return; }
   const max = Math.max(...Object.values(cats), 1);
-  const COLORS = {
-    "Roads & Potholes": "#f97316",
-    "Electricity & Lighting": "#3b82f6",
-    "Garbage & Sanitation": "#22c55e",
-    "Water & Sewage": "#8b5cf6",
-    "Noise Pollution": "#f59e0b",
-    "Public Safety": "#ef4444",
-    "Parks & Recreation": "#06b6d4",
-  };
+  const PALETTE = ["#f97316","#3b82f6","#22c55e","#8b5cf6","#f59e0b","#ef4444","#06b6d4","#ec4899","#14b8a6","#a855f7"];
+  const _colorCache = {};
+  let _colorIdx = 0;
+  function getDeptColor(name) {
+    if (!_colorCache[name]) _colorCache[name] = PALETTE[_colorIdx++ % PALETTE.length];
+    return _colorCache[name];
+  }
+  const COLORS = new Proxy({}, { get: function(t, k) { return getDeptColor(k); } });
   el.innerHTML = Object.entries(cats)
     .sort((a, b) => b[1] - a[1])
     .map(([cat, count]) => `
