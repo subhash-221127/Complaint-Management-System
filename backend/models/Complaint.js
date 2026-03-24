@@ -27,7 +27,28 @@ const complaintSchema = new mongoose.Schema({
     lng:     { type: Number }
   },
 
+  // ── Evidence ──────────────────────────────────────────────────
+  // evidencePaths[0] is ALWAYS the citizen's original "before" evidence
   evidencePaths: [String],
+
+  // Resolution photos uploaded by officer when closing the complaint
+  resolutionEvidencePaths: [String],
+
+  // ── Identity Masking ──────────────────────────────────────────
+  // When true: officer sees masked citizen contact details
+  isAnonymous: { type: Boolean, default: false },
+
+  // ── AI Verification ───────────────────────────────────────────
+  // Populated after officer submits resolution evidence
+  aiVerification: {
+    matchScore:    { type: Number,  default: null },  // 0–100
+    passed:        { type: Boolean, default: null },  // true = ≥70
+    summary:       { type: String,  default: '' },
+    checkedAt:     { type: Date,    default: null },
+    // If failed, admin sees it under "needs_review"; can approve or reassign
+    adminReviewed: { type: Boolean, default: false },
+    adminAction:   { type: String,  enum: ['approved', 'reassigned', null], default: null },
+  },
 
   citizenId: {
     type: mongoose.Schema.Types.ObjectId,

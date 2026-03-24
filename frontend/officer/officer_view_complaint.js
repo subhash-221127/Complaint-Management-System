@@ -34,14 +34,22 @@ const STEP_ICONS = {
   'Closed':      'fa-lock',
 };
 
-function buildBasicTimeline(status) {
+function buildBasicTimeline(status, raw) {
+  function fmt(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  const createdDate  = raw ? fmt(raw.createdAt)  : '—';
+  const assignedDate = raw ? fmt(raw.assignedAt) : '—';
+  const resolvedDate = raw ? fmt(raw.resolvedAt) : '—';
+
   const steps = [
-    { step: 'Submitted',   state: 'done',    date: '—', desc: 'Complaint received by system.' },
-    { step: 'Verified',    state: 'pending', date: '—', desc: 'Under admin review.' },
-    { step: 'Assigned',    state: 'pending', date: '—', desc: 'Assigned to field officer.' },
-    { step: 'In Progress', state: 'pending', date: '—', desc: 'Officer working on it.' },
-    { step: 'Resolved',    state: 'pending', date: '—', desc: 'Issue resolved.' },
-    { step: 'Closed',      state: 'pending', date: '—', desc: 'Case closed.' },
+    { step: 'Submitted',   state: 'done',    date: createdDate,  desc: 'Complaint received by system.' },
+    { step: 'Verified',    state: 'pending', date: '—',          desc: 'Under admin review.' },
+    { step: 'Assigned',    state: 'pending', date: assignedDate, desc: 'Assigned to field officer.' },
+    { step: 'In Progress', state: 'pending', date: '—',          desc: 'Officer working on it.' },
+    { step: 'Resolved',    state: 'pending', date: resolvedDate, desc: 'Issue resolved.' },
+    { step: 'Closed',      state: 'pending', date: '—',          desc: 'Case closed.' },
   ];
   if (status === 'pending')    { steps[1].state = 'active'; }
   if (status === 'assigned')   { steps[1].state = 'done'; steps[2].state = 'active'; }
@@ -155,10 +163,16 @@ function normalizeComplaintOfficer(c) {
       email: c.citizenId?.email || '—',
       phone: c.citizenId?.phone || '—',
     },
-    evidencePaths: c.evidencePaths || [],
-    comments:      c.comments      || [],
-    timeline:      c.timeline      || buildBasicTimeline(c.status),
-    rejectionReason: c.rejectionReason || '',
+    evidencePaths:          c.evidencePaths || [],
+    resolutionEvidencePaths: c.resolutionEvidencePaths || [],
+    comments:               c.comments      || [],
+    timeline:               c.timeline      || buildBasicTimeline(c.status, c),
+    rejectionReason:        c.rejectionReason || '',
+    isAnonymous:            c.isAnonymous || false,
+    aiVerification:         c.aiVerification || null,
+    _rawCreatedAt:          c.createdAt || null,
+    _rawAssignedAt:         c.assignedAt || null,
+    _rawResolvedAt:         c.resolvedAt || null,
   };
 }
 
@@ -238,7 +252,7 @@ function renderOfficerDetail(c) {
         <div class="action-panel-body">
           <div>
             <label style="font-size:0.78rem;font-weight:700;color:var(--slate-500);display:block;margin-bottom:8px;">
-              Upload Resolution Evidence
+              Upload Resolution Photo (Required — AI will verify before/after)
             </label>
             <div class="upload-area" onclick="document.getElementById('resolve-evidence').click()">
               <input type="file" id="resolve-evidence" accept="image/*,video/*,.pdf" onchange="previewUpload(this)"/>
@@ -342,11 +356,14 @@ function renderOfficerDetail(c) {
     <div class="citizen-strip">
       <div class="citizen-av">${citizenInitials}</div>
       <div style="flex:1;">
-        <div class="citizen-name"><i class="fa-solid fa-user" style="margin-right:6px;opacity:0.65;"></i>${c.citizen.name}</div>
+        <div class="citizen-name"><i class="fa-solid fa-user" style="margin-right:6px;opacity:0.65;"></i>${c.isAnonymous ? 'Anonymous Citizen' : c.citizen.name}</div>
         <div class="citizen-meta">Complainant</div>
         <div class="citizen-contacts">
-          ${c.citizen.email !== '—' ? `<a href="mailto:${c.citizen.email}"><i class="fa-solid fa-envelope"></i>${c.citizen.email}</a>` : ''}
-          ${c.citizen.phone !== '—' ? `<a href="tel:${c.citizen.phone}"><i class="fa-solid fa-phone"></i>${c.citizen.phone}</a>` : ''}
+          ${c.isAnonymous
+            ? '<span style="display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;color:#92400e;background:#fffbeb;padding:4px 10px;border-radius:8px;border:1px solid #fde68a;"><i class=\"fa-solid fa-user-secret\"></i> Identity hidden</span>'
+            : `${c.citizen.email && c.citizen.email !== '—' ? '<a href="mailto:'+c.citizen.email+'"><i class="fa-solid fa-envelope"></i>'+c.citizen.email+'</a>' : ''}
+               ${c.citizen.phone && c.citizen.phone !== '—' ? '<a href="tel:'+c.citizen.phone+'"><i class="fa-solid fa-phone"></i>'+c.citizen.phone+'</a>' : ''}`
+          }
         </div>
       </div>
     </div>
@@ -413,9 +430,9 @@ function renderOfficerDetail(c) {
         <div class="info-section">
           <div class="info-section-title">👤 Citizen Contact</div>
           <div class="info-section-body">
-            <div class="info-row-detail"><span class="lbl">Name</span><span class="val">${c.citizen.name}</span></div>
-            <div class="info-row-detail"><span class="lbl">Email</span><span class="val" style="font-size:0.8rem;">${c.citizen.email}</span></div>
-            <div class="info-row-detail"><span class="lbl">Phone</span><span class="val">${c.citizen.phone || '—'}</span></div>
+            <div class="info-row-detail"><span class="lbl">Name</span><span class="val">${c.isAnonymous ? 'Anonymous' : c.citizen.name}</span></div>
+            <div class="info-row-detail"><span class="lbl">Email</span><span class="val" style="font-size:0.8rem;">${c.isAnonymous ? '<span style=\"display:inline-flex;align-items:center;gap:4px;color:#92400e;font-size:0.78rem;\"><i class=\"fa-solid fa-user-secret\"></i> Hidden</span>' : (c.citizen.email || '—')}</span></div>
+            <div class="info-row-detail"><span class="lbl">Phone</span><span class="val">${c.isAnonymous ? '<span style=\"display:inline-flex;align-items:center;gap:4px;color:#92400e;font-size:0.78rem;\"><i class=\"fa-solid fa-user-secret\"></i> Hidden</span>' : (c.citizen.phone || '—')}</span></div>
           </div>
         </div>
 
@@ -475,35 +492,36 @@ function previewUpload(input) {
 }
 
 async function submitResolve(mongoId) {
-  const btn = document.getElementById('resolve-btn');
+  const btn       = document.getElementById('resolve-btn');
   const fileInput = document.getElementById('resolve-evidence');
 
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Closing…'; }
+  // ── Require a resolution photo ──────────────────────────────
+  if (!fileInput || !fileInput.files[0]) {
+    showOfficerToast('Please upload a photo showing the resolved issue before closing.', 'error');
+    return;
+  }
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying with AI…'; }
 
   try {
-    // If evidence was chosen, upload it first
-    if (fileInput && fileInput.files[0]) {
-      const formData = new FormData();
-      formData.append('evidence', fileInput.files[0]);
-      formData.append('status', 'resolved');
-      const resp = await fetch(`${BASE_URL}/api/complaint/${mongoId}/resolve`, {
-        method: 'PATCH',
-        body: formData,
-      });
-      if (!resp.ok) throw new Error();
+    const formData = new FormData();
+    formData.append('evidence', fileInput.files[0]);
+
+    const resp = await fetch(`${BASE_URL}/api/complaint/${mongoId}/resolve`, {
+      method: 'PATCH',
+      body: formData,
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.message || 'Server error');
+
+    if (data.aiPassed) {
+      showOfficerToast('✓ Resolved! AI verification passed (score: ' + data.aiScore + '/100)', 'success');
     } else {
-      // Just mark resolved without new evidence
-      const resp = await fetch(`${BASE_URL}/api/complaint/${mongoId}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'resolved' }),
-      });
-      if (!resp.ok) throw new Error();
+      showOfficerToast('📋 Submitted. Low AI match score — sent to admin for review.', '');
     }
-    showOfficerToast('✓ Complaint resolved and closed!', 'success');
-    setTimeout(() => location.reload(), 1400);
-  } catch {
-    showOfficerToast('Failed to resolve complaint. Try again.', 'error');
+    setTimeout(() => location.reload(), 2000);
+  } catch (err) {
+    showOfficerToast(err.message || 'Failed to resolve complaint. Try again.', 'error');
     if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Mark as Resolved & Close'; }
   }
 }
@@ -599,7 +617,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   try {
     // Fetch by MongoDB _id — populate citizenId for contact info
-    const res = await fetch(`${BASE_URL}/api/complaint/${encodeURIComponent(id)}?populateCitizen=true`);
+    const res = await fetch(`${BASE_URL}/api/complaint/${encodeURIComponent(id)}`);
     if (!res.ok) throw new Error('Not found');
     const raw = await res.json();
     renderOfficerDetail(normalizeComplaintOfficer(raw));

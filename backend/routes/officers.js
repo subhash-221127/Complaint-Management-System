@@ -8,6 +8,21 @@ const Officer = require("../models/Officer");
 const Department = require("../models/Department");
 const Complaint = require("../models/Complaint");
 
+function stripAnonymous(complaint, viewerIsOwner = false) {
+  if (!complaint) return complaint;
+  const c = typeof complaint.toObject === 'function' ? complaint.toObject() : { ...complaint };
+  if (!c.isAnonymous || viewerIsOwner) return c;
+  if (c.citizenId && typeof c.citizenId === 'object') {
+    c.citizenId = {
+      _id:   c.citizenId._id,
+      name:  'Anonymous',
+      email: null,
+      phone: null,
+    };
+  }
+  return c;
+}
+
 // ── Nodemailer transporter ─────────────────────────────────────
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -112,7 +127,8 @@ router.get("/officers/:id/complaints", async (req, res) => {
       .populate("citizenId", "name email phone")
       .sort({ createdAt: -1 });
 
-    res.json(complaints);
+    // Strip citizen identity from anonymous complaints — officers must not see it
+    res.json(complaints.map(c => stripAnonymous(c)));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -309,6 +325,32 @@ router.patch("/officers/:id/change-password", async (req, res) => {
     await officer.save();
 
     res.json({ message: "Password updated successfully." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ── PATCH /api/officers/:id/update-profile ──────────────────────
+// Officer updates their own name and phone (not email, not officerId)
+router.patch("/officers/:id/update-profile", async (req, res) => {
+  try {
+    const { name, phone } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Name cannot be empty." });
+    }
+
+    // Find by officerId string (e.g. "OFF001") or MongoDB _id
+    let officer = await Officer.findOne({ officerId: req.params.id });
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id);
+    }
+    if (!officer) return res.status(404).json({ message: "Officer not found." });
+
+    officer.name  = name.trim();
+    if (phone) officer.phone = phone.trim();
+    await officer.save();
+
+    res.json({ message: "Profile updated successfully.", officer });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

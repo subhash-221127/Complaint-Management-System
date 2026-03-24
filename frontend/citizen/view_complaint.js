@@ -163,19 +163,31 @@ function normalizeComplaint(c) {
     name:        sessionUser.name  || "—",
     mobile:      sessionUser.phone || "—",
     email:       sessionUser.email || "—",
-    timeline:    c.timeline || buildBasicTimeline(c.status),
-    rejectionReason: c.rejectionReason || '',
+    timeline:         c.timeline || buildBasicTimeline(c.status, c),
+    rejectionReason:  c.rejectionReason || '',
+    isAnonymous:      c.isAnonymous || false,
+    _rawCreatedAt:    c.createdAt  || null,
+    _rawAssignedAt:   c.assignedAt || null,
+    _rawResolvedAt:   c.resolvedAt || null,
   };
 }
 
-function buildBasicTimeline(status) {
+function buildBasicTimeline(status, raw) {
+  function fmtD(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+  const createdDate  = raw ? fmtD(raw.createdAt)  : '—';
+  const assignedDate = raw ? fmtD(raw.assignedAt) : '—';
+  const resolvedDate = raw ? fmtD(raw.resolvedAt) : '—';
+
   const steps = [
-    { step: "Submitted",   icon: "fa-paper-plane",       state: "done",    date: "—", desc: "Complaint received.", note: "" },
-    { step: "Verified",    icon: "fa-shield-check",       state: "pending", date: "—", desc: "Under review.",        note: "" },
-    { step: "Assigned",    icon: "fa-user-tie",           state: "pending", date: "—", desc: "Pending assignment.",  note: "" },
-    { step: "In Progress", icon: "fa-screwdriver-wrench", state: "pending", date: "—", desc: "Not yet started.",     note: "" },
-    { step: "Resolved",    icon: "fa-circle-check",       state: "pending", date: "—", desc: "Pending.",             note: "" },
-    { step: "Closed",      icon: "fa-lock",               state: "pending", date: "—", desc: "Pending.",             note: "" },
+    { step: "Submitted",   icon: "fa-paper-plane",       state: "done",    date: createdDate,  desc: "Complaint received.", note: "" },
+    { step: "Verified",    icon: "fa-shield-check",       state: "pending", date: "—",         desc: "Under review.",       note: "" },
+    { step: "Assigned",    icon: "fa-user-tie",           state: "pending", date: assignedDate, desc: "Pending assignment.", note: "" },
+    { step: "In Progress", icon: "fa-screwdriver-wrench", state: "pending", date: "—",         desc: "Not yet started.",    note: "" },
+    { step: "Resolved",    icon: "fa-circle-check",       state: "pending", date: resolvedDate, desc: "Pending.",            note: "" },
+    { step: "Closed",      icon: "fa-lock",               state: "pending", date: "—",         desc: "Pending.",            note: "" },
   ];
   if (status === "pending")   { steps[0].state = "done"; steps[1].state = "active"; }
   if (status === "assigned")  { steps[0].state = "done"; steps[1].state = "done"; steps[2].state = "active"; }
@@ -215,8 +227,8 @@ function renderDetail(c) {
         <div class="officer-name"><i class="fa-solid fa-user-tie" style="margin-right:6px;opacity:0.6;"></i>${c.officer}</div>
         <div class="officer-dept">${c.dept || ""}</div>
         <div class="officer-contacts">
-          ${c.officerPhone ? `<a href="tel:${c.officerPhone}"><i class="fa-solid fa-phone"></i>${c.officerPhone}</a>` : ""}
-          ${c.officerEmail ? `<a href="mailto:${c.officerEmail}"><i class="fa-solid fa-envelope"></i>${c.officerEmail}</a>` : ""}
+          ${c.officerPhone ? '<a href="tel:'+c.officerPhone+'"><i class="fa-solid fa-phone"></i>'+c.officerPhone+'</a>' : ''}
+          ${c.officerEmail ? '<a href="mailto:'+c.officerEmail+'"><i class="fa-solid fa-envelope"></i>'+c.officerEmail+'</a>' : ''}
         </div>
       </div>
     </div>` : "";
@@ -553,7 +565,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   try {
     // Fetch by MongoDB _id — backend should support GET /api/complaint/:id
-    const res = await fetch(`${BASE_URL}/api/complaint/${encodeURIComponent(id)}`);
+    // Pass userId so backend knows this is the owner — full data returned even if anonymous
+    const sessionUserRaw = sessionStorage.getItem('cityfix_user') || localStorage.getItem('cityfix_user') || '{}';
+    const sessionUser    = JSON.parse(sessionUserRaw);
+    const res = await fetch(`${BASE_URL}/api/complaint/${encodeURIComponent(id)}?userId=${sessionUser.id || ''}`);
 
     if (!res.ok) throw new Error("Not found");
 

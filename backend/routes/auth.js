@@ -425,12 +425,16 @@ router.get("/admin/me", async (req, res) => {
 });
 
 // ── PATCH /api/admin/me ──────────────────────────────────────
+// Accepts name and phone (email cannot be changed)
 router.patch("/admin/me", async (req, res) => {
   try {
-    const { id, name } = req.body;
+    const { id, name, phone } = req.body;
     if (!id) return res.status(400).json({ message: "Admin ID required." });
+    if (!name || !name.trim()) return res.status(400).json({ message: "Name cannot be empty." });
+    const updates = { name: name.trim() };
+    if (phone !== undefined) updates.phone = phone.trim();
     const updated = await Admin.findByIdAndUpdate(
-      id, { name }, { new: true }
+      id, updates, { new: true }
     ).select("-password");
     if (!updated) return res.status(404).json({ message: "Admin not found." });
     res.json({ message: "Profile updated.", admin: updated });

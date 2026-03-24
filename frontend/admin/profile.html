@@ -216,6 +216,7 @@
               <button class="btn-save" id="save-btn" onclick="saveProfile()">💾 Save Changes</button>
             </div>
           </div>
+          </div><!-- /admin-edit-body -->
         </div>
 
         <!-- Change Password -->
@@ -242,6 +243,7 @@
               <button class="btn-save" id="pwd-btn" onclick="changePassword()">🔐 Update Password</button>
             </div>
           </div>
+          </div><!-- /admin-pwd-body -->
         </div>
 
       </div><!-- /profile-wrap -->
@@ -256,6 +258,15 @@
   const _raw = sessionStorage.getItem('cityfix_user');
   const _user = _raw ? JSON.parse(_raw) : {};
   const adminId = _user.id || '';
+
+  function toggleAdminPwd() {
+    const body    = document.getElementById('admin-pwd-body');
+    const chevron = document.getElementById('admin-pwd-chevron');
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    body.style.display    = isOpen ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+  }
 
   function toggleProfileMenu() {
     document.getElementById('profile-dropdown').classList.toggle('show');
@@ -305,7 +316,8 @@
   }
 
   async function saveProfile() {
-    const name = document.getElementById('edit-name').value.trim();
+    const name  = document.getElementById('edit-name').value.trim();
+    const phone = document.getElementById('edit-phone')?.value.trim() || '';
     if (!name) { showMsg('edit-msg', 'Name cannot be empty.', 'error'); return; }
 
     const btn = document.getElementById('save-btn');
@@ -315,7 +327,7 @@
       const res  = await fetch(`${BASE_URL}/api/admin/me`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ id: adminId, name }),
+        body:    JSON.stringify({ id: adminId, name, phone }),
       });
       const data = await res.json();
       if (res.ok) {

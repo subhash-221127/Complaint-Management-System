@@ -100,6 +100,25 @@ function buildRejectedEmail(citizen, complaint) {
 
 
 // ─────────────────────────────────────────────────────────────────
+// Helper — wipe citizen identity from a complaint if anonymous
+// Admin explicitly cannot see citizen details if isAnonymous=true
+// ─────────────────────────────────────────────────────────────────
+function stripAnonymous(complaint) {
+  if (!complaint) return complaint;
+  const c = typeof complaint.toObject === 'function' ? complaint.toObject() : { ...complaint };
+  if (!c.isAnonymous) return c;
+  if (c.citizenId && typeof c.citizenId === 'object') {
+    c.citizenId = {
+      _id:   c.citizenId._id,
+      name:  'Anonymous',
+      email: null,
+      phone: null,
+    };
+  }
+  return c;
+}
+
+// ─────────────────────────────────────────────────────────────────
 // GET /api/admin/stats
 // ─────────────────────────────────────────────────────────────────
 router.get("/admin/stats", async (_req, res) => {
@@ -128,7 +147,7 @@ router.get("/admin/complaints", async (_req, res) => {
       .populate("officerId", "name designation departmentName officerId")
       .populate("citizenId", "name email phone")
       .sort({ createdAt: -1 });
-    res.json(complaints);
+    res.json(complaints.map(c => stripAnonymous(c)));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -145,7 +164,7 @@ router.get("/admin/complaints/today", async (_req, res) => {
       .populate("officerId", "name designation departmentName")
       .populate("citizenId", "name email phone")
       .sort({ createdAt: -1 });
-    res.json(complaints);
+    res.json(complaints.map(c => stripAnonymous(c)));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -160,7 +179,7 @@ router.get("/admin/complaints/:id", async (req, res) => {
       .populate("officerId", "name designation departmentName officerId email phone")
       .populate("citizenId", "name email phone");
     if (!complaint) return res.status(404).json({ message: "Complaint not found." });
-    res.json(complaint);
+    res.json(stripAnonymous(complaint));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -207,7 +226,7 @@ router.post("/admin/complaints/:id/assign", async (req, res) => {
       );
     }
 
-    res.json({ message: `Complaint assigned to ${officer.name} successfully.`, complaint: populated });
+    res.json({ message: `Complaint assigned to ${officer.name} successfully.`, complaint: stripAnonymous(populated) });
   } catch (err) {
     res.status(500).json({ message: "Failed to assign officer.", error: err.message });
   }
@@ -242,7 +261,7 @@ router.patch("/admin/complaints/:id/reject", async (req, res) => {
       );
     }
 
-    res.json({ message: "Complaint rejected.", complaint });
+    res.json({ message: "Complaint rejected.", complaint: stripAnonymous(complaint) });
   } catch (err) {
     res.status(500).json({ message: "Failed to reject complaint.", error: err.message });
   }
@@ -306,7 +325,7 @@ router.get("/admin/citizens/:id/complaints", async (req, res) => {
     const complaints = await Complaint.find({ citizenId: req.params.id })
       .populate("officerId", "name designation departmentName")
       .sort({ createdAt: -1 });
-    res.json(complaints);
+    res.json(complaints.map(c => stripAnonymous(c)));
   } catch (err) {
     if (err.name === "CastError") return res.status(400).json({ message: "Invalid citizen ID." });
     res.status(500).json({ message: err.message });

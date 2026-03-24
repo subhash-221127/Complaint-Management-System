@@ -289,8 +289,36 @@
     let actionSection = '';
 
     if (isResolved) {
-      actionSection =
-        '<div class="action-card green"><div style="font-weight:700;color:#16a34a;">✅ This complaint has been resolved by the assigned officer.</div></div>';
+      const ai = c.aiVerification || {};
+      const needsReview = ai.passed === false && !ai.adminReviewed;
+
+      let aiBanner = '';
+      if (needsReview) {
+        aiBanner =
+          '<div style="background:#fef9c3;border:1.5px solid #fde68a;border-radius:14px;padding:18px 20px;margin-bottom:16px;">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
+          '<span style="font-size:1.1rem;">🤖</span>' +
+          '<span style="font-size:0.78rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.08em;">AI Verification — Manual Review Required</span>' +
+          '</div>' +
+          '<div style="font-size:0.875rem;color:#78350f;margin-bottom:8px;line-height:1.6;">' +
+          '<strong>Match Score: ' + (ai.matchScore !== null && ai.matchScore !== undefined ? ai.matchScore + '/100' : 'N/A') + '</strong> — ' + (ai.summary || 'No summary available.') +
+          '</div>' +
+          '<p style="font-size:0.8rem;color:#92400e;margin-bottom:14px;">The officer  s resolution photo did not meet the 70% similarity threshold. Please review the evidence and choose an action.</p>' +
+          '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+          '<button onclick="adminReviewComplaint(\'' + complaintId + '\', \'approve\')" style="padding:10px 20px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-circle-check"></i> Approve & Close</button>' +
+          '<button onclick="adminReviewComplaint(\'' + complaintId + '\', \'reassign\')" style="padding:10px 20px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-rotate-right"></i> Reassign to Officer</button>' +
+          '</div>' +
+          '</div>';
+      } else if (ai.adminReviewed) {
+        const actionLabel = ai.adminAction === 'approved' ? '✅ Approved by Admin' : '🔁 Reassigned by Admin';
+        aiBanner = '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.82rem;color:#15803d;font-weight:600;"><i class="fa-solid fa-robot" style="margin-right:6px;"></i>AI Score: ' + (ai.matchScore !== null ? ai.matchScore + '/100' : 'N/A') + ' — ' + actionLabel + '</div>';
+      } else if (ai.passed === true) {
+        aiBanner = '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.82rem;color:#15803d;font-weight:600;"><i class="fa-solid fa-robot" style="margin-right:6px;"></i>AI Verification passed — Score: ' + (ai.matchScore !== null ? ai.matchScore + '/100' : 'N/A') + '</div>';
+      }
+
+      // Combined evidence is rendered later instead of inline here
+      actionSection = aiBanner +
+        '<div class="action-card green"><div style="font-weight:700;color:#16a34a;">✅ This complaint has been resolved by the assigned officer.' + (ai.passed === true ? ' AI verification passed.' : '') + '</div></div>';
 
     } else if (isRejected) {
       actionSection =
@@ -337,24 +365,23 @@
         rejectSection;
     }
 
-    // ── Delete section (resolved/rejected only) ────────────────
-    const deleteSection = isDeletable
-      ? '<div class="action-card darkred"><h4>🗑 Delete Complaint</h4>' +
-        '<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:14px;">Permanently remove from database. Cannot be undone.</p>' +
-        '<button class="btn btn-danger btn-sm" id="delete-btn" onclick="deleteComplaint()" style="background:#be123c;border-color:#be123c;">🗑 Delete Complaint</button>' +
-        '</div>'
-      : '';
+    // ── Evidence Comparison ──────────────────────────────────────
+    let combinedEvidenceHTML = '';
+    if ((c.evidencePaths && c.evidencePaths.length) || (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length)) {
+      combinedEvidenceHTML = '<div class="info-card" style="margin-bottom:24px;"><h4>📸 Evidence Comparison</h4><div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:12px;">';
+      
+      if (c.evidencePaths && c.evidencePaths.length) {
+        combinedEvidenceHTML += '<div style="flex:1; min-width:300px;"><div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;">Before (Citizen)</div><div style="display:flex;gap:12px;flex-direction:column;">' +
+          c.evidencePaths.map(p => '<img src="/uploads/' + p.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:pointer;" onclick="window.open(this.src,\'_blank\')" />').join('') + '</div></div>';
+      }
 
-    // ── Evidence ───────────────────────────────────────────────
-    const evidenceSection = c.evidencePaths && c.evidencePaths.length
-      ? '<div class="info-card" style="margin-bottom:24px;"><h4>🖼 Evidence Photos</h4>' +
-        '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;">' +
-        c.evidencePaths.map(p =>
-          '<img src="/uploads/' + p.split('/').pop() + '" alt="Evidence" ' +
-          'style="width:120px;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--border);cursor:pointer;" ' +
-          'onclick="window.open(this.src,\'_blank\')" />'
-        ).join('') + '</div></div>'
-      : '';
+      if (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length) {
+        combinedEvidenceHTML += '<div style="flex:1; min-width:300px;"><div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;">After (Officer)</div><div style="display:flex;gap:12px;flex-direction:column;">' +
+          c.resolutionEvidencePaths.map(p => '<img src="/uploads/' + p.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:pointer;" onclick="window.open(this.src,\'_blank\')" />').join('') + '</div></div>';
+      }
+      
+      combinedEvidenceHTML += '</div></div>';
+    }
 
     // ── Render everything ──────────────────────────────────────
     document.getElementById('page-content').innerHTML =
@@ -383,6 +410,7 @@
       (c.location && c.location.address ? '<div class="info-row"><span class="info-label">Location</span><span class="info-value">📍 ' + c.location.address + '</span></div>' : '') +
       '</div>' +
       '<div class="info-card"><h4>👤 Citizen Information</h4>' +
+      (c.isAnonymous ? '<div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:10px;padding:10px 14px;margin:12px 16px 4px;font-size:0.82rem;color:#92400e;font-weight:600;"><i class="fa-solid fa-user-secret" style="margin-right:6px;"></i>Identity is completely masked by citizen. Contact details are hidden.</div>' : '') +
       '<div class="info-row"><span class="info-label">Name</span><span class="info-value">' + (citizen.name || '—') + '</span></div>' +
       '<div class="info-row"><span class="info-label">Email</span><span class="info-value">' + (citizen.email || '—') + '</span></div>' +
       '<div class="info-row"><span class="info-label">Phone</span><span class="info-value">' + (citizen.phone || '—') + '</span></div>' +
@@ -391,8 +419,7 @@
       '</div></div>' +
 
       actionSection +
-      deleteSection +
-      evidenceSection +
+      combinedEvidenceHTML +
 
       // Timeline
       '<div class="timeline"><h4>📅 Activity Timeline</h4>' +
@@ -419,7 +446,16 @@
           '<div class="timeline-content"><div class="event">Complaint Rejected ❌</div>' +
           '<div class="time">Rejected by Admin' + (c.rejectionReason ? ' — ' + c.rejectionReason : '') + '</div></div></div>'
         : '') +
-      '</div>';
+      '</div>' + 
+      
+      // Delete section (resolved/rejected only) mapped to bottom right
+      (isDeletable 
+        ? '<div style="display:flex; justify-content:flex-end; margin-top:30px;">' +
+          '<div style="text-align:right;">' +
+          '<button class="btn btn-danger" id="delete-btn" onclick="deleteComplaint()" style="background:#be123c;border-color:#be123c;padding:10px 20px;font-size:0.9rem;border-radius:10px;color:#fff;cursor:pointer;"><i class="fa-solid fa-trash"></i> Permanently Delete Complaint</button>' +
+          '<div style="font-size:0.75rem;color:var(--text-secondary);margin-top:8px;">This action cannot be undone.</div>' +
+          '</div></div>'
+        : '');
 
     // Load officers for the best-matched department AFTER DOM is rendered
     if (!isResolved && !isRejected && selectedDept) {
@@ -455,6 +491,28 @@
         '<a href="complaints.html" class="btn btn-primary" style="margin-top:16px;">← Back to Complaints</a></div>';
     }
   }
+
+  // ── Admin review of AI-flagged complaint ──────────────────────
+  window.adminReviewComplaint = async function(id, action) {
+    const label = action === 'approve' ? 'Approve & close this complaint?' : 'Reassign back to the officer for re-resolution?';
+    if (!confirm(label)) return;
+    try {
+      const res  = await fetch('/api/complaint/' + id + '/admin-review', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        showToast(action === 'approve' ? '✅ Complaint approved and closed.' : '🔁 Complaint reassigned to officer.', 'success');
+        complaint = data.complaint || complaint;
+        await init();
+      } else {
+        showToast(data.message || 'Action failed.', 'error');
+      }
+    } catch {
+      showToast('Cannot connect to server.', 'error');
+    }
+  };
 
   document.addEventListener('click', e => {
     const p = document.getElementById('admin-profile');

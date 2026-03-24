@@ -7,7 +7,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="stylesheet" href="citizen.css"/>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-  <!-- Real Leaflet map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -18,6 +17,37 @@
       font-size: 0.72rem; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
+    }
+    /* Anonymous toggle */
+    .anon-toggle {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 16px; border-radius: 12px;
+      border: 1.5px solid var(--slate-200, #e2e8f0);
+      background: var(--slate-50, #f8fafc);
+      margin-top: 14px; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .anon-toggle:has(input:checked) {
+      border-color: var(--navy, #1a3c6e);
+      background: rgba(26,60,110,0.05);
+    }
+    .anon-toggle input[type="checkbox"] {
+      width: 18px; height: 18px; flex-shrink: 0; margin-top: 2px; cursor: pointer;
+      accent-color: var(--navy, #1a3c6e);
+    }
+    
+    .anon-toggle-title {
+      font-size: 0.875rem; font-weight: 700;
+      color: var(--slate-800, #1e293b); margin-bottom: 3px;
+    }
+    .anon-toggle-desc {
+      font-size: 0.78rem; color: var(--slate-500, #64748b); line-height: 1.5;
+    }
+    .anon-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 2px 8px; border-radius: 999px;
+      background: rgba(26,60,110,0.1); color: var(--navy, #1a3c6e);
+      font-size: 0.7rem; font-weight: 700; margin-top: 5px;
     }
   </style>
   <script src="../admin/theme.js"></script>
@@ -90,7 +120,6 @@
   </header>
 
   <div class="content">
-
     <div class="form-grid">
 
       <!-- LEFT -->
@@ -149,7 +178,7 @@
       <!-- RIGHT -->
       <div class="col">
 
-        <!-- Location — Real Leaflet Map -->
+        <!-- Location -->
         <div class="card">
           <div class="card-head">
             <div class="step-badge">3</div>
@@ -166,7 +195,6 @@
             <span id="addressText"></span>
           </div>
 
-          <!-- REAL LEAFLET MAP -->
           <div id="leafletMap"></div>
           <p style="font-size:0.72rem;color:var(--light);text-align:center;margin-top:6px;">
             <i class="fa-solid fa-hand-pointer"></i> Click map to pin location · Drag pin to adjust
@@ -188,7 +216,7 @@
           </div>
         </div>
 
-        <!-- Contact -->
+        <!-- Contact & Privacy -->
         <div class="card">
           <div class="card-head">
             <div class="step-badge">4</div>
@@ -209,6 +237,23 @@
             <label class="label">Email</label>
             <input class="input" type="email" placeholder="you@example.com"/>
           </div>
+
+          <!-- ── ANONYMOUS TOGGLE ───────────────────────── -->
+          <label class="anon-toggle" id="anonToggleLabel">
+            <input type="checkbox" id="anonCheckbox"/>
+            <div class="anon-toggle-body">
+              <div class="anon-toggle-title"><i class="fa-solid fa-user-secret" style="margin-right:6px;"></i>Submit Anonymously</div>
+              <div class="anon-toggle-desc">
+                Your phone number and email will be hidden from officers and departments.
+                Only the admin can see your identity.
+              </div>
+              <div class="anon-badge" id="anonBadge" style="display:none;">
+                <i class="fa-solid fa-shield-halved"></i> Identity Masked
+              </div>
+            </div>
+          </label>
+          <!-- ──────────────────────────────────────────── -->
+
           <label class="check-row" style="margin-top:12px;">
             <input type="checkbox" checked/> Notify me via SMS on status updates
           </label>
@@ -240,6 +285,11 @@
 <script src="api.js"></script>
 <script src="citizen_submit.js"></script>
 <script>
+// Show/hide badge when anonymous is checked
+document.getElementById('anonCheckbox').addEventListener('change', function() {
+  document.getElementById('anonBadge').style.display = this.checked ? 'inline-flex' : 'none';
+});
+
 // Load departments from DB into category dropdown
 (async function() {
   try {

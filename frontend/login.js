@@ -27,26 +27,25 @@ form.addEventListener("submit", async function (e) {
     const data = await res.json();
 
     if (res.ok) {
-      // Build full session object — includes _id for API calls
       const initials = (data.user.name || "")
         .split(" ").filter(Boolean).map(w => w[0]).slice(0, 2).join("").toUpperCase() || "U";
 
       const sessionUser = {
-        id:         data.user.id,          // MongoDB _id — used as citizenId in complaint submit
-        name:       data.user.name,
-        email:      data.user.email,
-        role:       data.user.role,
-        department: data.user.department || "",
-        phone:      data.user.phone || "",
+        id:          data.user.id,           // MongoDB _id
+        officerId:   data.user.officerId  || "",   // ← FIX: "OFF001" style ID for officer API calls
+        designation: data.user.designation || "",  // ← FIX: shown in officer topbar
+        name:        data.user.name,
+        email:       data.user.email,
+        role:        data.user.role,
+        department:  data.user.department || "",
+        phone:       data.user.phone || "",
         initials,
       };
 
-      // Store in both sessionStorage (preferred) and localStorage (fallback)
       sessionStorage.setItem("cityfix_user", JSON.stringify(sessionUser));
       localStorage.setItem("cityfix_user",   JSON.stringify(sessionUser));
       localStorage.setItem("userEmail",      data.user.email);
 
-      // Redirect based on role
       if (data.user.role === "citizen") {
         window.location.href = "citizen/citizen_dash.html";
       } else if (data.user.role === "admin") {

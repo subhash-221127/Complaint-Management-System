@@ -265,33 +265,21 @@
     <!-- Loading state (hidden immediately via JS) -->
     <div id="loading-state" style="display:none;"></div>
 
-    <div id="profile-content" style="display:none;">
 
       <!-- ══ HERO CARD ══ -->
       <div class="profile-hero-card" style="position:relative;">
-        <!-- Status badge pinned to top-right of card -->
         <div style="position:absolute;top:18px;right:20px;z-index:10;">
           <div style="position:relative;">
-            <button id="status-toggle-btn" onclick="toggleStatusMenu(event)" style="
-              display:inline-flex;align-items:center;gap:6px;
-              padding:6px 14px;border-radius:999px;font-size:0.75rem;font-weight:700;
-              border:none;cursor:pointer;font-family:inherit;
-              background:rgba(34,197,94,0.2);color:#4ade80;
-              transition:all 0.2s;
-            ">
+            <button id="status-toggle-btn" onclick="toggleStatusMenu(event)" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:999px;font-size:0.75rem;font-weight:700;border:none;cursor:pointer;font-family:inherit;background:rgba(34,197,94,0.2);color:#4ade80;transition:all 0.2s;">
               <span id="status-dot-indicator" style="width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block;"></span>
               <span id="status-badge-label">Active</span>
               <i class="fa-solid fa-chevron-down" style="font-size:0.6rem;"></i>
             </button>
-            <div id="status-menu" style="
-              display:none;position:absolute;top:calc(100% + 6px);right:0;
-              background:#fff;border:1px solid var(--slate-200);border-radius:12px;
-              box-shadow:0 8px 24px rgba(0,0,0,0.12);overflow:hidden;min-width:140px;z-index:100;
-            ">
-              <button onclick="setOfficerStatus('Active')" style="width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:600;color:#16a34a;text-align:left;display:flex;align-items:center;gap:8px;transition:background 0.15s;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'">
+            <div id="status-menu" style="display:none;position:absolute;top:calc(100% + 6px);right:0;background:#fff;border:1px solid var(--slate-200);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.12);overflow:hidden;min-width:140px;z-index:100;">
+              <button onclick="setOfficerStatus('Active')" style="width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:600;color:#16a34a;text-align:left;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='none'">
                 <span style="width:7px;height:7px;border-radius:50%;background:#22c55e;display:inline-block;"></span> Active
               </button>
-              <button onclick="setOfficerStatus('On Leave')" style="width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:600;color:#d97706;text-align:left;display:flex;align-items:center;gap:8px;transition:background 0.15s;" onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background='none'">
+              <button onclick="setOfficerStatus('On Leave')" style="width:100%;padding:10px 14px;background:none;border:none;cursor:pointer;font-family:inherit;font-size:0.82rem;font-weight:600;color:#d97706;text-align:left;display:flex;align-items:center;gap:8px;" onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background='none'">
                 <span style="width:7px;height:7px;border-radius:50%;background:#f59e0b;display:inline-block;"></span> On Leave
               </button>
             </div>
@@ -313,46 +301,55 @@
           </div>
         </div>
         <div class="hero-stats-strip">
-          <div class="hero-stat">
-            <div class="hero-stat-val" id="stat-handled">—</div>
-            <div class="hero-stat-label">Cases Handled</div>
-          </div>
-          <div class="hero-stat">
-            <div class="hero-stat-val" id="stat-resolved">—</div>
-            <div class="hero-stat-label">Cases Resolved</div>
-          </div>
-          <div class="hero-stat">
-            <div class="hero-stat-val" id="stat-rate">—%</div>
-            <div class="hero-stat-label">Resolution Rate</div>
-          </div>
+          <div class="hero-stat"><div class="hero-stat-val" id="stat-handled">—</div><div class="hero-stat-label">Cases Handled</div></div>
+          <div class="hero-stat"><div class="hero-stat-val" id="stat-resolved">—</div><div class="hero-stat-label">Cases Resolved</div></div>
+          <div class="hero-stat"><div class="hero-stat-val" id="stat-rate">—%</div><div class="hero-stat-label">Resolution Rate</div></div>
         </div>
       </div>
 
       <!-- ══ INFO CARDS ══ -->
       <div class="profile-grid">
-
         <!-- Personal Info -->
         <div class="info-card">
-          <div class="info-card-header">
-            <div class="info-card-icon icon-navy"><i class="fa-solid fa-user"></i></div>
-            <span class="info-card-title">Personal Information</span>
+          <div class="info-card-header" style="justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="info-card-icon icon-navy"><i class="fa-solid fa-user"></i></div>
+              <span class="info-card-title">Personal Information</span>
+            </div>
+            <button onclick="toggleEditPanel()" style="font-size:0.75rem;font-weight:700;color:var(--navy);background:rgba(26,60,110,0.08);border:none;padding:5px 12px;border-radius:8px;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;">
+              <i class="fa-solid fa-pen-to-square"></i> Edit
+            </button>
           </div>
           <div class="info-card-body">
-            <div class="info-row">
-              <span class="lbl"><i class="fa-solid fa-circle-user"></i> Full Name</span>
-              <span class="val" id="info-name">—</span>
+            <div class="info-row"><span class="lbl"><i class="fa-solid fa-circle-user"></i> Full Name</span><span class="val" id="info-name">—</span></div>
+            <div class="info-row"><span class="lbl"><i class="fa-solid fa-envelope"></i> Email</span><span class="val" id="info-email" style="font-size:0.82rem;">—</span></div>
+            <div class="info-row"><span class="lbl"><i class="fa-solid fa-phone"></i> Phone</span><span class="val" id="info-phone">—</span></div>
+            <div class="info-row"><span class="lbl"><i class="fa-solid fa-id-badge"></i> Officer ID</span><span class="val" id="info-officerId" style="font-family:monospace;">—</span></div>
+          </div>
+          <!-- Edit panel — hidden until Edit clicked -->
+          <div id="edit-panel" style="display:none;padding:16px 20px;border-top:1px solid var(--slate-100);background:var(--slate-50);">
+            <div style="font-size:0.72rem;font-weight:800;color:var(--slate-500);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;">Edit Profile</div>
+            <div class="input-group" style="margin-bottom:10px;">
+              <label>Full Name</label>
+              <input type="text" id="edit-name" placeholder="Your name"/>
             </div>
-            <div class="info-row">
-              <span class="lbl"><i class="fa-solid fa-envelope"></i> Email</span>
-              <span class="val" id="info-email" style="font-size:0.82rem;">—</span>
+            <div class="input-group" style="margin-bottom:10px;">
+              <label>Phone</label>
+              <input type="tel" id="edit-phone" placeholder="Your phone number"/>
             </div>
-            <div class="info-row">
-              <span class="lbl"><i class="fa-solid fa-phone"></i> Phone</span>
-              <span class="val" id="info-phone">—</span>
+            <div class="input-group" style="margin-bottom:4px;">
+              <label style="color:var(--slate-400);">Email (cannot be changed)</label>
+              <input type="email" id="edit-email" disabled style="opacity:0.5;cursor:not-allowed;"/>
             </div>
-            <div class="info-row">
-              <span class="lbl"><i class="fa-solid fa-id-badge"></i> Officer ID</span>
-              <span class="val" id="info-officerId" style="font-family:monospace;">—</span>
+            <div style="font-size:0.72rem;color:var(--slate-400);margin-bottom:12px;">Officer ID is assigned by admin and cannot be edited.</div>
+            <div id="edit-msg" style="display:none;font-size:0.82rem;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:10px;"></div>
+            <div style="display:flex;gap:8px;">
+              <button onclick="saveOfficerProfile()" style="flex:1;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;">
+                <i class="fa-solid fa-floppy-disk"></i> Save Changes
+              </button>
+              <button onclick="toggleEditPanel()" style="padding:11px 16px;background:var(--slate-100);color:var(--slate-600);border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:600;cursor:pointer;">
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -364,52 +361,35 @@
             <span class="info-card-title">Work Information</span>
           </div>
           <div class="info-card-body">
-            <div class="info-row">
-              <span class="lbl"><i class="fa-solid fa-sitemap"></i> Department</span>
-              <span class="val" id="info-dept">—</span>
-            </div>
-            <div class="info-row">
-              <span class="lbl"><i class="fa-solid fa-briefcase"></i> Designation</span>
-              <span class="val" id="info-designation">—</span>
-            </div>
-            <div class="info-row">
-              <span class="lbl"><i class="fa-regular fa-calendar"></i> Join Date</span>
-              <span class="val" id="info-joindate">—</span>
-            </div>
-            <div class="info-row">
-              <span class="lbl"><i class="fa-solid fa-circle-dot"></i> Status</span>
-              <span class="val" id="info-status">—</span>
-            </div>
+            <div class="info-row"><span class="lbl"><i class="fa-solid fa-sitemap"></i> Department</span><span class="val" id="info-dept">—</span></div>
+            <div class="info-row"><span class="lbl"><i class="fa-solid fa-briefcase"></i> Designation</span><span class="val" id="info-designation">—</span></div>
+            <div class="info-row"><span class="lbl"><i class="fa-regular fa-calendar"></i> Join Date</span><span class="val" id="info-joindate">—</span></div>
+            <div class="info-row"><span class="lbl"><i class="fa-solid fa-circle-dot"></i> Status</span><span class="val" id="info-status">—</span></div>
           </div>
         </div>
-
       </div>
 
-      <!-- ══ CHANGE PASSWORD ══ -->
+      <!-- ══ CHANGE PASSWORD — collapsible ══ -->
       <div class="pwd-card">
-        <div class="pwd-card-header">
-          <div class="info-card-icon icon-purple"><i class="fa-solid fa-lock"></i></div>
-          <span class="info-card-title">Change Password</span>
+        <div class="pwd-card-header" style="cursor:pointer;user-select:none;justify-content:space-between;display:flex;align-items:center;" onclick="togglePwdPanel()">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="info-card-icon icon-purple"><i class="fa-solid fa-lock"></i></div>
+            <span class="info-card-title">Change Password</span>
+          </div>
+          <i class="fa-solid fa-chevron-down" id="pwd-chevron" style="color:var(--slate-400);font-size:0.8rem;transition:transform 0.2s;"></i>
         </div>
-        <div class="pwd-card-body">
-          <div class="pwd-form">
-            <div class="input-group">
-              <label>Current Password</label>
-              <input type="password" id="pwd-current" placeholder="Enter your current password"/>
+        <div id="pwd-panel" style="display:none;">
+          <div class="pwd-card-body">
+            <div class="pwd-form">
+              <div class="input-group"><label>Current Password</label><input type="password" id="pwd-current" placeholder="Enter your current password"/></div>
+              <div class="input-group"><label>New Password</label><input type="password" id="pwd-new" placeholder="Min. 8 characters"/></div>
+              <div class="input-group"><label>Confirm New Password</label><input type="password" id="pwd-confirm" placeholder="Re-enter new password"/></div>
+              <div id="pwd-error" class="pwd-error"></div>
+              <div id="pwd-success" class="pwd-success"></div>
+              <button class="btn-save" id="pwd-btn" onclick="changePassword()">
+                <i class="fa-solid fa-lock"></i> Update Password
+              </button>
             </div>
-            <div class="input-group">
-              <label>New Password</label>
-              <input type="password" id="pwd-new" placeholder="Min. 8 characters"/>
-            </div>
-            <div class="input-group">
-              <label>Confirm New Password</label>
-              <input type="password" id="pwd-confirm" placeholder="Re-enter new password"/>
-            </div>
-            <div id="pwd-error" class="pwd-error"></div>
-            <div id="pwd-success" class="pwd-success"></div>
-            <button class="btn-save" id="pwd-btn" onclick="changePassword()">
-              <i class="fa-solid fa-lock"></i> Update Password
-            </button>
           </div>
         </div>
       </div>
@@ -419,10 +399,84 @@
 </div>
 
 <div class="toast-container" id="toast-container"></div>
+
 <script src="officer.js"></script>
 <script>
-  // Extend loadProfile to also populate the new hero elements
   let _currentOfficerId = null;
+
+  function toggleEditPanel() {
+    const panel = document.getElementById('edit-panel');
+    if (!panel) return;
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+      // Pre-fill with current values
+      const nameEl  = document.getElementById('info-name');
+      const phoneEl = document.getElementById('info-phone');
+      const emailEl = document.getElementById('info-email');
+      if (nameEl)  document.getElementById('edit-name').value  = nameEl.textContent  !== '—' ? nameEl.textContent  : '';
+      if (phoneEl) document.getElementById('edit-phone').value = phoneEl.textContent !== '—' ? phoneEl.textContent : '';
+      if (emailEl) document.getElementById('edit-email').value = emailEl.textContent !== '—' ? emailEl.textContent : '';
+    }
+  }
+
+  function togglePwdPanel() {
+    const panel   = document.getElementById('pwd-panel');
+    const chevron = document.getElementById('pwd-chevron');
+    if (!panel) return;
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
+  }
+
+  async function saveOfficerProfile() {
+    const name  = document.getElementById('edit-name')?.value.trim();
+    const phone = document.getElementById('edit-phone')?.value.trim();
+    const msgEl = document.getElementById('edit-msg');
+
+    if (!name) {
+      msgEl.textContent = 'Name cannot be empty.';
+      msgEl.style.cssText = 'display:block;background:#fef2f2;color:#dc2626;font-size:0.82rem;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:10px;';
+      return;
+    }
+
+    try {
+      const resp = await fetch(`${BASE_URL}/api/officers/${_currentOfficerId}/update-profile`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ name, phone }),
+      });
+      const data = await resp.json();
+      if (resp.ok) {
+        msgEl.textContent = '✓ Profile updated successfully!';
+        msgEl.style.cssText = 'display:block;background:#f0fdf4;color:#16a34a;font-size:0.82rem;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:10px;';
+        // Update displayed values
+        setEl('info-name',  name);
+        setEl('info-phone', phone || '—');
+        setEl('hero-name',  name);
+        // Update session
+        const raw = sessionStorage.getItem('cityfix_user') || localStorage.getItem('cityfix_user');
+        if (raw) {
+          const u = JSON.parse(raw);
+          u.name = name; u.phone = phone || u.phone;
+          u.initials = name.split(' ').filter(Boolean).map(w=>w[0]).join('').toUpperCase().slice(0,2);
+          sessionStorage.setItem('cityfix_user', JSON.stringify(u));
+          localStorage.setItem('cityfix_user', JSON.stringify(u));
+          setEl('topbar-username', name);
+          setEl('avatar-initials', u.initials);
+          setEl('dropdown-initials', u.initials);
+          setEl('dropdown-name', name);
+        }
+        setTimeout(() => { document.getElementById('edit-panel').style.display = 'none'; }, 1500);
+      } else {
+        msgEl.textContent = data.message || 'Update failed.';
+        msgEl.style.cssText = 'display:block;background:#fef2f2;color:#dc2626;font-size:0.82rem;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:10px;';
+      }
+    } catch {
+      msgEl.textContent = 'Cannot connect to server.';
+      msgEl.style.cssText = 'display:block;background:#fef2f2;color:#dc2626;font-size:0.82rem;font-weight:600;padding:8px 12px;border-radius:8px;margin-bottom:10px;';
+    }
+  }
 
   async function loadProfile() {
     try {
@@ -481,9 +535,9 @@
             : '<span class="status-dot inactive"><span class="status-dot-circle"></span> On Leave</span>';
       }
 
-      // Stat blocks
-      setEl('block-handled',  handled);
-      setEl('block-resolved', resolved);
+      // Stat blocks (hidden from UI originally, preserving variable assignments to avoid errors if setEl runs silently)
+      // setEl('block-handled',  handled);
+      // setEl('block-resolved', resolved);
 
       // Also keep the topbar-username updated
       setEl('topbar-username',   o.name       || 'Officer');
@@ -567,6 +621,7 @@
       menu.style.display = 'none';
     }
   });
+
 </script>
 </body>
 </html>
