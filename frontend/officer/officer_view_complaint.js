@@ -34,28 +34,44 @@ const STEP_ICONS = {
   'Closed':      'fa-lock',
 };
 
-function buildBasicTimeline(status) {
+function fmtStepDate(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
+}
+
+function buildBasicTimeline(status, complaint) {
+  const raw = complaint || {};
+  const submittedDate = fmtStepDate(raw.createdAt);
+  const assignedDate  = fmtStepDate(raw.assignedAt);
+  const resolvedDate  = fmtStepDate(raw.resolvedAt);
+
+  if (status === 'rejected') {
+    return [
+      { step: 'Submitted', state: 'done',   date: submittedDate, desc: 'Complaint received.' },
+      { step: 'Reviewed',  state: 'done',   date: '',  desc: 'Reviewed by admin.' },
+      { step: 'Rejected',  state: 'done',   date: '',  desc: 'Rejected / case declined.' },
+      { step: 'Closed',    state: 'active', date: '',  desc: 'Case closed.' },
+    ];
+  }
+
   const steps = [
-    { step: 'Submitted',   state: 'done',    date: '—', desc: 'Complaint received by system.' },
-    { step: 'Verified',    state: 'pending', date: '—', desc: 'Under admin review.' },
-    { step: 'Assigned',    state: 'pending', date: '—', desc: 'Assigned to field officer.' },
-    { step: 'In Progress', state: 'pending', date: '—', desc: 'Officer working on it.' },
-    { step: 'Resolved',    state: 'pending', date: '—', desc: 'Issue resolved.' },
-    { step: 'Closed',      state: 'pending', date: '—', desc: 'Case closed.' },
+    { step: 'Submitted',   state: 'done',    date: submittedDate, desc: 'Complaint received by system.' },
+    { step: 'Verified',    state: 'pending', date: '',  desc: 'Under admin review.' },
+    { step: 'Assigned',    state: 'pending', date: assignedDate,  desc: 'Assigned to field officer.' },
+    { step: 'In Progress', state: 'pending', date: '',  desc: 'Officer working on it.' },
+    { step: 'Resolved',    state: 'pending', date: resolvedDate,  desc: 'Issue resolved.' },
+    { step: 'Closed',      state: 'pending', date: resolvedDate,  desc: 'Case closed.' },
   ];
+
   if (status === 'pending')    { steps[1].state = 'active'; }
   if (status === 'assigned')   { steps[1].state = 'done'; steps[2].state = 'active'; }
   if (status === 'in_progress' || status === 'inprogress') {
     steps[1].state = 'done'; steps[2].state = 'done'; steps[3].state = 'active';
   }
   if (status === 'resolved') { steps.slice(0, 5).forEach(s => s.state = 'done'); steps[5].state = 'active'; }
-  if (status === 'rejected') {
-    return [
-      { step: 'Submitted', state: 'done',   date: '—', desc: 'Complaint received.' },
-      { step: 'Rejected',  state: 'done',   date: '—', desc: 'Rejected / case declined.' },
-      { step: 'Closed',    state: 'active', date: '—', desc: 'Case closed.' },
-    ];
-  }
   return steps;
 }
 
@@ -130,6 +146,10 @@ function normalizeComplaintOfficer(c) {
   const locationStr = c.location?.address || c.location || '—';
   const lat = c.location?.lat || null;
   const lng = c.location?.lng || null;
+
+  // Resolve citizen — citizenId may be a populated object or just an ID string
+  const citizenObj = c.citizenId && typeof c.citizenId === 'object' ? c.citizenId : null;
+
   return {
     id:          c.complaintId || c._id,
     _id:         c._id,
@@ -151,13 +171,13 @@ function normalizeComplaintOfficer(c) {
       ? new Date(c.resolvedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
       : null,
     citizen: {
-      name:  c.citizenId?.name  || '—',
-      email: c.citizenId?.email || '—',
-      phone: c.citizenId?.phone || '—',
+      name:  citizenObj?.name  || '—',
+      email: citizenObj?.email || '—',
+      phone: citizenObj?.phone || '—',
     },
     evidencePaths: c.evidencePaths || [],
     comments:      c.comments      || [],
-    timeline:      c.timeline      || buildBasicTimeline(c.status),
+    timeline:      c.timeline      || buildBasicTimeline(c.status, c),
     rejectionReason: c.rejectionReason || '',
   };
 }

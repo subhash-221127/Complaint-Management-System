@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -213,9 +213,6 @@
     <a href="complaints.html" class="sidebar-link"><span class="icon">📋</span> My Complaints</a>
     <a href="profile.html"    class="sidebar-link active"><span class="icon">👤</span> My Profile</a>
   </nav>
-  <div class="sidebar-footer">
-    <a href="#" class="sidebar-link" onclick="handleLogout()"><span class="icon">🚪</span> Logout</a>
-  </div>
 </aside>
 
 <div class="main">
@@ -225,6 +222,9 @@
       <span class="page-sub">Your account information</span>
     </div>
     <div class="header-right">
+      <button class="theme-toggle-btn" onclick="toggleOfficerTheme()" title="Toggle dark mode">
+        <span id="officer-theme-icon">🌙</span>
+      </button>
       <div style="position:relative;">
         <button class="profile-btn" id="user-btn" onclick="toggleUserMenu(event)">
           <div class="chip-avatar" id="avatar-initials">OF</div>
@@ -385,8 +385,54 @@
 
       </div>
 
-      <!-- ══ CHANGE PASSWORD ══ -->
-      <div class="pwd-card">
+      <!-- ══ ACTION BUTTONS ══ -->
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn-save" style="flex:1;min-width:160px;background:linear-gradient(135deg,#1a3c6e,#2563eb);" onclick="toggleEditSection()">
+          <i class="fa-solid fa-pen"></i> Edit Profile
+        </button>
+        <button class="btn-save" style="flex:1;min-width:160px;background:linear-gradient(135deg,#7c3aed,#6d28d9);" onclick="togglePwSection()">
+          <i class="fa-solid fa-lock"></i> Change Password
+        </button>
+      </div>
+
+      <!-- ══ EDIT PROFILE (collapsed) ══ -->
+      <div id="edit-profile-section" style="display:none;" class="pwd-card">
+        <div class="pwd-card-header">
+          <div class="info-card-icon icon-navy"><i class="fa-solid fa-pen"></i></div>
+          <span class="info-card-title">Edit Profile</span>
+        </div>
+        <div class="pwd-card-body">
+          <div class="pwd-form">
+            <div class="input-group">
+              <label>Full Name</label>
+              <input type="text" id="edit-name" placeholder="Your full name"/>
+            </div>
+            <div class="input-group">
+              <label>Phone</label>
+              <input type="text" id="edit-phone" placeholder="Phone number"/>
+            </div>
+            <div class="input-group">
+              <label>Designation</label>
+              <input type="text" id="edit-designation" placeholder="Your designation"/>
+            </div>
+            <div class="input-group">
+              <label>Email <span style="font-size:0.75rem;color:#94a3b8;">(cannot be changed)</span></label>
+              <input type="email" id="edit-email-display" disabled style="opacity:0.5;cursor:not-allowed;"/>
+            </div>
+            <div class="input-group">
+              <label>Officer ID <span style="font-size:0.75rem;color:#94a3b8;">(cannot be changed)</span></label>
+              <input type="text" id="edit-officerid-display" disabled style="opacity:0.5;cursor:not-allowed;font-family:monospace;"/>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button class="btn-save" style="flex:1;background:#f1f5f9;color:#1e293b;border:1.5px solid #e2e8f0;" onclick="toggleEditSection()">Cancel</button>
+              <button class="btn-save" style="flex:1;" id="edit-save-btn" onclick="saveOfficerProfile()">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ CHANGE PASSWORD (collapsed) ══ -->
+      <div id="change-pw-section" style="display:none;" class="pwd-card">
         <div class="pwd-card-header">
           <div class="info-card-icon icon-purple"><i class="fa-solid fa-lock"></i></div>
           <span class="info-card-title">Change Password</span>
@@ -405,11 +451,12 @@
               <label>Confirm New Password</label>
               <input type="password" id="pwd-confirm" placeholder="Re-enter new password"/>
             </div>
-            <div id="pwd-error" class="pwd-error"></div>
-            <div id="pwd-success" class="pwd-success"></div>
-            <button class="btn-save" id="pwd-btn" onclick="changePassword()">
-              <i class="fa-solid fa-lock"></i> Update Password
-            </button>
+            <div style="display:flex;gap:10px;margin-top:4px;">
+              <button class="btn-save" style="flex:1;background:#f1f5f9;color:#1e293b;border:1.5px solid #e2e8f0;" onclick="togglePwSection()">Cancel</button>
+              <button class="btn-save" style="flex:1;background:linear-gradient(135deg,#7c3aed,#6d28d9);" id="pwd-btn" onclick="changePassword()">
+                <i class="fa-solid fa-lock"></i> Change Password
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -421,100 +468,15 @@
 <div class="toast-container" id="toast-container"></div>
 <script src="officer.js"></script>
 <script>
-  // Extend loadProfile to also populate the new hero elements
-  let _currentOfficerId = null;
-
-  async function loadProfile() {
-    try {
-      const targetId = SESSION.officerId || SESSION.id;
-      _currentOfficerId = targetId;
-      const resp = await fetch(`${BASE_URL}/api/officers/${targetId}`);
-      if (!resp.ok) throw new Error();
-      const o = await resp.json();
-
-      // Always use the officerId string from the DB response for subsequent API calls
-      _currentOfficerId = o.officerId || targetId;
-
-      const initials = o.name
-        ? o.name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2)
-        : 'OF';
-
-      // Hero
-      setEl('hero-initials',   initials);
-      setEl('hero-name',       o.name);
-      setEl('hero-designation', o.designation || '—');
-      setEl('hero-dept',       o.departmentName || '—');
-      setEl('hero-id-tag',     o.officerId || '—');
-
-      const statusTag = document.getElementById('hero-status-tag');
-      if (statusTag) {
-        statusTag.innerHTML = `<span class="status-dot-circle"></span> ${o.status || 'Active'}`;
-        statusTag.className = 'hero-tag ' + (o.status === 'Active' ? 'hero-tag-green' : 'hero-tag-default');
-      }
-
-      // Update the top-right status badge
-      updateStatusBadge(o.status || 'Active');
-
-      // Hero stats strip
-      const handled  = o.casesHandled  || 0;
-      const resolved = o.casesResolved || 0;
-      const rate     = handled > 0 ? Math.round((resolved / handled) * 100) : 0;
-      setEl('stat-handled',  handled);
-      setEl('stat-resolved', resolved);
-      setEl('stat-rate',     rate + '%');
-
-      // Info rows
-      setEl('info-name',        o.name);
-      setEl('info-email',       o.email);
-      setEl('info-phone',       o.phone          || '—');
-      setEl('info-officerId',   o.officerId);
-      setEl('info-dept',        o.departmentName || '—');
-      setEl('info-designation', o.designation    || '—');
-      setEl('info-joindate',    o.joinDate        || '—');
-
-      const infoStatus = document.getElementById('info-status');
-      if (infoStatus) {
-        infoStatus.innerHTML = o.status === 'Active'
-          ? '<span class="status-dot active"><span class="status-dot-circle"></span> Active</span>'
-          : o.status === 'On Leave'
-            ? '<span class="status-dot" style="background:rgba(245,158,11,0.12);color:#b45309;"><span class="status-dot-circle" style="background:#f59e0b;"></span> On Leave</span>'
-            : '<span class="status-dot inactive"><span class="status-dot-circle"></span> On Leave</span>';
-      }
-
-      // Stat blocks
-      setEl('block-handled',  handled);
-      setEl('block-resolved', resolved);
-
-      // Also keep the topbar-username updated
-      setEl('topbar-username',   o.name       || 'Officer');
-      setEl('avatar-initials',   initials);
-      setEl('dropdown-initials', initials);
-      setEl('dropdown-name',     o.name       || 'Officer');
-      setEl('dropdown-email',    o.email      || '—');
-      setEl('dropdown-dept',     o.departmentName || '—');
-
-      document.getElementById('loading-state').style.display   = 'none';
-      document.getElementById('profile-content').style.display = 'block';
-
-    } catch {
-      const ls = document.getElementById('loading-state');
-      if (ls) { ls.style.display = 'block'; ls.innerHTML = '<p style="color:var(--red);">Could not load profile. Is the backend running?</p>'; }
-    }
-  }
-
+  // status-badge helper used by loadProfile (officer.js)
   function updateStatusBadge(status) {
     const btn   = document.getElementById('status-toggle-btn');
     const label = document.getElementById('status-badge-label');
     if (!btn || !label) return;
-
     label.textContent = status;
-
     if (status === 'Active') {
       btn.style.background = 'rgba(34,197,94,0.2)';
       btn.style.color      = '#4ade80';
-    } else if (status === 'On Leave') {
-      btn.style.background = 'rgba(245,158,11,0.2)';
-      btn.style.color      = '#fbbf24';
     } else {
       btn.style.background = 'rgba(245,158,11,0.2)';
       btn.style.color      = '#fbbf24';
@@ -530,37 +492,43 @@
   async function setOfficerStatus(newStatus) {
     document.getElementById('status-menu').style.display = 'none';
     try {
-      const resp = await fetch(`${BASE_URL}/api/officers/${_currentOfficerId}/status`, {
+      const targetId = (_officerData && _officerData.officerId) || SESSION.officerId || SESSION.id;
+      const resp = await fetch(`${BASE_URL}/api/officers/${targetId}/status`, {
         method:  'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({ status: newStatus }),
       });
       if (!resp.ok) throw new Error();
-
       updateStatusBadge(newStatus);
-
       const statusTag = document.getElementById('hero-status-tag');
       if (statusTag) {
         statusTag.innerHTML = `<span class="status-dot-circle"></span> ${newStatus}`;
         statusTag.className = 'hero-tag ' + (newStatus === 'Active' ? 'hero-tag-green' : 'hero-tag-default');
       }
-
       const infoStatus = document.getElementById('info-status');
       if (infoStatus) {
         infoStatus.innerHTML = newStatus === 'Active'
           ? '<span class="status-dot active"><span class="status-dot-circle"></span> Active</span>'
-          : newStatus === 'On Leave'
-            ? '<span class="status-dot" style="background:rgba(245,158,11,0.12);color:#b45309;"><span class="status-dot-circle" style="background:#f59e0b;"></span> On Leave</span>'
-            : '<span class="status-dot inactive"><span class="status-dot-circle"></span> On Leave</span>';
+          : '<span class="status-dot" style="background:rgba(245,158,11,0.12);color:#b45309;"><span class="status-dot-circle" style="background:#f59e0b;"></span> On Leave</span>';
       }
-
       showToast(`Status updated to ${newStatus}`, 'success');
     } catch {
       showToast('Failed to update status. Try again.', 'error');
     }
   }
 
-  // Close status menu on outside click
+  // Patch toggleEditSection to also fill readonly fields
+  const _origToggleEdit = window.toggleEditSection;
+  window.toggleEditSection = function() {
+    _origToggleEdit && _origToggleEdit();
+    if (_officerData) {
+      const emailEl = document.getElementById('edit-email-display');
+      const idEl    = document.getElementById('edit-officerid-display');
+      if (emailEl) emailEl.value = _officerData.email      || '';
+      if (idEl)    idEl.value    = _officerData.officerId  || '';
+    }
+  };
+
   document.addEventListener('click', e => {
     const menu = document.getElementById('status-menu');
     if (menu && !menu.contains(e.target) && e.target !== document.getElementById('status-toggle-btn')) {
@@ -568,5 +536,6 @@
     }
   });
 </script>
+
 </body>
 </html>

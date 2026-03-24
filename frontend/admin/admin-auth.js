@@ -18,8 +18,9 @@
   document.addEventListener('DOMContentLoaded', function () {
     const nameEl    = document.getElementById('admin-name');
     const avatarEl  = document.getElementById('admin-avatar');
-    if (nameEl)   nameEl.textContent   = user.name     || 'Admin User';
-    if (avatarEl) avatarEl.textContent = user.initials || 'AD';
+    const computed  = (user.name || '').split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0,2) || 'AD';
+    if (nameEl)   nameEl.textContent   = user.name || 'Admin User';
+    if (avatarEl) avatarEl.textContent = computed;
   });
 })();
 

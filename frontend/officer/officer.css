@@ -48,6 +48,64 @@ body {
   overflow: hidden;
 }
 
+/* ── Dark Mode ── */
+[data-theme="dark"] {
+  --bg:           #0f172a;
+  --surface:      #1e293b;
+  --border:       #334155;
+  --border-light: #1e293b;
+  --text:         #f1f5f9;
+  --slate-50:     #0f172a;
+  --slate-100:    #1e293b;
+  --slate-200:    #334155;
+  --slate-300:    #475569;
+  --slate-400:    #64748b;
+  --slate-500:    #94a3b8;
+  --slate-600:    #cbd5e1;
+  --slate-700:    #e2e8f0;
+  --slate-800:    #f1f5f9;
+  --slate-900:    #f8fafc;
+  --navy-light:   rgba(59,130,246,0.15);
+  --orange-light: rgba(249,115,22,0.15);
+  --amber-light:  rgba(245,158,11,0.15);
+  --green-light:  rgba(34,197,94,0.12);
+  --blue-light:   rgba(59,130,246,0.12);
+}
+[data-theme="dark"] body { background: #0f172a; color: #f1f5f9; }
+[data-theme="dark"] .header { background: #1e293b; border-bottom-color: #334155; }
+[data-theme="dark"] .profile-btn { background: #1e293b; border-color: #334155; color: #f1f5f9; }
+[data-theme="dark"] .profile-dropdown { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .dropdown-user-header { background: #162032; border-bottom-color: #334155; }
+[data-theme="dark"] .dropdown-item { color: #e2e8f0; }
+[data-theme="dark"] .dropdown-item:hover { background: #334155; }
+[data-theme="dark"] .dropdown-divider { background: #334155; }
+[data-theme="dark"] .filter-bar { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .search-input,
+[data-theme="dark"] .filter-select { background: #0f172a; border-color: #334155; color: #f1f5f9; }
+[data-theme="dark"] .complaint-card { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .complaint-card:hover { background: #243044; }
+[data-theme="dark"] .modal { background: #1e293b; }
+[data-theme="dark"] .modal-header { border-bottom-color: #334155; }
+[data-theme="dark"] .modal-overlay { background: rgba(0,0,0,0.6); }
+[data-theme="dark"] .modal-field label { color: #94a3b8; }
+[data-theme="dark"] .mini-stat { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .main { background: #0f172a; }
+
+/* Dark mode theme toggle button */
+.theme-toggle-btn {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid var(--slate-200, #e2e8f0);
+  background: transparent;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  color: var(--slate-600, #475569);
+  transition: background 0.2s, border-color 0.2s;
+  margin-right: 8px;
+}
+.theme-toggle-btn:hover { background: var(--slate-100, #f1f5f9); }
+
 /* ============================================================
    SIDEBAR
    ============================================================ */
@@ -1371,4 +1429,4 @@ body {
 .status-menu-item.active:hover   { background: #f0fdf4; }
 .status-menu-item.on-leave { color: #d97706; }
 .status-menu-item.on-leave:hover { background: #fffbeb; }
-.status-dot-sm { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.status-dot-sm { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }

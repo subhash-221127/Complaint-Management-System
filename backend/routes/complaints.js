@@ -439,10 +439,10 @@ router.patch("/complaint/:id/status", async (req, res) => {
           { $inc: { casesResolved: 1 } }
         );
       }
-      // Send resolved email to citizen (non-fatal)
+      // Send resolved email — re-fetch with populated citizenId to ensure we have email
       try {
-        const freshComplaint = await Complaint.findById(req.params.id);
-        const citizen = await User.findById(complaint.citizenId);
+        const freshComplaint = await Complaint.findById(req.params.id).populate("citizenId", "name email phone");
+        const citizen = freshComplaint ? freshComplaint.citizenId : await User.findById(complaint.citizenId);
         if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
           await transporter.sendMail({
             from:    "CityFix <" + process.env.EMAIL_USER + ">",
@@ -451,6 +451,12 @@ router.patch("/complaint/:id/status", async (req, res) => {
             html:    buildResolvedEmail(citizen, freshComplaint || complaint),
           });
           console.log("Resolved email sent to " + citizen.email);
+        } else {
+          console.warn("Resolved email skipped — missing citizen email or SMTP config:", {
+            citizenEmail: citizen?.email,
+            hasEmailUser: !!process.env.EMAIL_USER,
+            hasEmailPass: !!process.env.EMAIL_PASS,
+          });
         }
       } catch (emailErr) {
         console.error("Resolved email failed (non-fatal):", emailErr.message);
@@ -581,15 +587,22 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
 
     // Send resolved email to citizen (non-fatal)
     try {
-      const citizen = await User.findById(complaint.citizenId);
+      const freshComplaint = await Complaint.findById(req.params.id).populate("citizenId", "name email phone");
+      const citizen = freshComplaint ? freshComplaint.citizenId : await User.findById(complaint.citizenId);
       if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         await transporter.sendMail({
           from:    `"CityFix" <${process.env.EMAIL_USER}>`,
           to:      citizen.email,
           subject: `✅ Complaint Resolved – ${complaint.complaintId} | CityFix`,
-          html:    buildResolvedEmail(citizen, complaint),
+          html:    buildResolvedEmail(citizen, freshComplaint || complaint),
         });
         console.log(`Resolved email sent to ${citizen.email}`);
+      } else {
+        console.warn("Resolve email skipped:", {
+          citizenEmail: citizen?.email,
+          hasEmailUser: !!process.env.EMAIL_USER,
+          hasEmailPass: !!process.env.EMAIL_PASS,
+        });
       }
     } catch (emailErr) {
       console.error("Resolved email failed (non-fatal):", emailErr.message);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -25,9 +25,6 @@
     <a href="complaints.html" class="sidebar-link active"><span class="icon">📋</span> My Complaints</a>
     <a href="profile.html"    class="sidebar-link"><span class="icon">👤</span> My Profile</a>
   </nav>
-  <div class="sidebar-footer">
-    <a href="#" class="sidebar-link" onclick="handleLogout()"><span class="icon">🚪</span> Logout</a>
-  </div>
 </aside>
 
 <div class="main">
@@ -37,6 +34,9 @@
       <span class="page-sub" id="topbar-sub">Loading…</span>
     </div>
     <div class="header-right">
+      <button class="theme-toggle-btn" onclick="toggleOfficerTheme()" title="Toggle dark mode">
+        <span id="officer-theme-icon">🌙</span>
+      </button>
       <div style="position:relative;">
         <button class="profile-btn" id="user-btn" onclick="toggleUserMenu(event)">
           <div class="chip-avatar" id="avatar-initials">OF</div>
