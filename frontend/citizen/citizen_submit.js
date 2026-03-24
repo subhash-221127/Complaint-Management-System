@@ -256,6 +256,8 @@ function showToast(msg, sub) {
 // 7. FAB — Submit complaint to backend
 // -----------------------------------------------
 
+const isAnonymous = document.getElementById("anonCheckbox")?.checked || false;
+
 const fab = document.getElementById("fabBtn");
 
 fab?.addEventListener("click", async () => {
@@ -299,8 +301,9 @@ fab?.addEventListener("click", async () => {
   formData.append("location", location);
   formData.append("department", category);   // backend uses "department"
   formData.append("severity", selectedSeverity);
+  const isAnonymous = document.getElementById("anonCheckbox")?.checked || false;
   formData.append("contactEmail", getUserEmail());
-
+formData.append("isAnonymous", isAnonymous ? "true" : "false");
   // Attach the logged-in citizen's MongoDB _id — required by backend
   const sessionUser = JSON.parse(sessionStorage.getItem("cityfix_user") || localStorage.getItem("cityfix_user") || "{}");
   const citizenId = sessionUser.id || "";
