@@ -266,7 +266,6 @@ router.post("/login", async (req, res) => {
     if (officer) {
       const match = await bcrypt.compare(password, officer.password);
       if (!match) return res.status(401).json({ message: "Invalid credentials." });
-      if (officer.status === "On Leave") return res.status(403).json({ message: "Your account is currently on leave. Please contact admin." });
       const token = generateToken({ id: officer._id, officerId: officer.officerId, role: "officer" });
       return res.json({
         message: "Login successful", token,
