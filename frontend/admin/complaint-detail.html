@@ -33,6 +33,36 @@
     .toast.show    { transform:translateY(0); opacity:1; }
     .toast.success { background:#16a34a; }
     .toast.error   { background:#dc2626; }
+
+    /* ── Status Stepper (citizen-style, read-only) ── */
+    .admin-stepper-wrap { margin-bottom: 24px; }
+    .admin-stepper-wrap h4 { margin-bottom: 16px; font-size: 1rem; color: var(--text-primary); }
+    .admin-stepper { display: flex; flex-direction: column; gap: 0; }
+    .ast-step { display: flex; gap: 14px; position: relative; }
+    .ast-step:not(:last-child) .ast-line {
+      position: absolute; left: 17px; top: 36px;
+      width: 2px; height: calc(100% - 4px);
+      background: var(--border, #e2e8f0);
+      z-index: 0;
+    }
+    .ast-step.done .ast-line  { background: #22c55e; }
+    .ast-step.active .ast-line { background: linear-gradient(to bottom, #3b82f6, var(--border,#e2e8f0)); }
+    .ast-dot {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 0.85rem; position: relative; z-index: 1;
+      border: 2px solid var(--border, #e2e8f0);
+      background: var(--bg, #f8fafc);
+      color: var(--text-secondary, #94a3b8);
+    }
+    .ast-step.done  .ast-dot { background: #22c55e; border-color: #22c55e; color: #fff; }
+    .ast-step.active .ast-dot { background: #3b82f6; border-color: #3b82f6; color: #fff; box-shadow: 0 0 0 4px rgba(59,130,246,0.15); }
+    .ast-step.rejected-step .ast-dot { background: #ef4444; border-color: #ef4444; color: #fff; }
+    .ast-body { padding: 4px 0 20px; flex: 1; }
+    .ast-title { font-size: 0.9rem; font-weight: 700; color: var(--text-primary, #1e293b); }
+    .ast-desc  { font-size: 0.8rem; color: var(--text-secondary, #64748b); margin-top: 2px; }
+    .ast-date  { font-size: 0.78rem; color: var(--text-secondary, #94a3b8); margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+    .ast-step.pending .ast-title { color: var(--text-secondary, #94a3b8); font-weight: 500; }
   </style>
 </head>
 <body>
@@ -421,8 +451,11 @@
       actionSection +
       combinedEvidenceHTML +
 
-      // Timeline
-      '<div class="timeline"><h4>📅 Activity Timeline</h4>' +
+      // ── Full Status Stepper (citizen-style, read-only for admin) ──
+      buildAdminStepper(c) +
+
+      // Activity log (keep existing compact log below stepper)
+      '<div class="timeline" style="margin-top:24px;"><h4>📅 Activity Log</h4>' +
       '<div class="timeline-item"><div class="timeline-dot orange"></div>' +
       '<div class="timeline-content"><div class="event">Complaint Filed</div>' +
       '<div class="time">' + fmtDate(c.createdAt) + ' — by ' + (citizen.name || 'Citizen') + '</div></div></div>' +
@@ -461,6 +494,58 @@
     if (!isResolved && !isRejected && selectedDept) {
       await loadOfficersByDept(selectedDept);
     }
+  }
+
+  // ── Admin Stepper (citizen-style, read-only) ────────────────────
+  function buildAdminStepper(c) {
+    const isResolved = c.status === 'resolved';
+    const isRejected = c.status === 'rejected';
+    const isAssigned = ['assigned','in_progress','resolved'].includes(c.status);
+    const isInProg   = ['in_progress','resolved'].includes(c.status);
+
+    let steps;
+    if (isRejected) {
+      steps = [
+        { label: 'Submitted',  icon: 'fa-paper-plane',    state: 'done',    date: c.createdAt,  desc: 'Complaint filed by citizen.' },
+        { label: 'Reviewed',   icon: 'fa-magnifying-glass', state: 'done',   date: '',           desc: 'Reviewed by admin.' },
+        { label: 'Rejected',   icon: 'fa-circle-xmark',   state: 'rejected', date: '',           desc: c.rejectionReason ? 'Reason: ' + c.rejectionReason : 'Could not be processed.' },
+        { label: 'Closed',     icon: 'fa-lock',           state: 'active',  date: '',           desc: 'Case closed.' },
+      ];
+    } else {
+      steps = [
+        { label: 'Submitted',   icon: 'fa-paper-plane',       state: 'done',    date: c.createdAt,  desc: 'Filed by ' + ((c.citizenId && c.citizenId.name) || 'citizen') + '.' },
+        { label: 'Verified',    icon: 'fa-shield-halved',      state: isAssigned || isInProg || isResolved ? 'done' : (c.status === 'pending' ? 'active' : 'pending'), date: '', desc: 'Reviewed by admin.' },
+        { label: 'Assigned',    icon: 'fa-user-tie',           state: isAssigned ? 'done' : 'pending', date: c.assignedAt, desc: c.officerId ? 'Assigned to ' + c.officerId.name + '.' : 'Pending assignment.' },
+        { label: 'In Progress', icon: 'fa-screwdriver-wrench', state: isInProg ? 'done' : (c.status === 'assigned' ? 'active' : 'pending'), date: '', desc: 'Officer working on it.' },
+        { label: 'Resolved',    icon: 'fa-circle-check',       state: isResolved ? 'done' : 'pending', date: c.resolvedAt, desc: isResolved ? 'Issue successfully resolved.' : 'Pending resolution.' },
+        { label: 'Closed',      icon: 'fa-lock',               state: isResolved ? 'active' : 'pending', date: c.resolvedAt, desc: 'Case closed.' },
+      ];
+      // For 'assigned' status, mark verified as done, assigned as active
+      if (c.status === 'assigned') {
+        steps[1].state = 'done';
+        steps[2].state = 'active';
+      }
+    }
+
+    const stepsHTML = steps.map((s, i) => {
+      const isLast    = i === steps.length - 1;
+      const dotIcon   = s.state === 'done' || s.state === 'rejected' ? 'fa-check' :
+                        s.state === 'active' ? s.icon : 'fa-circle';
+      const dateStr   = s.date ? fmtDate(s.date) : '';
+      return [
+        '<div class="ast-step ' + s.state + (s.state === 'rejected' ? ' rejected-step' : '') + '">',
+          isLast ? '' : '<div class="ast-line"></div>',
+          '<div class="ast-dot"><i class="fa-solid ' + dotIcon + '"></i></div>',
+          '<div class="ast-body">',
+            '<div class="ast-title">' + s.label + '</div>',
+            '<div class="ast-desc">' + s.desc + '</div>',
+            dateStr ? '<div class="ast-date"><i class="fa-regular fa-clock"></i> ' + dateStr + '</div>' : '',
+          '</div>',
+        '</div>'
+      ].join('');
+    }).join('');
+
+    return '<div class="admin-stepper-wrap"><h4>📊 Complaint Status</h4><div class="admin-stepper">' + stepsHTML + '</div></div>';
   }
 
   // ── Init ───────────────────────────────────────────────────────

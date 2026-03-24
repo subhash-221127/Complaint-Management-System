@@ -272,6 +272,30 @@ router.delete("/officers/:id", async (req, res) => {
   }
 });
 
+// ── PATCH /officers/:id  —  Update officer profile (name, phone, designation) ──
+router.patch("/officers/:id", async (req, res) => {
+  try {
+    const { name, phone, designation } = req.body;
+    const update = {};
+    if (name)        update.name        = name.trim();
+    if (phone)       update.phone       = phone.trim();
+    if (designation) update.designation = designation.trim();
+
+    let officer = await Officer.findOne({ officerId: req.params.id });
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id);
+    }
+    if (!officer) return res.status(404).json({ message: "Officer not found." });
+
+    const updated = await Officer.findByIdAndUpdate(officer._id, update, { new: true })
+      .populate("department", "name code");
+
+    res.json({ message: "Profile updated successfully.", officer: updated });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // ── PATCH /officers/:id/status ─────────────────────────────────
 router.patch("/officers/:id/status", async (req, res) => {
   try {

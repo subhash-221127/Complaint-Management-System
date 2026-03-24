@@ -196,8 +196,18 @@
           </div>
         </div>
 
-        <!-- Edit Name -->
-        <div class="info-card">
+        <!-- Action buttons -->
+        <div style="display:flex;gap:12px;margin-bottom:16px;">
+          <button class="btn-save" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;" onclick="toggleAdminEdit()">
+            ✏️ Edit Profile
+          </button>
+          <button class="btn-save" style="flex:1;background:linear-gradient(135deg,#7c3aed,#6d28d9);display:flex;align-items:center;justify-content:center;gap:8px;" onclick="toggleAdminPw()">
+            🔒 Change Password
+          </button>
+        </div>
+
+        <!-- Edit Name (collapsed) -->
+        <div class="info-card" id="edit-section" style="display:none;">
           <div class="info-card-header">
             <div class="info-card-icon icon-navy">✏️</div>
             <span class="info-card-title">Edit Profile</span>
@@ -213,14 +223,15 @@
             </div>
             <div id="edit-msg" class="msg-box"></div>
             <div class="form-actions">
+              <button class="btn-save" style="background:#f1f5f9;color:#1e293b;border:1.5px solid #e2e8f0;flex:none;padding:10px 20px;" onclick="toggleAdminEdit()">Cancel</button>
               <button class="btn-save" id="save-btn" onclick="saveProfile()">💾 Save Changes</button>
             </div>
           </div>
           </div><!-- /admin-edit-body -->
         </div>
 
-        <!-- Change Password -->
-        <div class="info-card">
+        <!-- Change Password (collapsed) -->
+        <div class="info-card" id="pwd-section" style="display:none;">
           <div class="info-card-header">
             <div class="info-card-icon icon-purple">🔒</div>
             <span class="info-card-title">Change Password</span>
@@ -240,6 +251,7 @@
             </div>
             <div id="pwd-msg" class="msg-box"></div>
             <div class="form-actions">
+              <button class="btn-save" style="background:#f1f5f9;color:#1e293b;border:1.5px solid #e2e8f0;flex:none;padding:10px 20px;" onclick="toggleAdminPw()">Cancel</button>
               <button class="btn-save" id="pwd-btn" onclick="changePassword()">🔐 Update Password</button>
             </div>
           </div>
@@ -276,6 +288,22 @@
     if (p && !p.contains(e.target))
       document.getElementById('profile-dropdown').classList.remove('show');
   });
+
+  function toggleAdminEdit() {
+    const s   = document.getElementById('edit-section');
+    const pw  = document.getElementById('pwd-section');
+    const open = s.style.display !== 'none';
+    s.style.display = open ? 'none' : 'block';
+    if (!open && pw) pw.style.display = 'none';
+  }
+
+  function toggleAdminPw() {
+    const s   = document.getElementById('pwd-section');
+    const edit = document.getElementById('edit-section');
+    const open = s.style.display !== 'none';
+    s.style.display = open ? 'none' : 'block';
+    if (!open && edit) edit.style.display = 'none';
+  }
 
   function showMsg(elId, msg, type) {
     const el = document.getElementById(elId);
@@ -332,12 +360,12 @@
       const data = await res.json();
       if (res.ok) {
         showMsg('edit-msg', 'Profile updated successfully!', 'success');
-        // Update session
         _user.name = name;
-        _user.initials = name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        const newInitials = name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        _user.initials = newInitials;
         sessionStorage.setItem('cityfix_user', JSON.stringify(_user));
-        // Refresh displayed values
-        loadProfile();
+        await loadProfile();
+        setTimeout(() => { document.getElementById('edit-section').style.display = 'none'; }, 1200);
       } else {
         showMsg('edit-msg', data.message || 'Update failed.', 'error');
       }
@@ -371,6 +399,7 @@
         document.getElementById('pwd-current').value = '';
         document.getElementById('pwd-new').value     = '';
         document.getElementById('pwd-confirm').value = '';
+        setTimeout(() => { document.getElementById('pwd-section').style.display = 'none'; }, 1200);
       } else {
         showMsg('pwd-msg', data.message || 'Failed to update password.', 'error');
       }
@@ -379,11 +408,6 @@
     }
     btn.disabled = false; btn.textContent = '🔐 Update Password';
   }
-
-  // Also fix change-password for admin — reuse the auth route but admin uses Admin model
-  // We need a separate admin change-password route or adapt the existing one
-  // For now auth/change-password works for User model — admin needs its own
-  // We'll handle this by checking in backend (added below in auth.js patch)
 
   document.addEventListener('DOMContentLoaded', loadProfile);
 </script>

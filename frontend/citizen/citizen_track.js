@@ -53,22 +53,53 @@ function normalizeComplaint(c) {
     rated:    c.rated || false,
     officerPhone: c.officerId?.phone || null,
     officerEmail: c.officerId?.email || null,
-    timeline: c.timeline || buildBasicTimeline(c.status),
+    timeline: c.timeline || buildBasicTimeline(c.status === "in_progress" ? "inprogress" : (c.status || "pending"), c),
   };
 }
 
-function buildBasicTimeline(status) {
+function fmtStepDate(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit"
+  });
+}
+
+function buildBasicTimeline(status, complaint) {
+  const raw = complaint || {};
+  const submittedDate  = fmtStepDate(raw.createdAt);
+  const assignedDate   = fmtStepDate(raw.assignedAt);
+  const resolvedDate   = fmtStepDate(raw.resolvedAt);
+
   const steps = [
-    { step: "Submitted",   icon: "fa-paper-plane",       state: "done",    date: "—", desc: "Complaint received.", note: "" },
-    { step: "Verified",    icon: "fa-shield-check",       state: "pending", date: "—", desc: "Under review.",        note: "" },
-    { step: "Assigned",    icon: "fa-user-tie",           state: "pending", date: "—", desc: "Pending assignment.",  note: "" },
-    { step: "In Progress", icon: "fa-screwdriver-wrench", state: "pending", date: "—", desc: "Not yet started.",     note: "" },
-    { step: "Resolved",    icon: "fa-circle-check",       state: "pending", date: "—", desc: "Pending.",             note: "" },
-    { step: "Closed",      icon: "fa-lock",               state: "pending", date: "—", desc: "Pending.",             note: "" },
+    { step: "Submitted",   icon: "fa-paper-plane",       state: "done",    date: submittedDate, desc: "Complaint received by CityFix.", note: "" },
+    { step: "Verified",    icon: "fa-shield-check",       state: "pending", date: "",  desc: "Under admin review.", note: "" },
+    { step: "Assigned",    icon: "fa-user-tie",           state: "pending", date: assignedDate,  desc: "Assigned to field officer.", note: "" },
+    { step: "In Progress", icon: "fa-screwdriver-wrench", state: "pending", date: "",  desc: "Officer is working on it.", note: "" },
+    { step: "Resolved",    icon: "fa-circle-check",       state: "pending", date: resolvedDate,  desc: "Issue resolved.", note: "" },
+    { step: "Closed",      icon: "fa-lock",               state: "pending", date: resolvedDate,  desc: "Case closed.", note: "" },
   ];
-  if (status === "pending")              { steps[0].state = "done"; steps[1].state = "active"; }
-  if (status === "in_progress" || status === "inprogress") { steps[0].state = "done"; steps[1].state = "done"; steps[2].state = "done"; steps[3].state = "active"; }
-  if (status === "resolved")             { steps.slice(0, 5).forEach(s => s.state = "done"); steps[5].state = "active"; }
+
+  if (status === "pending") {
+    steps[0].state = "done";
+    steps[1].state = "active";
+  } else if (status === "assigned") {
+    steps[0].state = "done"; steps[1].state = "done";
+    steps[2].state = "active";
+  } else if (status === "in_progress" || status === "inprogress") {
+    steps[0].state = "done"; steps[1].state = "done"; steps[2].state = "done";
+    steps[3].state = "active";
+  } else if (status === "resolved") {
+    steps.slice(0, 5).forEach(s => s.state = "done");
+    steps[5].state = "active";
+  } else if (status === "rejected") {
+    return [
+      { step: "Submitted", icon: "fa-paper-plane",    state: "done",   date: submittedDate, desc: "Complaint received.", note: "" },
+      { step: "Reviewed",  icon: "fa-magnifying-glass", state: "done",  date: "", desc: "Reviewed by admin.", note: "" },
+      { step: "Rejected",  icon: "fa-circle-xmark",   state: "done",   date: "", desc: "Could not be processed.", note: "" },
+      { step: "Closed",    icon: "fa-lock",            state: "active", date: "", desc: "Case closed.", note: "" },
+    ];
+  }
   return steps;
 }
 

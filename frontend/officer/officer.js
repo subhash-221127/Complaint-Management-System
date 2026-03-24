@@ -43,6 +43,7 @@ function severityBadge(s) {
 }
 
 function normalizeComplaint(c) {
+  const citizenObj = c.citizenId && typeof c.citizenId === 'object' ? c.citizenId : null;
   return {
     _id:         c._id,
     id:          c.complaintId || c._id,
@@ -64,9 +65,9 @@ function normalizeComplaint(c) {
     _rawDate:    c.createdAt  || null,
     evidence:    c.evidencePaths?.[0] || null,
     citizen: {
-      name:  c.citizenId?.name  || '—',
-      email: c.citizenId?.email || '—',
-      phone: c.citizenId?.phone || '—',
+      name:  citizenObj?.name  || '—',
+      email: citizenObj?.email || '—',
+      phone: citizenObj?.phone || '—',
     },
   };
 }
@@ -395,8 +396,33 @@ async function loadStats() {
 }
 
 // =============================================
+// DARK MODE
+// =============================================
+
+function toggleOfficerTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const next    = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('cityfix-theme', next);
+  const icon = document.getElementById('officer-theme-icon');
+  if (icon) icon.textContent = next === 'dark' ? '☀️' : '🌙';
+}
+
+// Apply saved theme on load
+(function() {
+  const saved = localStorage.getItem('cityfix-theme') || 'light';
+  document.documentElement.setAttribute('data-theme', saved);
+  document.addEventListener('DOMContentLoaded', () => {
+    const icon = document.getElementById('officer-theme-icon');
+    if (icon) icon.textContent = saved === 'dark' ? '☀️' : '🌙';
+  });
+})();
+
+// =============================================
 // PAGE: profile.html
 // =============================================
+
+let _officerData = null; // cached officer object
 
 async function loadProfile() {
   try {
@@ -404,16 +430,34 @@ async function loadProfile() {
     const resp = await fetch(`${BASE_URL}/api/officers/${targetId}`);
     if (!resp.ok) throw new Error();
     const o = await resp.json();
+    _officerData = o;
 
+    const initials = o.name
+      ? o.name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2)
+      : 'OF';
+
+    // Hero
+    setEl('hero-initials',    initials);
     setEl('hero-name',        o.name);
     setEl('hero-designation', o.designation    || '—');
     setEl('hero-dept',        o.departmentName || '—');
-    setEl('hero-id',          o.officerId);
-    setEl('hero-status',      o.status         || 'Active');
+    setEl('hero-id-tag',      o.officerId);
 
-    const statusTag = document.getElementById('hero-status');
-    if (statusTag) statusTag.className = 'profile-hero-tag' + (o.status === 'Active' ? ' active' : '');
+    const statusTag = document.getElementById('hero-status-tag');
+    if (statusTag) {
+      statusTag.innerHTML = `<span class="status-dot-circle"></span> ${o.status || 'Active'}`;
+      statusTag.className = 'hero-tag ' + (o.status === 'Active' ? 'hero-tag-green' : 'hero-tag-default');
+    }
+    updateStatusBadge(o.status || 'Active');
 
+    const handled  = o.casesHandled  || 0;
+    const resolved = o.casesResolved || 0;
+    const rate     = handled > 0 ? Math.round((resolved / handled) * 100) : 0;
+    setEl('stat-handled',  handled);
+    setEl('stat-resolved', resolved);
+    setEl('stat-rate',     rate + '%');
+
+    // Info rows
     setEl('info-name',        o.name);
     setEl('info-email',       o.email);
     setEl('info-phone',       o.phone          || '—');
@@ -421,70 +465,129 @@ async function loadProfile() {
     setEl('info-dept',        o.departmentName || '—');
     setEl('info-designation', o.designation    || '—');
     setEl('info-joindate',    o.joinDate        || '—');
-    setEl('info-status',      o.status          || 'Active');
-    setEl('info-handled',     o.casesHandled    || 0);
-    setEl('info-resolved',    o.casesResolved   || 0);
+
+    const infoStatus = document.getElementById('info-status');
+    if (infoStatus) {
+      infoStatus.innerHTML = o.status === 'Active'
+        ? '<span class="status-dot active"><span class="status-dot-circle"></span> Active</span>'
+        : '<span class="status-dot" style="background:rgba(245,158,11,0.12);color:#b45309;"><span class="status-dot-circle" style="background:#f59e0b;"></span> On Leave</span>';
+    }
+
+    setEl('block-handled',  handled);
+    setEl('block-resolved', resolved);
+
+    setEl('topbar-username',   o.name       || 'Officer');
+    setEl('avatar-initials',   initials);
+    setEl('dropdown-initials', initials);
+    setEl('dropdown-name',     o.name       || 'Officer');
+    setEl('dropdown-email',    o.email      || '—');
+    setEl('dropdown-dept',     o.departmentName || '—');
 
     document.getElementById('loading-state').style.display   = 'none';
     document.getElementById('profile-content').style.display = 'block';
 
   } catch {
     const ls = document.getElementById('loading-state');
-    if (ls) ls.innerHTML = '<p style="color:var(--red);">Could not load profile. Is the backend running?</p>';
+    if (ls) { ls.style.display = 'block'; ls.innerHTML = '<p style="color:var(--red);">Could not load profile. Is the backend running?</p>'; }
   }
 }
 
-async function changePassword() {
-  const current   = document.getElementById('pwd-current').value;
-  const newPwd    = document.getElementById('pwd-new').value;
-  const confirm   = document.getElementById('pwd-confirm').value;
-  const errorEl   = document.getElementById('pwd-error');
-  const successEl = document.getElementById('pwd-success');
-  const btn       = document.getElementById('pwd-btn');
-
-  errorEl.style.display = successEl.style.display = 'none';
-
-  if (!current || !newPwd || !confirm) {
-    errorEl.textContent = 'Please fill all fields.';
-    errorEl.style.display = 'block'; return;
+// ── Edit Profile (collapsed) ───────────────────
+function toggleEditSection() {
+  const section = document.getElementById('edit-profile-section');
+  const pwSection = document.getElementById('change-pw-section');
+  if (!section) return;
+  const isOpen = section.style.display !== 'none';
+  section.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen && pwSection) pwSection.style.display = 'none';
+  if (!isOpen && _officerData) {
+    const nameEl = document.getElementById('edit-name');
+    const phoneEl = document.getElementById('edit-phone');
+    const desigEl = document.getElementById('edit-designation');
+    if (nameEl)  nameEl.value  = _officerData.name        || '';
+    if (phoneEl) phoneEl.value = _officerData.phone       || '';
+    if (desigEl) desigEl.value = _officerData.designation || '';
   }
-  if (newPwd.length < 8) {
-    errorEl.textContent = 'New password must be at least 8 characters.';
-    errorEl.style.display = 'block'; return;
-  }
-  if (newPwd !== confirm) {
-    errorEl.textContent = 'New passwords do not match.';
-    errorEl.style.display = 'block'; return;
-  }
+}
 
-  btn.disabled  = true;
-  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating…';
+async function saveOfficerProfile() {
+  const name  = (document.getElementById('edit-name')  || {}).value?.trim();
+  const phone = (document.getElementById('edit-phone') || {}).value?.trim();
+  const desig = (document.getElementById('edit-designation') || {}).value?.trim();
+  if (!name) { showToast('Name cannot be empty.', 'error'); return; }
+
+  const btn = document.getElementById('edit-save-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
 
   try {
-    const resp = await fetch(`${BASE_URL}/api/officers/${SESSION.officerId}/change-password`, {
+    const targetId = (_officerData && _officerData.officerId) || SESSION.officerId || SESSION.id;
+    const resp = await fetch(`${BASE_URL}/api/officers/${targetId}`, {
+      method:  'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ name, phone, designation: desig }),
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      _officerData = data.officer || _officerData;
+      SESSION.name = name;
+      sessionStorage.setItem('cityfix_user', JSON.stringify(SESSION));
+      localStorage.setItem('cityfix_user', JSON.stringify(SESSION));
+      showToast('Profile updated!', 'success');
+      document.getElementById('edit-profile-section').style.display = 'none';
+      await loadProfile();
+    } else {
+      showToast(data.message || 'Failed to save.', 'error');
+    }
+  } catch {
+    showToast('Cannot connect to server.', 'error');
+  }
+  if (btn) { btn.disabled = false; btn.textContent = 'Save Changes'; }
+}
+
+// ── Change Password (collapsed) ────────────────
+function togglePwSection() {
+  const section   = document.getElementById('change-pw-section');
+  const editSection = document.getElementById('edit-profile-section');
+  if (!section) return;
+  const isOpen = section.style.display !== 'none';
+  section.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen && editSection) editSection.style.display = 'none';
+}
+
+async function changePassword() {
+  const current   = (document.getElementById('pwd-current') || {}).value;
+  const newPwd    = (document.getElementById('pwd-new')     || {}).value;
+  const confirm   = (document.getElementById('pwd-confirm') || {}).value;
+  const btn       = document.getElementById('pwd-btn');
+
+  if (!current || !newPwd || !confirm) { showToast('Please fill all fields.', 'error'); return; }
+  if (newPwd.length < 8) { showToast('New password must be at least 8 characters.', 'error'); return; }
+  if (newPwd !== confirm) { showToast('Passwords do not match.', 'error'); return; }
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Updating…'; }
+
+  try {
+    const targetId = (_officerData && _officerData.officerId) || SESSION.officerId || SESSION.id;
+    const resp = await fetch(`${BASE_URL}/api/officers/${targetId}/change-password`, {
       method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ currentPassword: current, newPassword: newPwd }),
     });
     const data = await resp.json();
-
     if (resp.ok) {
-      successEl.textContent = '✓ Password updated successfully!';
-      successEl.style.display = 'block';
-      document.getElementById('pwd-current').value = '';
-      document.getElementById('pwd-new').value     = '';
-      document.getElementById('pwd-confirm').value = '';
+      showToast('Password updated successfully!', 'success');
+      document.getElementById('change-pw-section').style.display = 'none';
+      ['pwd-current','pwd-new','pwd-confirm'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
     } else {
-      errorEl.textContent   = data.message || 'Failed to update password.';
-      errorEl.style.display = 'block';
+      showToast(data.message || 'Failed to update password.', 'error');
     }
   } catch {
-    errorEl.textContent   = 'Server error. Try again later.';
-    errorEl.style.display = 'block';
+    showToast('Server error. Try again later.', 'error');
   }
-
-  btn.disabled  = false;
-  btn.innerHTML = '<i class="fa-solid fa-lock"></i> Update Password';
+  if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-lock"></i> Change Password'; }
 }
 
 // =============================================
