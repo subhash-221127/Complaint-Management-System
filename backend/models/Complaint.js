@@ -29,19 +29,36 @@ const complaintSchema = new mongoose.Schema({
 
   evidencePaths: [String],
 
+  // ── MODIFIED: required: false + default: null so anonymous complaints don't crash ──
   citizenId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+    type:     mongoose.Schema.Types.ObjectId,
+    ref:      'User',
+    required: false,
+    default:  null,
+  },
+
+  // ── ADDED: anonymous flag — default false so all existing complaints are unaffected ──
+  isAnonymous: {
+    type:    Boolean,
+    default: false,
   },
 
   officerId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Officer',
+    type:    mongoose.Schema.Types.ObjectId,
+    ref:     'Officer',
     default: null
   },
   assignedAt:  { type: Date, default: null },
   resolvedAt:  { type: Date, default: null },
+
+  comments: [
+    {
+      author:    { type: String, default: 'Unknown' },
+      role:      { type: String, default: 'officer' }, // 'officer' | 'admin'
+      text:      { type: String, required: true },
+      createdAt: { type: Date,   default: Date.now },
+    }
+  ],
 
 }, { timestamps: true });
 

@@ -24,7 +24,6 @@ const upload = multer({ storage });
 
 // ─────────────────────────────────────────────
 // Nodemailer transporter
-// Uses SMTP credentials from .env
 // ─────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
   service: process.env.EMAIL_SERVICE || "gmail",
@@ -35,7 +34,7 @@ const transporter = nodemailer.createTransport({
 });
 
 // ─────────────────────────────────────────────
-// Email template — nice HTML format
+// Email template — Complaint Submitted
 // ─────────────────────────────────────────────
 function buildConfirmationEmail(citizen, complaint) {
   const submittedAt = new Date(complaint.createdAt).toLocaleString("en-IN", {
@@ -59,26 +58,16 @@ function buildConfirmationEmail(citizen, complaint) {
   <title>Complaint Confirmation – CityFix</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
-
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 20px;">
     <tr><td align="center">
-
-      <!-- Card -->
       <table width="600" cellpadding="0" cellspacing="0"
              style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);max-width:600px;width:100%;">
-
-        <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:36px 40px;text-align:center;">
-            <div style="display:inline-flex;align-items:center;gap:10px;">
-              <div style="width:36px;height:36px;background:rgba(255,255,255,0.2);border-radius:50%;display:inline-block;line-height:36px;font-size:18px;">📍</div>
-              <span style="font-size:24px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">City<span style="color:#93c5fd;">Fix</span></span>
-            </div>
+            <span style="font-size:24px;font-weight:700;color:#ffffff;">City<span style="color:#93c5fd;">Fix</span></span>
             <p style="color:#bfdbfe;margin:12px 0 0;font-size:14px;">Complaint Management System</p>
           </td>
         </tr>
-
-        <!-- Success Banner -->
         <tr>
           <td style="background:#f0fdf4;border-bottom:2px solid #bbf7d0;padding:20px 40px;text-align:center;">
             <span style="font-size:32px;">✅</span>
@@ -86,140 +75,147 @@ function buildConfirmationEmail(citizen, complaint) {
             <p style="margin:0;color:#166534;font-size:14px;">We have received your complaint and will act on it promptly.</p>
           </td>
         </tr>
-
-        <!-- Body -->
         <tr>
           <td style="padding:36px 40px;">
-
             <p style="margin:0 0 24px;color:#374151;font-size:15px;">
               Dear <strong>${citizen.name}</strong>,<br/>
               Thank you for reaching out to CityFix. Here are the details of your submitted complaint:
             </p>
-
-            <!-- Complaint ID Badge -->
             <div style="background:#eff6ff;border:1.5px dashed #3b82f6;border-radius:10px;padding:16px 24px;margin-bottom:28px;text-align:center;">
               <p style="margin:0 0 4px;font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:0.8px;font-weight:600;">Your Complaint ID</p>
               <p style="margin:0;font-size:28px;font-weight:800;color:#1d4ed8;letter-spacing:2px;">${complaint.complaintId}</p>
               <p style="margin:6px 0 0;font-size:12px;color:#6b7280;">Save this ID to track your complaint status</p>
             </div>
-
-            <!-- Details Table -->
             <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:28px;">
-              <tr>
-                <td style="padding:12px 16px;background:#f9fafb;border-radius:8px 8px 0 0;border-bottom:1px solid #e5e7eb;">
-                  <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;">📋 Title</span><br/>
-                  <span style="font-size:15px;color:#111827;font-weight:600;margin-top:4px;display:block;">${complaint.title}</span>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:12px 16px;background:#ffffff;border-bottom:1px solid #e5e7eb;">
-                  <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;">🏢 Department</span><br/>
-                  <span style="font-size:15px;color:#111827;margin-top:4px;display:block;">${complaint.department}</span>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:12px 16px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">
-                  <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;">⚠️ Severity</span><br/>
-                  <span style="display:inline-block;margin-top:6px;padding:3px 12px;border-radius:20px;font-size:13px;font-weight:700;color:#ffffff;background:${severityColor};">
-                    ${complaint.severity.charAt(0).toUpperCase() + complaint.severity.slice(1)}
-                  </span>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:12px 16px;background:#ffffff;border-bottom:1px solid #e5e7eb;">
-                  <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;">📍 Location</span><br/>
-                  <span style="font-size:15px;color:#111827;margin-top:4px;display:block;">${complaint.location?.address || "—"}</span>
-                </td>
-              </tr>
-              <tr>
-                <td style="padding:12px 16px;background:#f9fafb;border-radius:0 0 8px 8px;">
-                  <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;">🕐 Submitted At</span><br/>
-                  <span style="font-size:15px;color:#111827;margin-top:4px;display:block;">${submittedAt}</span>
-                </td>
-              </tr>
+              <tr><td style="padding:12px 16px;background:#f9fafb;border-radius:8px 8px 0 0;border-bottom:1px solid #e5e7eb;">
+                <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;">📋 Title</span><br/>
+                <span style="font-size:15px;color:#111827;font-weight:600;margin-top:4px;display:block;">${complaint.title}</span>
+              </td></tr>
+              <tr><td style="padding:12px 16px;background:#ffffff;border-bottom:1px solid #e5e7eb;">
+                <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;">🏢 Department</span><br/>
+                <span style="font-size:15px;color:#111827;margin-top:4px;display:block;">${complaint.department}</span>
+              </td></tr>
+              <tr><td style="padding:12px 16px;background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+                <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;">⚠️ Severity</span><br/>
+                <span style="display:inline-block;margin-top:6px;padding:3px 12px;border-radius:20px;font-size:13px;font-weight:700;color:#ffffff;background:${severityColor};">
+                  ${complaint.severity.charAt(0).toUpperCase() + complaint.severity.slice(1)}
+                </span>
+              </td></tr>
+              <tr><td style="padding:12px 16px;background:#ffffff;border-bottom:1px solid #e5e7eb;">
+                <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;">📍 Location</span><br/>
+                <span style="font-size:15px;color:#111827;margin-top:4px;display:block;">${complaint.location?.address || "—"}</span>
+              </td></tr>
+              <tr><td style="padding:12px 16px;background:#f9fafb;border-radius:0 0 8px 8px;">
+                <span style="font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;">🕐 Submitted At</span><br/>
+                <span style="font-size:15px;color:#111827;margin-top:4px;display:block;">${submittedAt}</span>
+              </td></tr>
             </table>
-
-            <!-- Description -->
             <div style="background:#fafafa;border-left:4px solid #3b82f6;border-radius:0 8px 8px 0;padding:16px 20px;margin-bottom:28px;">
-              <p style="margin:0 0 6px;font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;">📝 Description</p>
+              <p style="margin:0 0 6px;font-size:12px;color:#6b7280;font-weight:600;text-transform:uppercase;">📝 Description</p>
               <p style="margin:0;color:#374151;font-size:14px;line-height:1.7;">${complaint.description}</p>
             </div>
-
-            <!-- What happens next -->
-            <div style="background:#fefce8;border:1.5px solid #fde68a;border-radius:10px;padding:20px 24px;margin-bottom:28px;">
-              <p style="margin:0 0 12px;font-size:14px;font-weight:700;color:#92400e;">⏭️ What happens next?</p>
-              <table cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding:5px 0;vertical-align:top;">
-                    <span style="color:#d97706;font-size:16px;margin-right:10px;">1.</span>
-                  </td>
-                  <td style="padding:5px 0;">
-                    <span style="font-size:13px;color:#78350f;">Our team will review your complaint within <strong>24 hours</strong>.</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:5px 0;vertical-align:top;">
-                    <span style="color:#d97706;font-size:16px;margin-right:10px;">2.</span>
-                  </td>
-                  <td style="padding:5px 0;">
-                    <span style="font-size:13px;color:#78350f;">An officer from the <strong>${complaint.department}</strong> department will be assigned.</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td style="padding:5px 0;vertical-align:top;">
-                    <span style="color:#d97706;font-size:16px;margin-right:10px;">3.</span>
-                  </td>
-                  <td style="padding:5px 0;">
-                    <span style="font-size:13px;color:#78350f;">You will be notified at each stage of resolution.</span>
-                  </td>
-                </tr>
-              </table>
-            </div>
-
             <p style="margin:0;font-size:14px;color:#6b7280;text-align:center;">
               Use complaint ID <strong style="color:#1d4ed8;">${complaint.complaintId}</strong> to track your complaint anytime on the CityFix portal.
             </p>
-
           </td>
         </tr>
-
-        <!-- Footer -->
         <tr>
           <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center;">
             <p style="margin:0 0 6px;font-size:13px;color:#9ca3af;">This is an automated email from CityFix. Please do not reply.</p>
             <p style="margin:0;font-size:12px;color:#d1d5db;">© ${new Date().getFullYear()} CityFix – Making Cities Better</p>
           </td>
         </tr>
-
       </table>
     </td></tr>
   </table>
+</body>
+</html>`;
+}
 
+// ─────────────────────────────────────────────
+// Email template — Complaint Resolved
+// ─────────────────────────────────────────────
+function buildResolvedEmail(citizen, complaint) {
+  const resolvedAt = complaint.resolvedAt
+    ? new Date(complaint.resolvedAt).toLocaleString("en-IN", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : new Date().toLocaleString("en-IN", { day: "2-digit", month: "long", year: "numeric" });
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1.0"/></head>
+<body style="margin:0;padding:0;background:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);max-width:600px;width:100%;">
+        <tr>
+          <td style="background:linear-gradient(135deg,#1e3a5f 0%,#2563eb 100%);padding:36px 40px;text-align:center;">
+            <span style="font-size:24px;font-weight:700;color:#fff;">City<span style="color:#93c5fd;">Fix</span></span>
+            <p style="color:#bfdbfe;margin:8px 0 0;font-size:14px;">Complaint Management System</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f0fdf4;border-bottom:2px solid #bbf7d0;padding:20px 40px;text-align:center;">
+            <span style="font-size:32px;">✅</span>
+            <h2 style="margin:8px 0 4px;color:#15803d;font-size:20px;font-weight:700;">Complaint Resolved!</h2>
+            <p style="margin:0;color:#166534;font-size:14px;">Your complaint has been successfully resolved.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:36px 40px;">
+            <p style="margin:0 0 20px;color:#374151;font-size:15px;">Dear <strong>${citizen.name}</strong>,</p>
+            <p style="margin:0 0 20px;color:#374151;font-size:14px;line-height:1.7;">
+              We are pleased to inform you that your complaint <strong style="color:#2563eb;">${complaint.complaintId}</strong> has been resolved.
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin-bottom:24px;">
+              <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;width:130px;">Complaint ID</td><td style="font-size:14px;font-weight:700;color:#2563eb;">${complaint.complaintId}</td></tr>
+              <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Title</td><td style="font-size:14px;color:#111827;">${complaint.title}</td></tr>
+              <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Department</td><td style="font-size:14px;color:#111827;">${complaint.department}</td></tr>
+              <tr><td style="padding:7px 0;font-size:13px;color:#6b7280;">Resolved On</td><td style="font-size:14px;color:#111827;">${resolvedAt}</td></tr>
+            </table>
+            <p style="font-size:13px;color:#6b7280;text-align:center;">Thank you for using CityFix to report civic issues.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
+            <p style="margin:0;font-size:12px;color:#9ca3af;">CityFix — Automated notification. Do not reply.</p>
+          </td>
+        </tr>
+      </table>
+    </td></tr>
+  </table>
 </body>
 </html>`;
 }
 
 // ─────────────────────────────────────────────
 // POST /api/create  —  Submit a complaint
+// ── MODIFIED: supports isAnonymous ──────────
 // ─────────────────────────────────────────────
 router.post("/create", upload.single("evidence"), async (req, res) => {
   try {
-    const { title, description, location, department, severity, citizenId } = req.body;
+    const { title, description, location, department, severity, citizenId, isAnonymous } = req.body;
+
+    // ── ADDED: safely parse isAnonymous from string/boolean ──
+    const anonymous = isAnonymous === true || isAnonymous === "true";
 
     if (!title || !description || !location || !department) {
       return res.status(400).json({ message: "Please fill all required fields" });
     }
-    if (!citizenId) {
+
+    // ── MODIFIED: only block login check if NOT anonymous ──
+    if (!anonymous && !citizenId) {
       return res.status(400).json({ message: "User not logged in. Please log in and try again." });
     }
 
-    // Create and save complaint
+    // ── MODIFIED: set citizenId to null if anonymous ──
     const complaint = new Complaint({
       title,
       description,
       department,
-      severity:  severity || "medium",
-      citizenId: citizenId,
+      severity:    severity || "medium",
+      citizenId:   anonymous ? null : citizenId,
+      isAnonymous: anonymous,
       location: {
         address: location,
         lat: req.body.lat ? parseFloat(req.body.lat) : undefined,
@@ -236,9 +232,9 @@ router.post("/create", upload.single("evidence"), async (req, res) => {
       { $inc: { totalComplaints: 1, pendingComplaints: 1 } }
     );
 
-    // ── Send confirmation email ──
+    // ── MODIFIED: skip email for anonymous complaints ──
     try {
-      const citizen = await User.findById(citizenId);
+      const citizen = anonymous ? null : await User.findById(citizenId);
       if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
         await transporter.sendMail({
           from:    `"CityFix" <${process.env.EMAIL_USER}>`,
@@ -249,7 +245,6 @@ router.post("/create", upload.single("evidence"), async (req, res) => {
         console.log(`Confirmation email sent to ${citizen.email}`);
       }
     } catch (emailErr) {
-      // Email failure should NOT fail the whole request
       console.error("Email send failed (non-fatal):", emailErr.message);
     }
 
@@ -276,7 +271,7 @@ router.get("/mycomplaints", async (req, res) => {
 
     const complaints = await Complaint
       .find({ citizenId: userId })
-      .populate("officerId", "name designation departmentName")
+      .populate("officerId", "name designation departmentName phone email")
       .sort({ createdAt: -1 });
 
     return res.json(complaints);
@@ -288,6 +283,7 @@ router.get("/mycomplaints", async (req, res) => {
 
 // ─────────────────────────────────────────────
 // GET /api/complaint/:id  — by complaintId or _id
+// ── MODIFIED: masks citizen info if anonymous ─
 // ─────────────────────────────────────────────
 router.get("/complaint/:id", async (req, res) => {
   try {
@@ -295,11 +291,14 @@ router.get("/complaint/:id", async (req, res) => {
 
     let complaint = await Complaint
       .findOne({ complaintId: id.toUpperCase() })
-      .populate("officerId", "name designation departmentName");
+      .populate("officerId", "name designation departmentName phone email")
+      .populate("citizenId", "name email phone");
+
     if (!complaint) {
       complaint = await Complaint
         .findById(id)
-        .populate("officerId", "name designation departmentName")
+        .populate("officerId", "name designation departmentName phone email")
+        .populate("citizenId", "name email phone")
         .catch(() => null);
     }
 
@@ -307,7 +306,16 @@ router.get("/complaint/:id", async (req, res) => {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
-    return res.json(complaint);
+    // ── ADDED: hide citizen identity if anonymous ──
+    const result = complaint.toObject();
+    if (result.isAnonymous) {
+      result.citizenId   = null;
+      result.submittedBy = "Anonymous";
+    } else {
+      result.submittedBy = result.citizenId?.name || "Unknown";
+    }
+
+    return res.json(result);
   } catch (err) {
     console.error("Error fetching complaint:", err);
     return res.status(500).json({ message: "Error fetching complaint", error: err.message });
@@ -332,17 +340,15 @@ router.patch("/complaint/:id/assign", async (req, res) => {
         assignedAt: new Date(),
       },
       { new: true }
-    ).populate("officerId", "name designation departmentName");
+    ).populate("officerId", "name designation departmentName phone email");
 
     if (!complaint) return res.status(404).json({ message: "Complaint not found" });
 
-    // Update department stats
     await Department.findOneAndUpdate(
       { name: complaint.department },
       { $inc: { pendingComplaints: -1 } }
     );
 
-    // Update officer case count
     await Officer.findByIdAndUpdate(officer._id, { $inc: { casesHandled: 1 } });
 
     res.json({ message: "Officer assigned successfully", complaint });
@@ -376,15 +382,14 @@ router.patch("/complaint/:id/status", async (req, res) => {
         { $inc: { resolvedComplaints: 1, pendingComplaints: -1 } }
       );
       if (complaint.officerId) {
-        await Officer.findByIdAndUpdate(
-          complaint.officerId,
-          { $inc: { casesResolved: 1 } }
-        );
+        await Officer.findByIdAndUpdate(complaint.officerId, { $inc: { casesResolved: 1 } });
       }
-      // Send resolved email to citizen (non-fatal)
+
+      // ── MODIFIED: skip resolved email if anonymous ──
       try {
-        const freshComplaint = await Complaint.findById(req.params.id);
-        const citizen = await User.findById(complaint.citizenId);
+        const freshComplaint = await Complaint.findById(req.params.id).populate("citizenId", "name email phone");
+        const citizen = complaint.isAnonymous ? null
+          : (freshComplaint ? freshComplaint.citizenId : await User.findById(complaint.citizenId));
         if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
           await transporter.sendMail({
             from:    "CityFix <" + process.env.EMAIL_USER + ">",
@@ -413,7 +418,7 @@ router.patch("/complaint/:id/status", async (req, res) => {
 });
 
 // ─────────────────────────────────────────────
-// PATCH /api/complaint/:id/withdraw  —  Citizen withdraws complaint
+// PATCH /api/complaint/:id/withdraw  —  Citizen withdraws
 // ─────────────────────────────────────────────
 router.patch("/complaint/:id/withdraw", async (req, res) => {
   try {
@@ -430,6 +435,135 @@ router.patch("/complaint/:id/withdraw", async (req, res) => {
     );
 
     res.json({ message: "Complaint withdrawn" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// PATCH /api/complaint/:id/reject-assignment
+// ─────────────────────────────────────────────
+router.patch("/complaint/:id/reject-assignment", async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    if (complaint.officerId) {
+      await Officer.findByIdAndUpdate(complaint.officerId, { $inc: { casesHandled: -1 } });
+    }
+
+    complaint.officerId  = null;
+    complaint.status     = "pending";
+    complaint.assignedAt = null;
+    await complaint.save();
+
+    res.json({ message: "Assignment declined. Complaint returned to queue." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// PATCH /api/complaint/:id/officer-reject
+// ─────────────────────────────────────────────
+router.patch("/complaint/:id/officer-reject", async (req, res) => {
+  try {
+    const { rejectionReason } = req.body;
+    if (!rejectionReason || !rejectionReason.trim()) {
+      return res.status(400).json({ message: "A rejection reason is required." });
+    }
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    complaint.status          = "rejected";
+    complaint.rejectionReason = rejectionReason.trim();
+    await complaint.save();
+
+    await Department.findOneAndUpdate(
+      { name: complaint.department },
+      { $inc: { pendingComplaints: -1 } }
+    );
+
+    res.json({ message: "Complaint rejected.", complaint });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// PATCH /api/complaint/:id/resolve
+// ─────────────────────────────────────────────
+router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, res) => {
+  try {
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    complaint.status     = "resolved";
+    complaint.resolvedAt = new Date();
+
+    if (req.file) {
+      complaint.evidencePaths.push(req.file.filename);
+    }
+
+    await complaint.save();
+
+    await Department.findOneAndUpdate(
+      { name: complaint.department },
+      { $inc: { resolvedComplaints: 1, pendingComplaints: -1 } }
+    );
+    if (complaint.officerId) {
+      await Officer.findByIdAndUpdate(complaint.officerId, { $inc: { casesResolved: 1 } });
+    }
+
+    // ── MODIFIED: skip resolved email if anonymous ──
+    try {
+      const freshComplaint = await Complaint.findById(req.params.id).populate("citizenId", "name email phone");
+      const citizen = complaint.isAnonymous ? null
+        : (freshComplaint ? freshComplaint.citizenId : await User.findById(complaint.citizenId));
+      if (citizen && citizen.email && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        await transporter.sendMail({
+          from:    `"CityFix" <${process.env.EMAIL_USER}>`,
+          to:      citizen.email,
+          subject: `✅ Complaint Resolved – ${complaint.complaintId} | CityFix`,
+          html:    buildResolvedEmail(citizen, freshComplaint || complaint),
+        });
+        console.log(`Resolved email sent to ${citizen.email}`);
+      }
+    } catch (emailErr) {
+      console.error("Resolved email failed (non-fatal):", emailErr.message);
+    }
+
+    res.json({ message: "Complaint resolved successfully.", complaint });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
+// POST /api/complaint/:id/comment
+// ─────────────────────────────────────────────
+router.post("/complaint/:id/comment", async (req, res) => {
+  try {
+    const { author, text, role } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ message: "Comment text is required." });
+    }
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    const comment = {
+      author:    author || "Unknown",
+      role:      role   || "officer",
+      text:      text.trim(),
+      createdAt: new Date(),
+    };
+
+    complaint.comments.push(comment);
+    await complaint.save();
+
+    res.json({ message: "Comment added.", comment });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
