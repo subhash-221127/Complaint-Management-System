@@ -60,6 +60,40 @@ const transporter = nodemailer.createTransport({
 });
 
 // ─────────────────────────────────────────────
+// Email helpers
+// ─────────────────────────────────────────────
+async function sendMail(to, subject, html) {
+  try {
+    if (!to || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) return;
+    await transporter.sendMail({
+      from: "CityFix <" + process.env.EMAIL_USER + ">",
+      to, subject, html,
+    });
+    console.log("Email sent to " + to + ": " + subject);
+  } catch (err) {
+    console.error("Email send failed (non-fatal):", err.message);
+  }
+}
+
+function buildResolvedEmail(citizen, complaint) {
+  return [
+    "<html><body style='font-family:Arial,sans-serif;background:#f4f6f9;margin:0;padding:40px 20px;'>",
+    "<div style='max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);'>",
+    "<div style='background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:36px 40px;text-align:center;'>",
+    "<span style='font-size:24px;font-weight:700;color:#fff;'>City<span style='color:#93c5fd;'>Fix</span></span></div>",
+    "<div style='background:#f0fdf4;border-bottom:2px solid #bbf7d0;padding:20px 40px;text-align:center;'>",
+    "<div style='font-size:32px;'>&#9989;</div>",
+    "<h2 style='color:#15803d;font-size:20px;margin:8px 0 4px;'>Complaint Resolved</h2>",
+    "<p style='color:#166534;font-size:14px;margin:0;'>Your complaint has been successfully resolved.</p></div>",
+    "<div style='padding:36px 40px;'>",
+    "<p style='color:#374151;font-size:15px;'>Dear <strong>" + (citizen ? citizen.name : 'Citizen') + "</strong>,<br/>",
+    "Complaint <strong style='color:#1d4ed8;'>" + (complaint.complaintId || 'Unknown') + "</strong> has just been verified & closed.</p>",
+    "<p style='margin-top:20px;font-size:13px;color:#6b7280;text-align:center;'>Thank you for keeping our city clean and safe.</p>",
+    "</div></div></body></html>"
+  ].join("");
+}
+
+// ─────────────────────────────────────────────
 // Gemini AI — compare two images for similarity
 // Returns { score: 0-100, passed: bool, summary: string }
 // ─────────────────────────────────────────────
@@ -565,7 +599,8 @@ router.post("/complaint/:id/admin-review", async (req, res) => {
     if (!complaint) return res.status(404).json({ message: "Complaint not found" });
 
     complaint.aiVerification.adminReviewed = true;
-    complaint.aiVerification.adminAction   = action;
+    complaint.aiVerification.adminAction   = action === "approve" ? "approved" : "reassigned";
+    complaint.markModified("aiVerification");
 
     if (action === "approve") {
       // Admin approves — complaint stays resolved, send email now
