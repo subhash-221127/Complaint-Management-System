@@ -20,8 +20,22 @@ const OfficerSchema = new mongoose.Schema(
     },
     joinDate: { type: String, required: true },
 
+    level: {
+      type: Number,
+      enum: [1, 2, 3],
+      default: 1,
+    }, // 1 = field officer, 2 = senior officer, 3 = department head/director
+
     casesHandled:  { type: Number, default: 0 },
     casesResolved: { type: Number, default: 0 },
+
+    // ── Hierarchy ─────────────────────────────────────────────
+    // supervisorId: the L2 officer who supervises this L1 officer (or L3 supervising L2)
+    supervisorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Officer',
+      default: null,
+    },
 
     // ── Password Reset / Set Token ────────────────────────────
     // Generated on account creation and on forgot-password

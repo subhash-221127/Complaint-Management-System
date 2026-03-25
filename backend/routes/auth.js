@@ -273,6 +273,7 @@ router.post("/login", async (req, res) => {
           id: officer._id, officerId: officer.officerId, name: officer.name,
           email: officer.email, role: "officer",
           department: officer.departmentName, designation: officer.designation,
+          level: officer.level || 1,
         },
       });
     }

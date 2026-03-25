@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
@@ -42,6 +42,7 @@
       <a href="officers.html"   class="sidebar-link active"><span class="icon">&#128110;</span> Officers</a>
       <a href="citizens.html"   class="sidebar-link"><span class="icon">&#128101;</span> Citizens</a>
       <a href="departments.html" class="sidebar-link"><span class="icon">&#127970;</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
     </nav>
 </aside>
 
@@ -125,6 +126,14 @@
       <div class="modal-field"><label>Join Date *</label><input type="text" id="f-joindate" placeholder="Mar 21, 2026" /></div>
       <div class="modal-field"><label>Password *</label><input type="password" id="f-password" placeholder="Min. 8 characters" /></div>
       <div class="modal-field"><label>Confirm Password *</label><input type="password" id="f-confirm" placeholder="Re-enter password" /></div>
+      <div class="modal-field" style="grid-column:1/-1;">
+        <label>Officer Level (Hierarchy) *</label>
+        <select id="f-level">
+          <option value="1">Level 1 — Field Officer (Junior)</option>
+          <option value="2">Level 2 — Senior Officer (Escalation)</option>
+          <option value="3">Level 3 — Director / Department Head</option>
+        </select>
+      </div>
     </div>
     <p style="font-size:0.8rem;color:var(--text-secondary);margin-top:4px;">A welcome email with login credentials will be sent to the officer.</p>
     <div id="modal-error" style="display:none;color:#dc2626;font-size:0.85rem;margin-top:8px;"></div>
@@ -240,7 +249,7 @@
     try {
       const res  = await fetch('/api/officers', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, phone, designation, department, joinDate, password })
+        body: JSON.stringify({ name, email, phone, designation, department, joinDate, password, level: document.getElementById('f-level').value || 1 })
       });
       const data = await res.json();
       if (res.ok) {

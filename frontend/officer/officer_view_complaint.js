@@ -173,6 +173,13 @@ function normalizeComplaintOfficer(c) {
     _rawCreatedAt:          c.createdAt || null,
     _rawAssignedAt:         c.assignedAt || null,
     _rawResolvedAt:         c.resolvedAt || null,
+    escalationLevel:        c.escalationLevel || 1,
+    escalatedAt:            c.escalatedAt || null,
+    escalatedToL3At:        c.escalatedToL3At || null,
+    escalationNote:         c.escalationNote || '',
+    escalationHistory:      c.escalationHistory || [],
+    level2Officer: c.level2OfficerId && typeof c.level2OfficerId === 'object' ? c.level2OfficerId : null,
+    level3Officer: c.level3OfficerId && typeof c.level3OfficerId === 'object' ? c.level3OfficerId : null,
   };
 }
 
@@ -215,6 +222,64 @@ function renderOfficerDetail(c) {
         <div class="resolved-banner-sub">Resolved on ${c.resolvedAt || '—'}</div>
       </div>
     </div>` : '';
+
+  // Escalation banner — shown to L2/L3 officers viewing an escalated complaint
+  let escalationBannerHTML = '';
+  if (c.escalationLevel >= 2) {
+    const escDate  = c.escalationLevel === 3
+      ? (c.escalatedToL3At ? new Date(c.escalatedToL3At).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—')
+      : (c.escalatedAt    ? new Date(c.escalatedAt).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—');
+    const levelLabel = c.escalationLevel === 3 ? 'Level 3 – Director Review' : 'Level 2 – Senior Officer';
+
+    // Build handler history timeline from escalationHistory array
+    const histList = c.escalationHistory || [];
+    const historyTimelineHTML = histList.length > 0 ? `
+      <div style="margin-top:14px;padding-top:12px;border-top:1.5px dashed #fed7aa;">
+        <div style="font-size:0.7rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">
+          <i class="fa-solid fa-clock-rotate-left"></i>&nbsp; Handler History
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${histList.map((h, idx) => {
+            const isLast = idx === histList.length - 1;
+            const levelColors = {1:'#2563eb',2:'#f97316',3:'#dc2626'};
+            const dColor = levelColors[h.level] || '#6b7280';
+            const assignedStr = h.assignedAt
+              ? new Date(h.assignedAt).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})
+              : '—';
+            return `<div style="display:flex;align-items:flex-start;gap:10px;">
+              <div style="width:26px;height:26px;border-radius:50%;background:${dColor};color:#fff;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:900;flex-shrink:0;margin-top:1px;">L${h.level}</div>
+              <div style="flex:1;">
+                <div style="font-size:0.82rem;font-weight:800;color:#1e3a5f;">${h.officerName || '—'}</div>
+                <div style="font-size:0.72rem;color:#78350f;margin-top:1px;">Assigned: ${assignedStr}</div>
+                ${h.reason ? `<div style="font-size:0.7rem;color:#9a3412;margin-top:2px;font-style:italic;">${h.reason.substring(0,120)}${h.reason.length>120?'…':''}</div>` : ''}
+              </div>
+              <div style="font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;${isLast ? 'background:#fef2f2;color:#dc2626;' : 'background:#f0fdf4;color:#15803d;'}">
+                ${isLast ? '🔴 Current' : '✅ Escalated'}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : '';
+
+    escalationBannerHTML = `
+      <div style="background:linear-gradient(135deg,#fff7ed,#fef2f2);border:2px solid #fed7aa;border-radius:16px;padding:16px 22px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:44px;height:44px;background:linear-gradient(135deg,#f97316,#dc2626);border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.2rem;flex-shrink:0;">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:0.75rem;font-weight:800;color:#c2410c;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;">
+              🔺 Escalated — ${levelLabel}
+            </div>
+            <div style="font-size:0.88rem;font-weight:700;color:#92400e;">
+              This complaint was not resolved within SLA and escalated to you on <strong>${escDate}</strong>.
+            </div>
+            ${c.escalationNote ? `<div style="margin-top:8px;font-size:0.8rem;color:#9a3412;background:#fef3c7;border-radius:8px;padding:6px 10px;"><strong>Director Note:</strong> ${c.escalationNote}</div>` : ''}
+          </div>
+        </div>
+        ${historyTimelineHTML}
+      </div>`;
+  }
 
   // Citizen initials for avatar
   const citizenInitials = c.citizen.name !== '—'
@@ -315,6 +380,7 @@ function renderOfficerDetail(c) {
 
     ${resolvedBanner}
     ${rejectionHTML}
+    ${escalationBannerHTML}
 
     <!-- Hero Card -->
     <div class="detail-hero">
