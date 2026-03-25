@@ -46,6 +46,9 @@ app.use("/api", departmentRoutes);
 const adminRoutes = require("./routes/admin");
 app.use("/api", adminRoutes);
 
+// ── Escalation scheduler ──────────────────────────────────────
+const { startEscalationScheduler } = require("./escalation");
+
 // ---------------------------
 // MongoDB Connection
 // ---------------------------
@@ -61,6 +64,7 @@ function connectToMongo(uri) {
 }
 
 connectToMongo(MONGO_URI)
+  .then(() => startEscalationScheduler())
   .catch(async () => {
     // If the primary URI fails, try localhost as a fallback (useful for offline development).
     const fallback = "mongodb://127.0.0.1:27017/complaint-management-system";
@@ -68,6 +72,7 @@ connectToMongo(MONGO_URI)
       console.log("Attempting fallback MongoDB URI (local) …");
       try {
         await connectToMongo(fallback);
+        startEscalationScheduler();
       } catch (err) {
         console.error("Fallback MongoDB connection also failed. The server will start but database features may not work.");
       }

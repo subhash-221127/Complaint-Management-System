@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CityFix Admin – Officer Hierarchy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="admin.css"/>
+  <style>
+    :root {
+      --navy: #1e3a5f;
+      --blue: #2563eb;
+      --font: 'Plus Jakarta Sans', sans-serif;
+      --slate-50: #f8fafc; --slate-100: #f1f5f9; --slate-200: #e2e8f0;
+      --slate-400: #94a3b8; --slate-500: #64748b; --slate-600: #475569;
+      --red: #dc2626;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--slate-50); margin: 0; }
+
+    .page-wrap { max-width: 1100px; margin: 0 auto; padding: 28px 24px; }
+    .page-header { margin-bottom: 24px; }
+    .page-title { font-size: 1.5rem; font-weight: 900; color: var(--navy); margin: 0 0 4px; }
+    .page-sub { font-size: 0.85rem; color: var(--slate-500); }
+
+    /* Dept selector */
+    .dept-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
+    .dept-bar label { font-size: 0.82rem; font-weight: 700; color: var(--slate-500); }
+    .dept-select {
+      padding: 9px 14px; border: 1.5px solid var(--slate-200); border-radius: 10px;
+      font-family: var(--font); font-size: 0.88rem; outline: none; background: #fff;
+      color: var(--navy); font-weight: 600; min-width: 220px; cursor: pointer;
+    }
+    .dept-select:focus { border-color: var(--blue); }
+    .load-btn {
+      padding: 9px 20px; background: var(--navy); color: #fff; border: none; border-radius: 10px;
+      font-family: var(--font); font-weight: 700; cursor: pointer; font-size: 0.88rem;
+      display: flex; align-items: center; gap: 6px; transition: background 0.18s;
+    }
+    .load-btn:hover { background: #1e40af; }
+
+    /* Info banner */
+    .info-banner {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border: 1.5px solid #bfdbfe; border-radius: 14px; padding: 16px 20px;
+      margin-bottom: 24px; display: flex; gap: 14px; align-items: flex-start;
+    }
+    .info-icon { font-size: 1.4rem; flex-shrink: 0; }
+    .info-txt h3 { margin: 0 0 4px; font-size: 0.9rem; font-weight: 800; color: #1e3a8a; }
+    .info-txt p  { margin: 0; font-size: 0.8rem; color: #1e40af; line-height: 1.6; }
+
+    /* Grid layout */
+    .hierarchy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+    @media (max-width: 768px) { .hierarchy-grid { grid-template-columns: 1fr; } }
+
+    /* Tree */
+    .tree-section { background: #fff; border: 1.5px solid var(--slate-200); border-radius: 16px; overflow: hidden; }
+    .tree-header {
+      background: linear-gradient(135deg, var(--navy), #2563eb); color: #fff;
+      padding: 14px 20px; font-size: 0.88rem; font-weight: 800;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .tree-body { padding: 16px; }
+
+    .l3-node { margin-bottom: 16px; }
+    .officer-chip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 14px; border-radius: 12px; margin-bottom: 6px;
+      border: 1.5px solid var(--slate-200); background: var(--slate-50);
+      transition: border-color 0.18s;
+    }
+    .officer-chip:hover { border-color: var(--blue); }
+    .oc-av {
+      width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 0.78rem; color: #fff;
+    }
+    .oc-av.l3 { background: linear-gradient(135deg, #dc2626, #991b1b); }
+    .oc-av.l2 { background: linear-gradient(135deg, #f97316, #c2410c); }
+    .oc-av.l1 { background: linear-gradient(135deg, #2563eb, #1e3a5f); }
+    .oc-info { flex: 1; min-width: 0; }
+    .oc-name { font-size: 0.85rem; font-weight: 800; color: var(--navy); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .oc-desig { font-size: 0.73rem; color: var(--slate-500); }
+    .level-badge {
+      padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 800;
+      flex-shrink: 0;
+    }
+    .level-badge.l3 { background: #fef2f2; color: #b91c1c; }
+    .level-badge.l2 { background: #fff7ed; color: #c2410c; }
+    .level-badge.l1 { background: #eff6ff; color: #1d4ed8; }
+
+    /* Tree connectors */
+    .l2-branch { margin-left: 20px; padding-left: 14px; border-left: 2px dashed #f97316; }
+    .l1-branch { margin-left: 20px; padding-left: 14px; border-left: 2px dashed #3b82f6; }
+
+    /* Unassigned section */
+    .unassigned-section {
+      background: #fff; border: 1.5px solid #fed7aa; border-radius: 16px; overflow: hidden; margin-bottom: 24px;
+    }
+    .unassigned-header {
+      background: linear-gradient(135deg, #fff7ed, #fef3c7); border-bottom: 1.5px solid #fed7aa;
+      padding: 14px 20px; font-size: 0.88rem; font-weight: 800; color: #92400e;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .unassigned-body { padding: 16px; display: flex; flex-wrap: wrap; gap: 10px; }
+    .unassigned-chip {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 12px; background: var(--slate-50); border: 1.5px solid var(--slate-200);
+      border-radius: 10px; font-size: 0.8rem;
+    }
+    .unassigned-chip .uc-name { font-weight: 700; color: var(--navy); }
+    .unassigned-chip .uc-level { font-size: 0.68rem; color: var(--slate-500); }
+
+    /* Assignment form */
+    .assign-section { background: #fff; border: 1.5px solid var(--slate-200); border-radius: 16px; overflow: hidden; }
+    .assign-header {
+      background: linear-gradient(135deg, #f0fdf4, #dcfce7); border-bottom: 1.5px solid #bbf7d0;
+      padding: 14px 20px; font-size: 0.88rem; font-weight: 800; color: #15803d;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .assign-body { padding: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; align-items: end; margin-bottom: 16px; }
+    @media (max-width: 768px) { .form-row { grid-template-columns: 1fr; } }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-label { font-size: 0.75rem; font-weight: 700; color: var(--slate-500); text-transform: uppercase; }
+    .form-select2, .form-select {
+      padding: 9px 13px; border: 1.5px solid var(--slate-200); border-radius: 10px;
+      font-family: var(--font); font-size: 0.85rem; outline: none; background: #fff;
+      color: var(--navy); font-weight: 600; cursor: pointer;
+    }
+    .form-select2:focus, .form-select:focus { border-color: var(--blue); }
+    .assign-btn {
+      padding: 10px 22px; background: #16a34a; color: #fff; border: none; border-radius: 10px;
+      font-family: var(--font); font-weight: 800; cursor: pointer; font-size: 0.88rem;
+      display: flex; align-items: center; gap: 6px; transition: background 0.18s;
+    }
+    .assign-btn:hover { background: #15803d; }
+    .remove-btn {
+      padding: 10px 22px; background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca;
+      border-radius: 10px; font-family: var(--font); font-weight: 800; cursor: pointer;
+      font-size: 0.88rem; display: flex; align-items: center; gap: 6px; transition: all 0.18s;
+    }
+    .remove-btn:hover { background: #fee2e2; }
+
+    /* Toast */
+    .toast-wrap { position: fixed; bottom: 24px; right: 24px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      padding: 12px 18px; border-radius: 12px; font-size: 0.85rem; font-weight: 700;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.12); animation: slideUp 0.3s ease;
+      display: flex; align-items: center; gap: 8px; max-width: 340px;
+    }
+    .toast.success { background: #f0fdf4; border: 1.5px solid #86efac; color: #15803d; }
+    .toast.error   { background: #fef2f2; border: 1.5px solid #fca5a5; color: #b91c1c; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+    .stat-strip { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 100px; background: #fff; border: 1.5px solid var(--slate-200);
+      border-radius: 12px; padding: 14px 16px; text-align: center;
+    }
+    .stat-val { font-size: 1.5rem; font-weight: 900; color: var(--navy); }
+    .stat-label { font-size: 0.73rem; color: var(--slate-500); font-weight: 600; margin-top: 2px; }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .empty-tree { text-align: center; padding: 28px; color: var(--slate-400); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="page-header">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px;">
+      <a href="dashboard.html" style="text-decoration:none;color:var(--slate-400);font-size:0.82rem;">
+        <i class="fa-solid fa-chevron-left"></i> Dashboard
+      </a>
+    </div>
+    <h1 class="page-title">🏗️ Officer Hierarchy Management</h1>
+    <p class="page-sub">Assign L1 officers under L2 supervisors, and L2 officers under L3 directors. Used for automatic complaint escalation.</p>
+  </div>
+
+  <div class="info-banner">
+    <div class="info-icon">💡</div>
+    <div class="info-txt">
+      <h3>How Automatic Escalation Works</h3>
+      <p>
+        When a complaint is not resolved within <strong>5 minutes</strong> by an L1 officer, it automatically escalates to their assigned L2 supervisor.
+        If the L2 officer also doesn't resolve it within <strong>5 more minutes</strong>, it escalates to the L3 Director.
+        Set up supervisor assignments below so escalation always reaches the right person.
+        If no supervisor is set, the system will distribute to the least-loaded officer of the next level.
+      </p>
+    </div>
+  </div>
+
+  <!-- Dept selector -->
+  <div class="dept-bar">
+    <label><i class="fa-solid fa-building"></i> Department:</label>
+    <select class="dept-select" id="dept-select">
+      <option value="">— Select Department —</option>
+    </select>
+    <button class="load-btn" onclick="loadHierarchy()">
+      <i class="fa-solid fa-arrows-rotate"></i> Load Hierarchy
+    </button>
+  </div>
+
+  <div id="hier-content" style="display:none;">
+    <!-- Stats Strip -->
+    <div class="stat-strip">
+      <div class="stat-card">
+        <div class="stat-val" id="stat-l3">0</div>
+        <div class="stat-label">L3 Directors</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-l2">0</div>
+        <div class="stat-label">L2 Senior Officers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-l1">0</div>
+        <div class="stat-label">L1 Field Officers</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-unassigned-l1" style="color:#f97316;">0</div>
+        <div class="stat-label">Unassigned L1</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="stat-unassigned-l2" style="color:#dc2626;">0</div>
+        <div class="stat-label">Unassigned L2</div>
+      </div>
+    </div>
+
+    <!-- Hierarchy Tree -->
+    <div class="tree-section" style="margin-bottom:20px;">
+      <div class="tree-header"><i class="fa-solid fa-sitemap"></i> Current Hierarchy Tree</div>
+      <div class="tree-body" id="tree-body">
+        <div class="empty-tree">Select a department to view hierarchy.</div>
+      </div>
+    </div>
+
+    <!-- Unassigned -->
+    <div class="unassigned-section" id="unassigned-wrap">
+      <div class="unassigned-header"><i class="fa-solid fa-user-slash"></i> Officers Without Supervisor Assignment</div>
+      <div class="unassigned-body" id="unassigned-body">
+        <p style="color:var(--slate-400);font-size:0.82rem;">All officers are assigned.</p>
+      </div>
+    </div>
+
+    <!-- Assignment Form -->
+    <div class="assign-section">
+      <div class="assign-header"><i class="fa-solid fa-link"></i> Assign Supervisor to Officer</div>
+      <div class="assign-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-user"></i> Officer (L1 or L2)</label>
+            <select class="form-select2" id="assign-officer-select">
+              <option value="">— Select Officer —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label"><i class="fa-solid fa-user-tie"></i> Supervisor (L2 for L1 / L3 for L2)</label>
+            <select class="form-select2" id="assign-supervisor-select">
+              <option value="">— Select Supervisor —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" style="visibility:hidden;">Action</label>
+            <div class="btn-row">
+              <button class="assign-btn" onclick="assignSupervisor()">
+                <i class="fa-solid fa-link"></i> Assign
+              </button>
+              <button class="remove-btn" onclick="removeSupervisor()">
+                <i class="fa-solid fa-unlink"></i> Remove
+              </button>
+            </div>
+          </div>
+        </div>
+        <p style="font-size:0.78rem;color:var(--slate-500);margin:0;">
+          <i class="fa-solid fa-circle-info" style="color:#3b82f6;"></i>
+          Select the officer first. The system will automatically filter valid supervisors (must be one level higher, same department).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="hier-loading" style="text-align:center;padding:60px;display:none;">
+    <i class="fa-solid fa-spinner fa-spin" style="font-size:2rem;color:var(--slate-400);"></i>
+    <p style="color:var(--slate-500);margin-top:12px;">Loading hierarchy…</p>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+  const BASE_URL = "http://localhost:5000";
+  let currentDept = "";
+  let hierData = null;
+
+  function showToast(msg, type = "success") {
+    const wrap = document.getElementById("toast-wrap");
+    const div = document.createElement("div");
+    div.className = `toast ${type}`;
+    div.innerHTML = `<i class="fa-solid fa-${type === "success" ? "circle-check" : "circle-exclamation"}"></i> ${msg}`;
+    wrap.appendChild(div);
+    setTimeout(() => div.remove(), 3500);
+  }
+
+  function initials(name) {
+    return name ? name.split(" ").filter(Boolean).map(w => w[0]).join("").toUpperCase().slice(0, 2) : "OF";
+  }
+
+  async function loadDepts() {
+    try {
+      const resp = await fetch(`${BASE_URL}/api/departments`);
+      const depts = await resp.json();
+      const sel = document.getElementById("dept-select");
+      depts.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.name;
+        opt.textContent = d.name;
+        sel.appendChild(opt);
+      });
+    } catch (e) {
+      showToast("Could not load departments. Is the backend running?", "error");
+    }
+  }
+
+  async function loadHierarchy() {
+    currentDept = document.getElementById("dept-select").value;
+    if (!currentDept) { showToast("Please select a department first.", "error"); return; }
+
+    document.getElementById("hier-content").style.display = "none";
+    document.getElementById("hier-loading").style.display = "block";
+
+    try {
+      const resp = await fetch(`${BASE_URL}/api/hierarchy/${encodeURIComponent(currentDept)}`);
+      if (!resp.ok) throw new Error("Failed");
+      hierData = await resp.json();
+
+      document.getElementById("hier-loading").style.display = "none";
+      document.getElementById("hier-content").style.display = "block";
+
+      // Stats
+      document.getElementById("stat-l3").textContent = hierData.allL3.length;
+      document.getElementById("stat-l2").textContent = hierData.allL2.length;
+      document.getElementById("stat-l1").textContent = hierData.allL1.length;
+      document.getElementById("stat-unassigned-l1").textContent = hierData.unassignedL1.length;
+      document.getElementById("stat-unassigned-l2").textContent = hierData.unassignedL2.length;
+
+      renderTree(hierData);
+      renderUnassigned(hierData);
+      populateAssignForm(hierData);
+    } catch (e) {
+      document.getElementById("hier-loading").style.display = "none";
+      showToast("Failed to load hierarchy.", "error");
+    }
+  }
+
+  function renderTree(data) {
+    const body = document.getElementById("tree-body");
+    if (!data.tree.length && !data.allL2.length && !data.allL1.length) {
+      body.innerHTML = '<div class="empty-tree"><i class="fa-solid fa-users-slash" style="font-size:2rem;margin-bottom:8px;display:block;"></i>No officers found in this department.</div>';
+      return;
+    }
+    if (!data.tree.length) {
+      body.innerHTML = '<div class="empty-tree"><i class="fa-solid fa-triangle-exclamation" style="color:#f97316;font-size:1.8rem;margin-bottom:8px;display:block;"></i>No L3 Director assigned yet. Add an L3 officer or assign supervisors.</div>';
+      return;
+    }
+
+    body.innerHTML = data.tree.map(l3 => `
+      <div class="l3-node">
+        <div class="officer-chip">
+          <div class="oc-av l3">${initials(l3.name)}</div>
+          <div class="oc-info">
+            <div class="oc-name">${l3.name}</div>
+            <div class="oc-desig">${l3.designation} · ${l3.casesHandled || 0} handled</div>
+          </div>
+          <span class="level-badge l3"><i class="fa-solid fa-crown"></i> L3 Director</span>
+          <span style="font-size:0.7rem;color:var(--slate-400);margin-left:4px;">${l3.status}</span>
+        </div>
+        ${l3.l2Officers && l3.l2Officers.length ? `
+          <div class="l2-branch">
+            ${l3.l2Officers.map(l2 => `
+              <div class="officer-chip">
+                <div class="oc-av l2">${initials(l2.name)}</div>
+                <div class="oc-info">
+                  <div class="oc-name">${l2.name}</div>
+                  <div class="oc-desig">${l2.designation} · ${l2.casesHandled || 0} handled</div>
+                </div>
+                <span class="level-badge l2"><i class="fa-solid fa-star"></i> L2 Senior</span>
+              </div>
+              ${l2.l1Officers && l2.l1Officers.length ? `
+                <div class="l1-branch">
+                  ${l2.l1Officers.map(l1 => `
+                    <div class="officer-chip">
+                      <div class="oc-av l1">${initials(l1.name)}</div>
+                      <div class="oc-info">
+                        <div class="oc-name">${l1.name}</div>
+                        <div class="oc-desig">${l1.designation} · ${l1.casesHandled || 0} handled</div>
+                      </div>
+                      <span class="level-badge l1"><i class="fa-solid fa-user"></i> L1 Field</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : '<div style="margin-left:34px;font-size:0.75rem;color:var(--slate-400);padding:4px 0;">No L1 officers assigned under this L2 yet.</div>'}
+            `).join('')}
+          </div>
+        ` : '<div style="margin-left:20px;font-size:0.75rem;color:var(--slate-400);padding:4px 0;">No L2 officers assigned under this L3 yet.</div>'}
+      </div>
+    `).join('');
+  }
+
+  function renderUnassigned(data) {
+    const body = document.getElementById("unassigned-body");
+    const all = [
+      ...data.unassignedL2.map(o => ({ ...o, lbl: "L2" })),
+      ...data.unassignedL1.map(o => ({ ...o, lbl: "L1" })),
+    ];
+    if (!all.length) {
+      body.innerHTML = '<p style="color:#15803d;font-size:0.82rem;font-weight:700;"><i class="fa-solid fa-circle-check"></i> All officers have supervisors assigned! ✅</p>';
+      return;
+    }
+    body.innerHTML = all.map(o => `
+      <div class="unassigned-chip">
+        <div class="oc-av ${o.lbl.toLowerCase()}">${initials(o.name)}</div>
+        <div>
+          <div class="uc-name">${o.name}</div>
+          <div class="uc-level">${o.lbl} · ${o.designation || "—"}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function populateAssignForm(data) {
+    const officerSel = document.getElementById("assign-officer-select");
+    const supervisorSel = document.getElementById("assign-supervisor-select");
+
+    const l1l2 = [...data.allL1, ...data.allL2].sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
+    officerSel.innerHTML = '<option value="">— Select Officer (L1 or L2) —</option>' +
+      l1l2.map(o => `<option value="${o._id}" data-level="${o.level}">${o.name} — L${o.level} (${o.designation || "Officer"})</option>`).join('');
+
+    // When officer changes, filter supervisors by level+1
+    officerSel.onchange = function() {
+      const selected = officerSel.options[officerSel.selectedIndex];
+      const level = parseInt(selected.dataset.level || "0");
+      const supervisorLevel = level + 1;
+      const validSupervisors = supervisorLevel === 2 ? data.allL2 : supervisorLevel === 3 ? data.allL3 : [];
+      supervisorSel.innerHTML = `<option value="">— Select L${supervisorLevel} Supervisor —</option>` +
+        validSupervisors.map(o => `<option value="${o._id}">${o.name} — L${o.level} (${o.designation || ""})</option>`).join('');
+    };
+    supervisorSel.innerHTML = '<option value="">— Select Supervisor —</option>';
+  }
+
+  async function assignSupervisor() {
+    const officerId = document.getElementById("assign-officer-select").value;
+    const supervisorId = document.getElementById("assign-supervisor-select").value;
+    if (!officerId) { showToast("Please select an officer.", "error"); return; }
+    if (!supervisorId) { showToast("Please select a supervisor.", "error"); return; }
+
+    try {
+      const resp = await fetch(`${BASE_URL}/api/officers/${officerId}/assign-supervisor`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ supervisorId }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.message || "Error");
+      showToast("✅ " + data.message, "success");
+      await loadHierarchy();
+    } catch (e) {
+      showToast(e.message || "Failed to assign supervisor.", "error");
+    }
+  }
+
+  async function removeSupervisor() {
+    const officerId = document.getElementById("assign-officer-select").value;
+    if (!officerId) { showToast("Please select an officer to remove supervisor from.", "error"); return; }
+
+    try {
+      const resp = await fetch(`${BASE_URL}/api/officers/${officerId}/assign-supervisor`, {
+        method: "DELETE",
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.message || "Error");
+      showToast("↩️ " + data.message, "success");
+      await loadHierarchy();
+    } catch (e) {
+      showToast(e.message || "Failed to remove supervisor.", "error");
+    }
+  }
+
+  // Init
+  loadDepts();
+</script>
+</body>
+</html>

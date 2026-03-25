@@ -597,6 +597,20 @@ async function changePassword() {
 document.addEventListener('DOMContentLoaded', () => {
   populateTopbar();
 
+  // Show level-based sidebar links
+  const level = SESSION.level || 1;
+  const levelRoleEl = document.getElementById('topbar-level-role');
+  if (levelRoleEl) levelRoleEl.textContent = `Level ${level} Officer`;
+
+  if (level >= 2) {
+    const escLink = document.getElementById('sidebar-escalated');
+    if (escLink) escLink.style.display = '';
+  }
+  if (level >= 3) {
+    const l3Link = document.getElementById('sidebar-l3');
+    if (l3Link) l3Link.style.display = '';
+  }
+
   const page = window.location.pathname.split('/').pop();
 
   if (page === 'complaints.html') {
@@ -608,4 +622,5 @@ document.addEventListener('DOMContentLoaded', () => {
   } else if (page === 'officer_view_complaint.html') {
     // detail page handled by officer_view_complaint.js
   }
+  // escalated.html and l3_pending.html have their own inline scripts
 });

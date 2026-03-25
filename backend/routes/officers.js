@@ -138,7 +138,7 @@ router.get("/officers/:id/complaints", async (req, res) => {
 // No longer sends password in email — sends a secure set-password link
 router.post("/officers", async (req, res) => {
   try {
-    const { name, email, phone, department, designation, joinDate, password } = req.body;
+    const { name, email, phone, department, designation, joinDate, password, level } = req.body;
 
     if (!name || !email || !phone || !department || !designation || !joinDate || !password) {
       return res.status(400).json({ message: "All fields are required." });
@@ -165,6 +165,7 @@ router.post("/officers", async (req, res) => {
       department: dept._id,
       departmentName: dept.name,
       joinDate,
+      level: Number(level) || 1,
       status: "Active",
       casesHandled: 0,
       casesResolved: 0,
@@ -375,6 +376,145 @@ router.patch("/officers/:id/update-profile", async (req, res) => {
     await officer.save();
 
     res.json({ message: "Profile updated successfully.", officer });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────
+// GET /api/officers/by-department/:dept
+// Returns all active officers for a given department
+// ──────────────────────────────────────────────
+router.get("/officers/by-department/:dept", async (req, res) => {
+  try {
+    const dept = req.params.dept;
+    const officers = await Officer.find({ departmentName: dept, status: "Active" })
+      .select("name designation level departmentName supervisorId")
+      .sort({ level: 1, name: 1 });
+    res.json(officers);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────
+// PATCH /api/officers/:id/assign-supervisor
+// Assigns a supervisor (L2 for L1, or L3 for L2) to an officer
+// Body: { supervisorId }
+// ──────────────────────────────────────────────────────────────
+router.patch("/officers/:id/assign-supervisor", async (req, res) => {
+  try {
+    const { supervisorId } = req.body;
+
+    // Find the officer to assign a supervisor to
+    let officer = await Officer.findOne({ officerId: req.params.id });
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id);
+    }
+    if (!officer) return res.status(404).json({ message: "Officer not found." });
+
+    // Validate supervisor exists and is at correct level
+    const supervisor = await Officer.findById(supervisorId);
+    if (!supervisor) return res.status(404).json({ message: "Supervisor officer not found." });
+
+    if (supervisor.level !== officer.level + 1) {
+      return res.status(400).json({
+        message: `Supervisor must be at Level ${officer.level + 1} (one above the officer's Level ${officer.level}).`,
+      });
+    }
+
+    // Same department check
+    if (supervisor.departmentName !== officer.departmentName) {
+      return res.status(400).json({ message: "Supervisor must be in the same department." });
+    }
+
+    officer.supervisorId = supervisor._id;
+    await officer.save();
+
+    res.json({
+      message: `${officer.name} (L${officer.level}) is now supervised by ${supervisor.name} (L${supervisor.level}).`,
+      officer,
+      supervisor,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────
+// DELETE /api/officers/:id/assign-supervisor
+// Removes the supervisor assignment from an officer
+// ──────────────────────────────────────────────────────────────
+router.delete("/officers/:id/assign-supervisor", async (req, res) => {
+  try {
+    let officer = await Officer.findOne({ officerId: req.params.id });
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id);
+    }
+    if (!officer) return res.status(404).json({ message: "Officer not found." });
+
+    officer.supervisorId = null;
+    await officer.save();
+    res.json({ message: `Supervisor assignment removed from ${officer.name}.`, officer });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────
+// GET /api/officers/:id/subordinates
+// Returns all officers supervised by this officer
+// ──────────────────────────────────────────────────────────────
+router.get("/officers/:id/subordinates", async (req, res) => {
+  try {
+    let officer = await Officer.findOne({ officerId: req.params.id });
+    if (!officer && req.params.id.match(/^[0-9a-fA-F]{24}$/)) {
+      officer = await Officer.findById(req.params.id);
+    }
+    if (!officer) return res.status(404).json({ message: "Officer not found." });
+
+    const subordinates = await Officer.find({ supervisorId: officer._id })
+      .select("name designation level departmentName officerId status supervisorId")
+      .sort({ name: 1 });
+
+    res.json(subordinates);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────
+// GET /api/hierarchy/:deptName
+// Returns the full hierarchy tree for a department
+// { l3Officers: [{...officer, l2Officers:[{...officer, l1Officers:[...]}]}] }
+// ──────────────────────────────────────────────────────────────
+router.get("/hierarchy/:deptName", async (req, res) => {
+  try {
+    const dept = decodeURIComponent(req.params.deptName);
+    const allOfficers = await Officer.find({ departmentName: dept })
+      .select("_id officerId name designation level status supervisorId casesHandled casesResolved")
+      .sort({ level: -1, name: 1 });
+
+    const l3 = allOfficers.filter(o => o.level === 3);
+    const l2 = allOfficers.filter(o => o.level === 2);
+    const l1 = allOfficers.filter(o => o.level === 1);
+
+    // Build unassigned list (officers with no supervisor in relevant levels)
+    const assignedL1Ids = new Set(l1.filter(o => o.supervisorId).map(o => o._id.toString()));
+    const assignedL2Ids = new Set(l2.filter(o => o.supervisorId).map(o => o._id.toString()));
+
+    const tree = l3.map(l3o => ({
+      ...l3o.toObject(),
+      l2Officers: l2.filter(l2o => l2o.supervisorId?.toString() === l3o._id.toString()).map(l2o => ({
+        ...l2o.toObject(),
+        l1Officers: l1.filter(l1o => l1o.supervisorId?.toString() === l2o._id.toString()),
+      })),
+    }));
+
+    const unassignedL2 = l2.filter(o => !o.supervisorId);
+    const unassignedL1 = l1.filter(o => !o.supervisorId);
+
+    res.json({ tree, unassignedL2, unassignedL1, allL1: l1, allL2: l2, allL3: l3 });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
