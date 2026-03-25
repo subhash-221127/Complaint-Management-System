@@ -154,6 +154,7 @@ function normalizeComplaint(c) {
     officerPhone: c.officerId?.phone || null,
     officerEmail: c.officerId?.email || null,
     evidence:    c.evidencePaths?.[0] || null,
+    resolutionEvidence: c.resolutionEvidencePaths?.[0] || null,
     rated:       c.rated || false,
     canReopen:   c.status === "resolved",
     upvotes:     c.upvotes || 0,
@@ -331,11 +332,24 @@ function renderDetail(c) {
         <div class="info-section">
           <div class="info-section-title">📎 Evidence</div>
           <div style="padding:14px 18px;">
-            <a href="${BASE_URL}/uploads/${c.evidence}" target="_blank" class="btn btn-outline btn-sm">
+            <a href="${BASE_URL}/uploads/${c.evidence}" target="_blank" class="btn btn-outline btn-sm" style="display:inline-flex;align-items:center;gap:6px;">
               <i class="fa-solid fa-file"></i> View Attached File
             </a>
           </div>
         </div>` : ""}
+
+        ${(c.resolutionEvidence && c.status === "resolved") ? `
+          <a href="${BASE_URL}/uploads/${c.resolutionEvidence}" target="_blank" class="btn btn-primary btn-sm" style="display:inline-flex;align-items:center;gap:6px;background:var(--green-primary);border-color:var(--green-primary);">
+        <div class="info-section" style="border:1.5px solid var(--green-light);background:#f0fdf4;">
+          <div class="info-section-title" style="color:var(--green-dark);">✅ Resolution Evidence</div>
+          <div style="padding:14px 18px;">
+            <p style="font-size:0.85rem;color:var(--muted);margin-bottom:10px;">Officer submitted proof of resolution:</p>
+            
+              <i class="fa-solid fa-image"></i> View Resolution Photo
+  
+          </div>
+        </div>` : ""}
+        </a>
 
         <div class="info-section">
           <div class="info-section-title">💬 Comments &amp; Updates</div>
