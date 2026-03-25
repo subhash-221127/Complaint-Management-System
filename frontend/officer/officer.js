@@ -484,7 +484,8 @@ async function loadProfile() {
     setEl('dropdown-dept',     o.departmentName || '—');
 
     document.getElementById('loading-state').style.display   = 'none';
-    document.getElementById('profile-content').style.display = 'block';
+    const profileContent = document.getElementById('profile-content');
+    if (profileContent) profileContent.style.display = 'block';
 
   } catch {
     const ls = document.getElementById('loading-state');

@@ -406,8 +406,10 @@
       }
 
       if (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length) {
-        combinedEvidenceHTML += '<div style="flex:1; min-width:300px;"><div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;">After (Officer)</div><div style="display:flex;gap:12px;flex-direction:column;">' +
-          c.resolutionEvidencePaths.map(p => '<img src="/uploads/' + p.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:pointer;" onclick="window.open(this.src,\'_blank\')" />').join('') + '</div></div>';
+        // Show ONLY the latest resolution evidence (last one in the array)
+        const latestResolution = c.resolutionEvidencePaths[c.resolutionEvidencePaths.length - 1];
+        combinedEvidenceHTML += '<div style="flex:1; min-width:300px;"><div style="font-size:0.85rem;font-weight:700;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;">After (Officer - Latest Upload)</div><div style="display:flex;gap:12px;flex-direction:column;">' +
+          '<img src="/uploads/' + latestResolution.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:12px;border:1px solid var(--border);cursor:pointer;" onclick="window.open(this.src,\'_blank\')" />' + '</div></div>';
       }
       
       combinedEvidenceHTML += '</div></div>';

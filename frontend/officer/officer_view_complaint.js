@@ -515,9 +515,9 @@ async function submitResolve(mongoId) {
     if (!resp.ok) throw new Error(data.message || 'Server error');
 
     if (data.aiPassed) {
-      showOfficerToast('✓ Resolved! AI verification passed (score: ' + data.aiScore + '/100)', 'success');
+      showOfficerToast('✓ Resolved! AI verification passed (score: ' + data.aiScore + '/100). Complaint marked as RESOLVED.', 'success');
     } else {
-      showOfficerToast('📋 Submitted. Low AI match score — sent to admin for review.', '');
+      showOfficerToast('📋 Evidence submitted. AI score: ' + data.aiScore + '/100 (below 70% threshold). Complaint remains IN PROGRESS. Sent to admin for review.', '');
     }
     setTimeout(() => location.reload(), 2000);
   } catch (err) {

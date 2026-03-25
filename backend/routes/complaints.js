@@ -563,13 +563,13 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
       });
 
     } else {
-      // Needs admin review — keep status as resolved but flag it
-      complaint.status     = "resolved";
-      complaint.resolvedAt = new Date();
+      // AI score < 70 — keep status as in_progress and flag for admin review
+      complaint.status     = "in_progress";
+      complaint.resolvedAt = null;
       await complaint.save();
 
       return res.json({
-        message:        "Evidence submitted. AI verification score was low — flagged for admin review.",
+        message:        "Evidence submitted. AI verification score was low — complaint remains in progress, flagged for admin review.",
         aiScore:        aiResult.score,
         aiPassed:       false,
         needsReview:    true,

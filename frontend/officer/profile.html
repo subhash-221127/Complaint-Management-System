@@ -548,7 +548,8 @@
       setEl('dropdown-dept',     o.departmentName || '—');
 
       document.getElementById('loading-state').style.display   = 'none';
-      document.getElementById('profile-content').style.display = 'block';
+      const contentEl = document.getElementById('profile-content');
+      if (contentEl) contentEl.style.display = 'block';
 
     } catch {
       const ls = document.getElementById('loading-state');
