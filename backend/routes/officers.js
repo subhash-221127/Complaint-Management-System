@@ -88,12 +88,17 @@ router.get("/officers", async (_req, res) => {
 });
 
 // ── GET officers by department name (MUST be before /:id) ──────
+// Optional ?level=1 filters to L1 only; omit for all levels
 router.get("/officers/by-department/:deptName", async (req, res) => {
   try {
-    const officers = await Officer.find({
-      departmentName: req.params.deptName,
-      status: "Active"
-    }).sort({ name: 1 });
+    const filter = { departmentName: req.params.deptName, status: "Active" };
+    if (req.query.level) {
+      const lvl = parseInt(req.query.level, 10);
+      if (!isNaN(lvl)) filter.level = lvl;
+    }
+    const officers = await Officer.find(filter)
+      .select("name designation level departmentName supervisorId")
+      .sort({ level: 1, name: 1 });
     res.json(officers);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch officers by department", error: err.message });
@@ -383,12 +388,19 @@ router.patch("/officers/:id/update-profile", async (req, res) => {
 
 // ──────────────────────────────────────────────
 // GET /api/officers/by-department/:dept
-// Returns all active officers for a given department
+// Returns active officers for a department.
+// Optional query: ?level=1  → only L1 officers (for initial assignment)
+//                 (omit)    → all levels (for reassignment)
 // ──────────────────────────────────────────────
 router.get("/officers/by-department/:dept", async (req, res) => {
   try {
     const dept = req.params.dept;
-    const officers = await Officer.find({ departmentName: dept, status: "Active" })
+    const filter = { departmentName: dept, status: "Active" };
+    if (req.query.level) {
+      const lvl = parseInt(req.query.level, 10);
+      if (!isNaN(lvl)) filter.level = lvl;
+    }
+    const officers = await Officer.find(filter)
       .select("name designation level departmentName supervisorId")
       .sort({ level: 1, name: 1 });
     res.json(officers);

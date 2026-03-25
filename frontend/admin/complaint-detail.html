@@ -185,26 +185,45 @@
     return (name || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
   }
 
-  // ── Load officers for a department name ────────────────────────
-  async function loadOfficersByDept(deptName) {
+  // Level label helper
+  function levelLabel(lvl) {
+    const map = { 1: 'L1 · Field Officer', 2: 'L2 · Senior Officer', 3: 'L3 · Director' };
+    return map[lvl] || ('L' + lvl);
+  }
+
+  // ── Load officers for a department name ──────────────────────────
+  // levelOnly: true  → fetch only level-1 officers (initial assignment)
+  //            false → fetch all levels (reassignment)
+  async function loadOfficersByDept(deptName, levelOnly) {
     if (!deptName) return;
     try {
-      const res = await fetch('/api/officers/by-department/' + encodeURIComponent(deptName));
+      const qs = levelOnly ? '?level=1' : '';
+      const res = await fetch('/api/officers/by-department/' + encodeURIComponent(deptName) + qs);
       officers  = await res.json();
     } catch { officers = []; }
 
     const sel = document.getElementById('officer-select');
     if (!sel) return;
-    sel.innerHTML = officers.length
-      ? '<option value="">— Select officer —</option>' +
-        officers.map(o => '<option value="' + o._id + '">' + o.name + ' — ' + o.designation + '</option>').join('')
-      : '<option value="">No active officers in this department</option>';
+
+    if (!officers.length) {
+      sel.innerHTML = '<option value="">' + (levelOnly ? 'No active L1 officers in this department' : 'No active officers in this department') + '</option>';
+      return;
+    }
+
+    sel.innerHTML = '<option value="">— Select officer —</option>' +
+      officers.map(o =>
+        '<option value="' + o._id + '">' +
+        '[' + (o.level ? 'L' + o.level : '?') + '] ' + o.name + ' — ' + o.designation +
+        '</option>'
+      ).join('');
   }
 
-  // When admin changes department in dropdown → reload officers
+  // When admin changes department in dropdown → reload with same level context
   window.onDeptChange = async function() {
     const sel = document.getElementById('dept-select');
-    if (sel && sel.value) await loadOfficersByDept(sel.value);
+    // isReassign data attribute is set on the select when the form is built
+    const isReassign = sel && sel.dataset.reassign === 'true';
+    if (sel && sel.value) await loadOfficersByDept(sel.value, !isReassign);
   };
 
   // ── Assign ─────────────────────────────────────────────────────
@@ -394,18 +413,25 @@
 
     } else {
       // Pending / assigned — show assign form
+      // isReassign = an officer is already assigned (admin is changing assignment)
+      const isReassign = !!officer;
+
+      const officerLevelBadge = officer && officer.level
+        ? ' <span style="background:#dbeafe;color:#1d4ed8;font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:999px;">L' + officer.level + '</span>'
+        : '';
+
       const currentlyAssigned = officer
         ? '<div style="margin-bottom:16px;">' +
           '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Currently Assigned:</div>' +
           '<div class="assigned-officer-card">' +
           '<div class="assigned-avatar">' + initials(officer.name) + '</div>' +
           '<div class="assigned-info">' +
-          '<div class="name">' + officer.name + '</div>' +
+          '<div class="name">' + officer.name + officerLevelBadge + '</div>' +
           '<div class="dept">' + officer.designation + ' · ' + (officer.departmentName || '') + '</div>' +
           '<div class="dept">📧 ' + (officer.email || '') + ' · 📞 ' + (officer.phone || '') + '</div>' +
           '</div></div></div>' +
-          '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Reassign to a different officer:</div>'
-        : '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;font-weight:600;">Select a department and officer to handle this complaint:</div>';
+          '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Reassign to a different officer (all levels):</div>'
+        : '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;font-weight:600;">Select a department and officer to handle this complaint (Level 1 officers only):</div>';
 
       const rejectSection = !officer
         ? '<div class="action-card red"><h4>❌ Reject Complaint</h4>' +
@@ -416,14 +442,14 @@
         : '';
 
       actionSection =
-        '<div class="assign-section"><h4>👮 Assign Officer</h4>' +
+        '<div class="assign-section"><h4>👮 ' + (isReassign ? 'Reassign Officer' : 'Assign Officer') + '</h4>' +
         currentlyAssigned +
         '<div class="assign-form">' +
         '<div class="form-group"><label>Department</label>' +
-        '<select id="dept-select" onchange="onDeptChange()">' + deptOptions + '</select></div>' +
+        '<select id="dept-select" onchange="onDeptChange()" data-reassign="' + isReassign + '">' + deptOptions + '</select></div>' +
         '<div class="form-group"><label>Officer</label>' +
         '<select id="officer-select"><option value="">Loading officers…</option></select></div>' +
-        '<button class="btn btn-primary btn-sm" id="assign-btn" onclick="assignOfficer()" style="height:42px;align-self:flex-end;min-width:100px;">✅ Assign</button>' +
+        '<button class="btn btn-primary btn-sm" id="assign-btn" onclick="assignOfficer()" style="height:42px;align-self:flex-end;min-width:100px;">✅ ' + (isReassign ? 'Reassign' : 'Assign') + '</button>' +
         '</div></div>' +
         rejectSection;
     }
@@ -526,7 +552,8 @@
     // Load officers for the best-matched department AFTER DOM is rendered
     // Skip when AI review banner is showing (no assign form in DOM)
     if (!isResolved && !isRejected && !needsAiReview && selectedDept) {
-      await loadOfficersByDept(selectedDept);
+      // levelOnly=true for fresh assignment (no officer yet), false for reassignment
+      await loadOfficersByDept(selectedDept, !officer);
     }
   }
 

@@ -270,6 +270,27 @@ async function sendMail(to, subject, html) {
 }
 
 // ─────────────────────────────────────────────
+// GET /api/complaints/public-stats  — public, no auth
+// Returns aggregate counts for the landing page
+// ─────────────────────────────────────────────
+router.get("/complaints/public-stats", async (_req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [total, resolved, resolvedThisWeek] = await Promise.all([
+      Complaint.countDocuments({}),
+      Complaint.countDocuments({ status: "resolved" }),
+      Complaint.countDocuments({ status: "resolved", resolvedAt: { $gte: sevenDaysAgo } }),
+    ]);
+
+    res.json({ total, resolved, resolvedThisWeek });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
 // POST /api/create  —  Submit a complaint
 // NEW: accepts isAnonymous flag
 // ─────────────────────────────────────────────
