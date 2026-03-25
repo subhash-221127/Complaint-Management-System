@@ -270,6 +270,27 @@ async function sendMail(to, subject, html) {
 }
 
 // ─────────────────────────────────────────────
+// GET /api/complaints/public-stats  — public, no auth
+// Returns aggregate counts for the landing page
+// ─────────────────────────────────────────────
+router.get("/complaints/public-stats", async (_req, res) => {
+  try {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [total, resolved, resolvedThisWeek] = await Promise.all([
+      Complaint.countDocuments({}),
+      Complaint.countDocuments({ status: "resolved" }),
+      Complaint.countDocuments({ status: "resolved", resolvedAt: { $gte: sevenDaysAgo } }),
+    ]);
+
+    res.json({ total, resolved, resolvedThisWeek });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────
 // POST /api/create  —  Submit a complaint
 // NEW: accepts isAnonymous flag
 // ─────────────────────────────────────────────
@@ -361,12 +382,18 @@ router.get("/complaint/:id", async (req, res) => {
     let complaint = await Complaint
       .findOne({ complaintId: id.toUpperCase() })
       .populate("officerId", "name designation departmentName phone email")
-      .populate("citizenId", "name email phone");
+      .populate("citizenId", "name email phone")
+      .populate("level2OfficerId", "name designation email phone")
+      .populate("level3OfficerId", "name designation email phone")
+      .populate("escalationHistory.officerId", "name designation");
     if (!complaint) {
       complaint = await Complaint
         .findById(id)
         .populate("officerId", "name designation departmentName phone email")
         .populate("citizenId", "name email phone")
+        .populate("level2OfficerId", "name designation email phone")
+        .populate("level3OfficerId", "name designation email phone")
+        .populate("escalationHistory.officerId", "name designation")
         .catch(() => null);
     }
     if (!complaint) return res.status(404).json({ message: "Complaint not found" });
@@ -382,6 +409,7 @@ router.get("/complaint/:id", async (req, res) => {
     return res.status(500).json({ message: "Error fetching complaint", error: err.message });
   }
 });
+
 
 // ─────────────────────────────────────────────
 // PATCH /api/complaint/:id/assign  —  Admin assigns officer
@@ -530,7 +558,7 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
     };
 
     if (aiResult.passed) {
-      // Auto-resolve
+      // Score ≥ 70 — auto-resolve immediately
       complaint.status     = "resolved";
       complaint.resolvedAt = new Date();
 
@@ -563,13 +591,14 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
       });
 
     } else {
-      // Needs admin review — keep status as resolved but flag it
-      complaint.status     = "resolved";
-      complaint.resolvedAt = new Date();
+      // Score < 70 — keep status as "in_progress", flag for admin manual review.
+      // Do NOT resolve the complaint; admin must approve or reassign.
+      complaint.status = "in_progress";
+      // resolvedAt intentionally NOT set — complaint is not resolved yet
       await complaint.save();
 
       return res.json({
-        message:        "Evidence submitted. AI verification score was low — flagged for admin review.",
+        message:        "Evidence submitted. AI verification score was low — complaint requires admin manual review.",
         aiScore:        aiResult.score,
         aiPassed:       false,
         needsReview:    true,
@@ -586,8 +615,10 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
 
 // ─────────────────────────────────────────────
 // POST /api/complaint/:id/admin-review
-// Admin reviews a flagged complaint (AI failed)
-// action: "approve" | "reassign"
+// Admin reviews a flagged complaint (AI score < 70)
+// Complaint is in "in_progress" state at this point.
+// action: "approve" → resolve & email citizen
+// action: "reassign" → stay in_progress, clear AI data so officer resubmits
 // ─────────────────────────────────────────────
 router.post("/complaint/:id/admin-review", async (req, res) => {
   try {
@@ -603,13 +634,16 @@ router.post("/complaint/:id/admin-review", async (req, res) => {
     complaint.markModified("aiVerification");
 
     if (action === "approve") {
-      // Admin approves — complaint stays resolved, send email now
+      // Admin manually approves — resolve and notify citizen
       complaint.status     = "resolved";
-      complaint.resolvedAt = complaint.resolvedAt || new Date();
+      complaint.resolvedAt = new Date();
       await complaint.save();
 
-      // Department + officer counters (only if not already incremented)
-      await Department.findOneAndUpdate({ name: complaint.department }, { $inc: { resolvedComplaints: 1, pendingComplaints: -1 } });
+      // Update dept + officer counters
+      await Department.findOneAndUpdate(
+        { name: complaint.department },
+        { $inc: { resolvedComplaints: 1 } }
+      );
       if (complaint.officerId) {
         await Officer.findByIdAndUpdate(complaint.officerId, { $inc: { casesResolved: 1 } });
       }
@@ -625,11 +659,19 @@ router.post("/complaint/:id/admin-review", async (req, res) => {
       return res.json({ message: "Complaint approved and resolved by admin.", complaint });
 
     } else {
-      // Reassign — send back to in_progress, clear resolution evidence + AI data
-      complaint.status                   = "in_progress";
-      complaint.resolvedAt               = null;
-      complaint.resolutionEvidencePaths  = [];
-      complaint.aiVerification           = { matchScore: null, passed: null, summary: "", checkedAt: null, adminReviewed: false, adminAction: null };
+      // Reassign — clear AI results so officer can resubmit resolution evidence
+      complaint.status                  = "in_progress";
+      complaint.resolvedAt              = null;
+      complaint.resolutionEvidencePaths = [];
+      complaint.aiVerification          = {
+        matchScore:    null,
+        passed:        null,
+        summary:       "",
+        checkedAt:     null,
+        adminReviewed: false,
+        adminAction:   null,
+      };
+      complaint.markModified("aiVerification");
       await complaint.save();
       return res.json({ message: "Complaint reassigned to officer for re-resolution.", complaint });
     }
@@ -659,4 +701,176 @@ router.post("/complaint/:id/comment", async (req, res) => {
   }
 });
 
+// ─────────────────────────────────────────────────────────────
+// GET /api/complaints/escalated/level2?officerId=<mongoId>
+// Returns complaints escalated to this L2 officer (active only)
+// ─────────────────────────────────────────────────────────────
+router.get("/complaints/escalated/level2", async (req, res) => {
+  try {
+    const { officerId } = req.query;
+    if (!officerId) return res.status(400).json({ message: "officerId is required" });
+
+    const complaints = await Complaint.find({
+      level2OfficerId: officerId,
+      escalationLevel: { $in: [2, 3] },
+      status: { $in: ["assigned", "in_progress"] },
+    })
+      .populate("citizenId",  "name email phone")
+      .populate("officerId",  "name designation email phone")
+      .populate("level2OfficerId", "name designation email phone")
+      .populate("escalationHistory.officerId", "name designation")
+      .sort({ escalatedAt: -1 });
+
+    res.json(complaints.map(c => stripAnonymous(c)));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// GET /api/complaints/escalated/level3?officerId=<mongoId>
+// Returns complaints escalated to this L3 officer
+// ─────────────────────────────────────────────────────────────
+router.get("/complaints/escalated/level3", async (req, res) => {
+  try {
+    const { officerId } = req.query;
+    if (!officerId) return res.status(400).json({ message: "officerId is required" });
+
+    const complaints = await Complaint.find({
+      level3OfficerId: officerId,
+      escalationLevel: 3,
+      status: { $in: ["assigned", "in_progress"] },
+    })
+      .populate("citizenId",      "name email phone")
+      .populate("officerId",      "name designation email phone")
+      .populate("level2OfficerId","name designation email phone")
+      .populate("level3OfficerId","name designation")
+      .populate("escalationHistory.officerId", "name designation")
+      .sort({ escalatedToL3At: -1 });
+
+    res.json(complaints.map(c => stripAnonymous(c)));
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// PATCH /api/complaint/:id/l3-action
+// L3 officer: close the case or reassign it
+// body: { action: 'close'|'reassign', note?, newOfficerId? }
+// ─────────────────────────────────────────────────────────────
+router.patch("/complaint/:id/l3-action", async (req, res) => {
+  try {
+    const { action, note, newOfficerId } = req.body;
+    if (!["close", "reassign"].includes(action))
+      return res.status(400).json({ message: "action must be 'close' or 'reassign'" });
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+    if (complaint.escalationLevel !== 3)
+      return res.status(400).json({ message: "Complaint is not at L3 escalation level" });
+
+    if (action === "close") {
+      if (!note?.trim())
+        return res.status(400).json({ message: "A closure explanation is required." });
+
+      complaint.status         = "resolved";
+      complaint.resolvedAt     = new Date();
+      complaint.escalationNote = note.trim();
+      await complaint.save();
+
+      // Dept + officer counters
+      await Department.findOneAndUpdate({ name: complaint.department }, { $inc: { resolvedComplaints: 1 } });
+      if (complaint.officerId) {
+        await Officer.findByIdAndUpdate(complaint.officerId, { $inc: { casesResolved: 1 } });
+      }
+
+      // Email citizen
+      const citizen = await User.findById(complaint.citizenId);
+      if (citizen?.email) {
+        const html = `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:40px 20px;"><tr><td align="center">
+          <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;max-width:600px;width:100%;">
+          <tr><td style="background:linear-gradient(135deg,#1e3a5f,#2563eb);padding:36px 40px;text-align:center;">
+            <span style="font-size:24px;font-weight:700;color:#fff;">City<span style="color:#93c5fd;">Fix</span></span></td></tr>
+          <tr><td style="background:#f0fdf4;border-bottom:2px solid #bbf7d0;padding:20px 40px;text-align:center;">
+            <span style="font-size:32px;">✅</span>
+            <h2 style="margin:8px 0 4px;color:#15803d;font-size:20px;">Complaint Closed by Department Director</h2></td></tr>
+          <tr><td style="padding:36px 40px;">
+            <p style="color:#374151;font-size:15px;">Dear <strong>${citizen.name}</strong>,</p>
+            <p style="color:#374151;font-size:14px;">Your complaint <strong style="color:#2563eb;">${complaint.complaintId}</strong> has been reviewed and closed by the Department Director.</p>
+            <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:20px;margin:20px 0;">
+              <p style="margin:0 0 8px;font-size:13px;color:#6b7280;font-weight:700;">DIRECTOR'S EXPLANATION</p>
+              <p style="margin:0;font-size:14px;color:#111827;line-height:1.7;">${note.trim()}</p>
+            </div>
+          </td></tr></table></td></tr></table></body></html>`;
+        await sendMail(
+          citizen.email,
+          `✅ Complaint Closed – ${complaint.complaintId} | CityFix`,
+          html
+        );
+      }
+
+      return res.json({ message: "Complaint closed by L3 officer.", complaint });
+
+    } else {
+      // reassign
+      if (!newOfficerId)
+        return res.status(400).json({ message: "newOfficerId is required for reassignment." });
+
+      const newOfficer = await Officer.findById(newOfficerId);
+      if (!newOfficer) return res.status(404).json({ message: "New officer not found." });
+
+      complaint.officerId       = newOfficer._id;
+      complaint.status          = "assigned";
+      complaint.assignedAt      = new Date();
+      complaint.escalationLevel = 1;
+      complaint.escalatedAt     = null;
+      complaint.escalatedToL3At = null;
+      complaint.level2OfficerId = null;
+      complaint.level3OfficerId = null;
+      complaint.escalationHistory.push({
+        level:       1,
+        officerId:   newOfficer._id,
+        officerName: newOfficer.name,
+        assignedAt:  new Date(),
+        reason:      `Reassigned by L3 officer (${note || "Director review"})`
+      });
+      await complaint.save();
+
+      return res.json({ message: "Complaint reassigned by L3 officer.", complaint });
+    }
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────
+// POST /api/complaint/:id/l3-chat
+// L3 officer posts a message visible to L2 officer (role: 'level3')
+// ─────────────────────────────────────────────────────────────
+router.post("/complaint/:id/l3-chat", async (req, res) => {
+  try {
+    const { author, text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ message: "Message text is required." });
+
+    const complaint = await Complaint.findById(req.params.id);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    const comment = {
+      author:    author || "Director",
+      role:      "level3",
+      text:      text.trim(),
+      createdAt: new Date(),
+    };
+    complaint.comments.push(comment);
+    await complaint.save();
+    res.json({ message: "Message sent.", comment });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
+

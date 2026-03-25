@@ -294,7 +294,6 @@
     <div class="nav-links">
       <a href="#how-it-works">How it Works</a>
       <a href="#stats">Live Stats</a>
-      <a href="#map-section">Map</a>
       <button class="btn-primary" onclick="location.href='login.html'" style="padding:10px 20px;border-radius:12px;font-size:0.875rem;">Get Started</button>
     </div>
 
@@ -307,7 +306,6 @@
   <div id="mobile-menu">
     <a href="#how-it-works" onclick="toggleMenu()">How it Works</a>
     <a href="#stats" onclick="toggleMenu()">Live Stats</a>
-    <a href="#map-section" onclick="toggleMenu()">Map</a>
     <button class="btn-primary" onclick="location.href='login.html'">Get Started</button>
   </div>
 </nav>
@@ -362,20 +360,14 @@
         <p>Describe the issue, attach photos, and pin the exact location on the map. AI auto-categorizes it instantly.</p>
       </div>
       <div class="step-card card-hover">
-        <div class="step-icon" style="background:rgba(26,60,110,0.1);">🤖</div>
-        <div class="step-num">STEP 02</div>
-        <h3>AI Analysis</h3>
-        <p>Gemini AI scores priority, routes to the right department, and notifies the admin team in seconds.</p>
-      </div>
-      <div class="step-card card-hover">
         <div class="step-icon" style="background:rgba(34,197,94,0.1);">👮</div>
-        <div class="step-num">STEP 03</div>
+        <div class="step-num">STEP 02</div>
         <h3>Officer Assigned</h3>
         <p>Admin assigns the complaint to a field officer. You get a notification with their details.</p>
       </div>
       <div class="step-card card-hover">
         <div class="step-icon" style="background:rgba(139,92,246,0.1);">✅</div>
-        <div class="step-num">STEP 04</div>
+        <div class="step-num">STEP 03</div>
         <h3>Issue Resolved</h3>
         <p>Track real-time updates. Rate the resolution. Your city gets better, one fix at a time.</p>
       </div>
@@ -394,29 +386,22 @@
         <div class="stat-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="#1a3c6e" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         </div>
-        <div class="stat-value" data-target="1247">0</div>
+        <div class="stat-value" id="stat-total">—</div>
         <div class="stat-label">Total Complaints</div>
       </div>
       <div class="stat-card card-hover">
         <div class="stat-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         </div>
-        <div class="stat-value" data-target="983">0</div>
+        <div class="stat-value" id="stat-resolved">—</div>
         <div class="stat-label">Resolved Issues</div>
       </div>
       <div class="stat-card card-hover">
         <div class="stat-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2" stroke-linecap="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
         </div>
-        <div class="stat-value" data-target="47">0</div>
+        <div class="stat-value" id="stat-week">—</div>
         <div class="stat-label">Resolved This Week</div>
-      </div>
-      <div class="stat-card card-hover">
-        <div class="stat-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        </div>
-        <div class="stat-value" data-target="38">0</div>
-        <div class="stat-label">Avg Resolution (hrs)</div>
       </div>
     </div>
   </div>
@@ -431,8 +416,8 @@
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">🤖</div>
-        <h3>Gemini AI Categorization</h3>
-        <p>Automatic categorization and priority scoring powered by Google Gemini AI.</p>
+        <h3>AI Smart Match</h3>
+        <p>AI enabled smart image match and scoring rate with summary</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">🗺️</div>
@@ -463,24 +448,6 @@
   </div>
 </section>
 
-<!-- ── MAP ── -->
-<section id="map-section" style="background:var(--slate-50);padding:96px 16px;">
-  <div class="container text-center">
-    <span class="section-label label-navy">City Map</span>
-    <h2 class="section-title" style="color:var(--slate-800);">Complaints Across the City</h2>
-    <div class="map-legend">
-      <span><span class="legend-dot" style="background:#f97316;"></span>Open Complaints</span>
-      <span><span class="legend-dot" style="background:#22c55e;"></span>Resolved</span>
-    </div>
-    <div class="map-placeholder">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-      </svg>
-      <p style="font-weight:600;font-size:1rem;color:var(--slate-600);">Interactive Map</p>
-      <p style="font-size:0.875rem;">Connect your OpenStreetMap / Leaflet integration here</p>
-    </div>
-  </div>
-</section>
 
 <!-- ── CTA ── -->
 <section id="cta">
@@ -531,28 +498,57 @@
     document.getElementById('mobile-menu').style.display = menuOpen ? 'block' : 'none';
   }
 
-  // Animated numbers
-  function animateNumber(el) {
-    const target = parseInt(el.dataset.target);
+  // Animated counter
+  function animateNumber(el, target) {
     let current = 0;
-    const step = Math.ceil(target / 40);
+    const step = Math.max(1, Math.ceil(target / 50));
     const timer = setInterval(() => {
       current = Math.min(current + step, target);
       el.textContent = current.toLocaleString();
       if (current >= target) clearInterval(timer);
-    }, 40);
+    }, 30);
   }
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.querySelectorAll('.stat-value').forEach(animateNumber);
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.3 });
+  // Fetch real stats from backend
+  async function loadStats() {
+    try {
+      const res  = await fetch('/api/complaints/public-stats');
+      const data = await res.json();
 
-  document.querySelector('.stats-grid') && observer.observe(document.querySelector('.stats-grid'));
+      const weekStart = new Date();
+      weekStart.setDate(weekStart.getDate() - 7);
+
+      const total    = data.total    ?? 0;
+      const resolved = data.resolved ?? 0;
+      const week     = data.resolvedThisWeek ?? 0;
+
+      animateNumber(document.getElementById('stat-total'),    total);
+      animateNumber(document.getElementById('stat-resolved'), resolved);
+      animateNumber(document.getElementById('stat-week'),     week);
+    } catch {
+      // Fallback: show 0 if server unreachable
+      ['stat-total','stat-resolved','stat-week'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '0';
+      });
+    }
+  }
+
+  // Trigger stat load when the stats section scrolls into view
+  const statsGrid = document.querySelector('.stats-grid');
+  if (statsGrid) {
+    let statsLoaded = false;
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !statsLoaded) {
+          statsLoaded = true;
+          loadStats();
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+    observer.observe(statsGrid);
+  }
 </script>
 </body>
 </html>

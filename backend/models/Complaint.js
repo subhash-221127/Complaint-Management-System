@@ -64,6 +64,38 @@ const complaintSchema = new mongoose.Schema({
   assignedAt:  { type: Date, default: null },
   resolvedAt:  { type: Date, default: null },
 
+  // ── Escalation ─────────────────────────────────────────────────
+  // escalationLevel: 1 = L1 officer, 2 = escalated to L2, 3 = escalated to L3
+  escalationLevel:   { type: Number, enum: [1, 2, 3], default: 1 },
+  escalatedAt:       { type: Date,   default: null },   // when escalated from L1 → L2
+  escalatedToL3At:   { type: Date,   default: null },   // when escalated from L2 → L3
+
+  level2OfficerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Officer',
+    default: null,
+  },
+  level3OfficerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Officer',
+    default: null,
+  },
+
+  // L3 officer's closure explanation (shown to citizen)
+  escalationNote: { type: String, default: '' },
+
+  // Full escalation history — one entry per escalation event
+  escalationHistory: [
+    {
+      level:       { type: Number },               // level being escalated TO
+      officerId:   { type: mongoose.Schema.Types.ObjectId, ref: 'Officer' },
+      officerName: { type: String, default: '' },
+      assignedAt:  { type: Date, default: Date.now },
+      reason:      { type: String, default: 'Auto-escalated due to SLA breach' },
+    }
+  ],
+
+
   comments: [
     {
       author:    { type: String, default: 'Unknown' },

@@ -23,7 +23,8 @@
   </a>
   <nav class="sidebar-nav">
     <a href="complaints.html" class="sidebar-link active"><span class="icon">📋</span> My Complaints</a>
-    <a href="mystats.html"    class="sidebar-link"><span class="icon">📊</span> My Stats</a>
+    <a href="escalated.html"  class="sidebar-link" id="sidebar-escalated" style="display:none;"><span class="icon">🔺</span> Escalated</a>
+    <a href="l3_pending.html" class="sidebar-link" id="sidebar-l3" style="display:none;"><span class="icon">🔍</span> Director Review</a>
     <a href="profile.html"   class="sidebar-link"><span class="icon">👤</span> My Profile</a>
   </nav>
   <!-- Logout removed from sidebar — use the topbar dropdown instead -->
@@ -45,7 +46,7 @@
           <div class="chip-avatar" id="avatar-initials">OF</div>
           <div class="profile-btn-info">
             <span class="profile-btn-name" id="topbar-username">Officer</span>
-            <span class="profile-btn-role">Officer</span>
+            <span class="profile-btn-role" id="topbar-level-role">Officer</span>
           </div>
           <i class="fa-solid fa-chevron-down profile-chevron"></i>
         </button>
@@ -66,9 +67,6 @@
           <div class="dropdown-items">
             <a href="profile.html" class="dropdown-item">
               <i class="fa-solid fa-user"></i> My Profile
-            </a>
-            <a href="mystats.html" class="dropdown-item">
-              <i class="fa-solid fa-chart-bar"></i> My Stats
             </a>
             <div class="dropdown-divider"></div>
             <a href="#" class="dropdown-item logout-item" onclick="handleLogout()">

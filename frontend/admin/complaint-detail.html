@@ -82,6 +82,7 @@
       <a href="officers.html"    class="sidebar-link"><span class="icon">👮</span> Officers</a>
       <a href="citizens.html"    class="sidebar-link"><span class="icon">👥</span> Citizens</a>
       <a href="departments.html" class="sidebar-link"><span class="icon">🏢</span> Departments</a>
+      <a href="hierarchy.html"  class="sidebar-link"><span class="icon">🏗️</span> Hierarchy</a>
     </nav>
 </aside>
 
@@ -184,26 +185,45 @@
     return (name || '').split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase() || '?';
   }
 
-  // ── Load officers for a department name ────────────────────────
-  async function loadOfficersByDept(deptName) {
+  // Level label helper
+  function levelLabel(lvl) {
+    const map = { 1: 'L1 · Field Officer', 2: 'L2 · Senior Officer', 3: 'L3 · Director' };
+    return map[lvl] || ('L' + lvl);
+  }
+
+  // ── Load officers for a department name ──────────────────────────
+  // levelOnly: true  → fetch only level-1 officers (initial assignment)
+  //            false → fetch all levels (reassignment)
+  async function loadOfficersByDept(deptName, levelOnly) {
     if (!deptName) return;
     try {
-      const res = await fetch('/api/officers/by-department/' + encodeURIComponent(deptName));
+      const qs = levelOnly ? '?level=1' : '';
+      const res = await fetch('/api/officers/by-department/' + encodeURIComponent(deptName) + qs);
       officers  = await res.json();
     } catch { officers = []; }
 
     const sel = document.getElementById('officer-select');
     if (!sel) return;
-    sel.innerHTML = officers.length
-      ? '<option value="">— Select officer —</option>' +
-        officers.map(o => '<option value="' + o._id + '">' + o.name + ' — ' + o.designation + '</option>').join('')
-      : '<option value="">No active officers in this department</option>';
+
+    if (!officers.length) {
+      sel.innerHTML = '<option value="">' + (levelOnly ? 'No active L1 officers in this department' : 'No active officers in this department') + '</option>';
+      return;
+    }
+
+    sel.innerHTML = '<option value="">— Select officer —</option>' +
+      officers.map(o =>
+        '<option value="' + o._id + '">' +
+        '[' + (o.level ? 'L' + o.level : '?') + '] ' + o.name + ' — ' + o.designation +
+        '</option>'
+      ).join('');
   }
 
-  // When admin changes department in dropdown → reload officers
+  // When admin changes department in dropdown → reload with same level context
   window.onDeptChange = async function() {
     const sel = document.getElementById('dept-select');
-    if (sel && sel.value) await loadOfficersByDept(sel.value);
+    // isReassign data attribute is set on the select when the form is built
+    const isReassign = sel && sel.dataset.reassign === 'true';
+    if (sel && sel.value) await loadOfficersByDept(sel.value, !isReassign);
   };
 
   // ── Assign ─────────────────────────────────────────────────────
@@ -317,38 +337,71 @@
 
     // ── Build action section ───────────────────────────────────
     let actionSection = '';
+    const ai = c.aiVerification || {};
+    // Show yellow AI review banner whenever AI flagged the complaint and admin hasn't acted yet
+    const needsAiReview = ai.passed === false && !ai.adminReviewed && ai.checkedAt;
 
-    if (isResolved) {
-      const ai = c.aiVerification || {};
-      const needsReview = ai.passed === false && !ai.adminReviewed;
+    if (needsAiReview) {
+      // ── Yellow AI Review Banner ────────────────────────────────
+      const score      = (ai.matchScore !== null && ai.matchScore !== undefined) ? ai.matchScore : null;
+      const scoreLabel = score !== null ? score + '/100' : 'N/A';
+      const scoreColor = score !== null ? (score >= 50 ? '#d97706' : '#dc2626') : '#6b7280';
 
-      let aiBanner = '';
-      if (needsReview) {
-        aiBanner =
-          '<div style="background:#fef9c3;border:1.5px solid #fde68a;border-radius:14px;padding:18px 20px;margin-bottom:16px;">' +
-          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">' +
-          '<span style="font-size:1.1rem;">🤖</span>' +
-          '<span style="font-size:0.78rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.08em;">AI Verification — Manual Review Required</span>' +
-          '</div>' +
-          '<div style="font-size:0.875rem;color:#78350f;margin-bottom:8px;line-height:1.6;">' +
-          '<strong>Match Score: ' + (ai.matchScore !== null && ai.matchScore !== undefined ? ai.matchScore + '/100' : 'N/A') + '</strong> — ' + (ai.summary || 'No summary available.') +
-          '</div>' +
-          '<p style="font-size:0.8rem;color:#92400e;margin-bottom:14px;">The officer  s resolution photo did not meet the 70% similarity threshold. Please review the evidence and choose an action.</p>' +
-          '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
-          '<button onclick="adminReviewComplaint(\'' + complaintId + '\', \'approve\')" style="padding:10px 20px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-circle-check"></i> Approve & Close</button>' +
-          '<button onclick="adminReviewComplaint(\'' + complaintId + '\', \'reassign\')" style="padding:10px 20px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;"><i class="fa-solid fa-rotate-right"></i> Reassign to Officer</button>' +
-          '</div>' +
-          '</div>';
-      } else if (ai.adminReviewed) {
-        const actionLabel = ai.adminAction === 'approved' ? '✅ Approved by Admin' : '🔁 Reassigned by Admin';
-        aiBanner = '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.82rem;color:#15803d;font-weight:600;"><i class="fa-solid fa-robot" style="margin-right:6px;"></i>AI Score: ' + (ai.matchScore !== null ? ai.matchScore + '/100' : 'N/A') + ' — ' + actionLabel + '</div>';
-      } else if (ai.passed === true) {
-        aiBanner = '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.82rem;color:#15803d;font-weight:600;"><i class="fa-solid fa-robot" style="margin-right:6px;"></i>AI Verification passed — Score: ' + (ai.matchScore !== null ? ai.matchScore + '/100' : 'N/A') + '</div>';
+      // Before / After thumbnails embedded inside the banner
+      let thumbsHTML = '';
+      if ((c.evidencePaths && c.evidencePaths.length) || (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length)) {
+        thumbsHTML = '<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px;">';
+        if (c.evidencePaths && c.evidencePaths.length) {
+          thumbsHTML +=
+            '<div style="flex:1;min-width:200px;">' +
+            '<div style="font-size:0.72rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">📷 Before (Citizen)</div>' +
+            c.evidencePaths.map(p => '<img src="/uploads/' + p.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:2px solid #fde68a;cursor:pointer;margin-bottom:6px;" onclick="window.open(this.src,\'_blank\')" />').join('') +
+            '</div>';
+        }
+        if (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length) {
+          thumbsHTML +=
+            '<div style="flex:1;min-width:200px;">' +
+            '<div style="font-size:0.72rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">📷 After (Officer)</div>' +
+            c.resolutionEvidencePaths.map(p => '<img src="/uploads/' + p.split('/').pop() + '" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;border:2px solid #fde68a;cursor:pointer;margin-bottom:6px;" onclick="window.open(this.src,\'_blank\')" />').join('') +
+            '</div>';
+        }
+        thumbsHTML += '</div>';
       }
 
-      // Combined evidence is rendered later instead of inline here
+      actionSection =
+        '<div style="background:#fef9c3;border:2px solid #fde68a;border-radius:16px;padding:22px 24px;margin-bottom:20px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">' +
+        '<span style="font-size:1.4rem;">🤖</span>' +
+        '<div>' +
+        '<div style="font-size:0.95rem;font-weight:800;color:#78350f;">AI Review Required — Low Match Score</div>' +
+        '<div style="font-size:0.8rem;color:#92400e;margin-top:2px;">The officer\'s resolution photo scored below the 70% threshold. Review the evidence below and take action.</div>' +
+        '</div></div>' +
+        '<div style="display:inline-flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #fde68a;border-radius:999px;padding:6px 16px;margin-bottom:12px;">' +
+        '<span style="font-size:0.7rem;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.08em;">AI Score</span>' +
+        '<span style="font-size:1.15rem;font-weight:900;color:' + scoreColor + ';">' + scoreLabel + '</span>' +
+        '</div>' +
+        '<div style="font-size:0.875rem;color:#78350f;line-height:1.7;margin-bottom:16px;background:#fffde7;border-radius:8px;padding:10px 14px;">' +
+        '<strong>AI Summary:</strong> ' + (ai.summary || 'No summary available.') +
+        '</div>' +
+        thumbsHTML +
+        '<div style="display:flex;gap:12px;flex-wrap:wrap;">' +
+        '<button onclick="adminReviewComplaint(\'' + complaintId + '\', \'approve\')" style="padding:11px 22px;background:#16a34a;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;">' +
+        '✅ Approve &amp; Close Complaint</button>' +
+        '<button onclick="adminReviewComplaint(\'' + complaintId + '\', \'reassign\')" style="padding:11px 22px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-family:inherit;font-size:0.875rem;font-weight:700;cursor:pointer;">' +
+        '🔁 Reassign to Officer</button>' +
+        '</div>' +
+        '</div>';
+
+    } else if (isResolved) {
+      let aiBanner = '';
+      if (ai.adminReviewed) {
+        const actionLabel = ai.adminAction === 'approved' ? '✅ Manually Approved by Admin' : '🔁 Reassigned by Admin (re-resolved)';
+        aiBanner = '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.82rem;color:#15803d;font-weight:600;">🤖 AI Score: ' + (ai.matchScore !== null ? ai.matchScore + '/100' : 'N/A') + ' — ' + actionLabel + '</div>';
+      } else if (ai.passed === true) {
+        aiBanner = '<div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:12px 16px;margin-bottom:12px;font-size:0.82rem;color:#15803d;font-weight:600;">🤖 AI Verification passed — Score: ' + (ai.matchScore !== null ? ai.matchScore + '/100' : 'N/A') + '</div>';
+      }
       actionSection = aiBanner +
-        '<div class="action-card green"><div style="font-weight:700;color:#16a34a;">✅ This complaint has been resolved by the assigned officer.' + (ai.passed === true ? ' AI verification passed.' : '') + '</div></div>';
+        '<div class="action-card green"><div style="font-weight:700;color:#16a34a;">✅ This complaint has been resolved.' + (ai.passed === true ? ' AI verification passed.' : '') + '</div></div>';
 
     } else if (isRejected) {
       actionSection =
@@ -359,21 +412,27 @@
         '</div>';
 
     } else {
-      // Assign section
+      // Pending / assigned — show assign form
+      // isReassign = an officer is already assigned (admin is changing assignment)
+      const isReassign = !!officer;
+
+      const officerLevelBadge = officer && officer.level
+        ? ' <span style="background:#dbeafe;color:#1d4ed8;font-size:0.7rem;font-weight:700;padding:2px 7px;border-radius:999px;">L' + officer.level + '</span>'
+        : '';
+
       const currentlyAssigned = officer
         ? '<div style="margin-bottom:16px;">' +
           '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Currently Assigned:</div>' +
           '<div class="assigned-officer-card">' +
           '<div class="assigned-avatar">' + initials(officer.name) + '</div>' +
           '<div class="assigned-info">' +
-          '<div class="name">' + officer.name + '</div>' +
+          '<div class="name">' + officer.name + officerLevelBadge + '</div>' +
           '<div class="dept">' + officer.designation + ' · ' + (officer.departmentName || '') + '</div>' +
           '<div class="dept">📧 ' + (officer.email || '') + ' · 📞 ' + (officer.phone || '') + '</div>' +
           '</div></div></div>' +
-          '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Reassign to a different officer:</div>'
-        : '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;font-weight:600;">Select a department and officer to handle this complaint:</div>';
+          '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:10px;font-weight:600;">Reassign to a different officer (all levels):</div>'
+        : '<div style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:12px;font-weight:600;">Select a department and officer to handle this complaint (Level 1 officers only):</div>';
 
-      // Only show reject option if complaint is still pending (not yet assigned)
       const rejectSection = !officer
         ? '<div class="action-card red"><h4>❌ Reject Complaint</h4>' +
           '<p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:10px;">Provide a reason — this will be shown to the citizen.</p>' +
@@ -383,21 +442,21 @@
         : '';
 
       actionSection =
-        '<div class="assign-section"><h4>👮 Assign Officer</h4>' +
+        '<div class="assign-section"><h4>👮 ' + (isReassign ? 'Reassign Officer' : 'Assign Officer') + '</h4>' +
         currentlyAssigned +
         '<div class="assign-form">' +
         '<div class="form-group"><label>Department</label>' +
-        '<select id="dept-select" onchange="onDeptChange()">' + deptOptions + '</select></div>' +
+        '<select id="dept-select" onchange="onDeptChange()" data-reassign="' + isReassign + '">' + deptOptions + '</select></div>' +
         '<div class="form-group"><label>Officer</label>' +
         '<select id="officer-select"><option value="">Loading officers…</option></select></div>' +
-        '<button class="btn btn-primary btn-sm" id="assign-btn" onclick="assignOfficer()" style="height:42px;align-self:flex-end;min-width:100px;">✅ Assign</button>' +
+        '<button class="btn btn-primary btn-sm" id="assign-btn" onclick="assignOfficer()" style="height:42px;align-self:flex-end;min-width:100px;">✅ ' + (isReassign ? 'Reassign' : 'Assign') + '</button>' +
         '</div></div>' +
         rejectSection;
     }
 
-    // ── Evidence Comparison ──────────────────────────────────────
+    // ── Evidence Comparison (shown separately only when NOT inside AI banner) ──
     let combinedEvidenceHTML = '';
-    if ((c.evidencePaths && c.evidencePaths.length) || (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length)) {
+    if (!needsAiReview && ((c.evidencePaths && c.evidencePaths.length) || (c.resolutionEvidencePaths && c.resolutionEvidencePaths.length))) {
       combinedEvidenceHTML = '<div class="info-card" style="margin-bottom:24px;"><h4>📸 Evidence Comparison</h4><div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:12px;">';
       
       if (c.evidencePaths && c.evidencePaths.length) {
@@ -491,8 +550,10 @@
         : '');
 
     // Load officers for the best-matched department AFTER DOM is rendered
-    if (!isResolved && !isRejected && selectedDept) {
-      await loadOfficersByDept(selectedDept);
+    // Skip when AI review banner is showing (no assign form in DOM)
+    if (!isResolved && !isRejected && !needsAiReview && selectedDept) {
+      // levelOnly=true for fresh assignment (no officer yet), false for reassignment
+      await loadOfficersByDept(selectedDept, !officer);
     }
   }
 
