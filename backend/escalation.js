@@ -4,10 +4,10 @@
 // L2 → L3: escalated complaint still not resolved 5 more minutes later
 "use strict";
 
-const mongoose  = require("mongoose");
+const mongoose = require("mongoose");
 const Complaint = require("./models/Complaint");
-const Officer   = require("./models/Officer");
-const User      = require("./models/User");
+const Officer = require("./models/Officer");
+const User = require("./models/User");
 const nodemailer = require("nodemailer");
 
 // ── Email transporter ─────────────────────────────────────────
@@ -191,8 +191,8 @@ async function runEscalationCheck() {
     const now = new Date();
 
     // ── L1 → L2: assigned_at > 5 minutes ──────────────────────
-    const L1_SLA_MS = 5 * 60 * 1000; // 5 minutes
-    const l1Cutoff  = new Date(now - L1_SLA_MS);
+    const L1_SLA_MS = 60 * 60 * 1000; // 5 minutes
+    const l1Cutoff = new Date(now - L1_SLA_MS);
 
     const l1OverdueComplaints = await Complaint.find({
       escalationLevel: 1,
@@ -219,16 +219,16 @@ async function runEscalationCheck() {
       const prevOfficerDesig = prevOfficer ? prevOfficer.designation : "";
 
       // Update complaint  — also update officerId to the new L2 officer
-      complaint.escalationLevel  = 2;
-      complaint.level2OfficerId  = l2Officer._id;
-      complaint.officerId        = l2Officer._id;   // ← update main officer field
-      complaint.escalatedAt      = now;
+      complaint.escalationLevel = 2;
+      complaint.level2OfficerId = l2Officer._id;
+      complaint.officerId = l2Officer._id;   // ← update main officer field
+      complaint.escalatedAt = now;
       complaint.escalationHistory.push({
-        level:       2,
-        officerId:   l2Officer._id,
+        level: 2,
+        officerId: l2Officer._id,
         officerName: l2Officer.name,
-        assignedAt:  now,
-        reason:      `Auto-escalated: L1 officer SLA exceeded (5 minutes). Previously handled by ${prevOfficerName}${prevOfficerDesig ? ' — ' + prevOfficerDesig : ''}.`,
+        assignedAt: now,
+        reason: `Auto-escalated: L1 officer SLA exceeded (5 minutes). Previously handled by ${prevOfficerName}${prevOfficerDesig ? ' — ' + prevOfficerDesig : ''}.`,
       });
       await complaint.save();
 
@@ -257,7 +257,7 @@ async function runEscalationCheck() {
 
     // ── L2 → L3: escalatedAt > 5 minutes, not yet at L3 ──────
     const L2_SLA_MS = 5 * 60 * 1000; // 5 minutes
-    const l2Cutoff  = new Date(now - L2_SLA_MS);
+    const l2Cutoff = new Date(now - L2_SLA_MS);
 
     const l2OverdueComplaints = await Complaint.find({
       escalationLevel: 2,
@@ -284,14 +284,14 @@ async function runEscalationCheck() {
 
       complaint.escalationLevel = 3;
       complaint.level3OfficerId = l3Officer._id;
-      complaint.officerId       = l3Officer._id;   // ← update main officer field
+      complaint.officerId = l3Officer._id;   // ← update main officer field
       complaint.escalatedToL3At = now;
       complaint.escalationHistory.push({
-        level:       3,
-        officerId:   l3Officer._id,
+        level: 3,
+        officerId: l3Officer._id,
         officerName: l3Officer.name,
-        assignedAt:  now,
-        reason:      `Auto-escalated: L2 officer SLA exceeded (5 minutes after L2 assignment). Previously handled by ${prevOfficerName}${prevOfficerDesig ? ' — ' + prevOfficerDesig : ''}.`,
+        assignedAt: now,
+        reason: `Auto-escalated: L2 officer SLA exceeded (5 minutes after L2 assignment). Previously handled by ${prevOfficerName}${prevOfficerDesig ? ' — ' + prevOfficerDesig : ''}.`,
       });
       await complaint.save();
 

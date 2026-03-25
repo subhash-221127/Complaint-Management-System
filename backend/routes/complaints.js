@@ -537,7 +537,7 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
     };
 
     if (aiResult.passed) {
-      // Auto-resolve
+      // Score ≥ 70 — auto-resolve immediately
       complaint.status     = "resolved";
       complaint.resolvedAt = new Date();
 
@@ -570,13 +570,14 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
       });
 
     } else {
-      // Needs admin review — keep status as resolved but flag it
-      complaint.status     = "resolved";
-      complaint.resolvedAt = new Date();
+      // Score < 70 — keep status as "in_progress", flag for admin manual review.
+      // Do NOT resolve the complaint; admin must approve or reassign.
+      complaint.status = "in_progress";
+      // resolvedAt intentionally NOT set — complaint is not resolved yet
       await complaint.save();
 
       return res.json({
-        message:        "Evidence submitted. AI verification score was low — flagged for admin review.",
+        message:        "Evidence submitted. AI verification score was low — complaint requires admin manual review.",
         aiScore:        aiResult.score,
         aiPassed:       false,
         needsReview:    true,
@@ -593,8 +594,10 @@ router.patch("/complaint/:id/resolve", upload.single("evidence"), async (req, re
 
 // ─────────────────────────────────────────────
 // POST /api/complaint/:id/admin-review
-// Admin reviews a flagged complaint (AI failed)
-// action: "approve" | "reassign"
+// Admin reviews a flagged complaint (AI score < 70)
+// Complaint is in "in_progress" state at this point.
+// action: "approve" → resolve & email citizen
+// action: "reassign" → stay in_progress, clear AI data so officer resubmits
 // ─────────────────────────────────────────────
 router.post("/complaint/:id/admin-review", async (req, res) => {
   try {
@@ -610,13 +613,16 @@ router.post("/complaint/:id/admin-review", async (req, res) => {
     complaint.markModified("aiVerification");
 
     if (action === "approve") {
-      // Admin approves — complaint stays resolved, send email now
+      // Admin manually approves — resolve and notify citizen
       complaint.status     = "resolved";
-      complaint.resolvedAt = complaint.resolvedAt || new Date();
+      complaint.resolvedAt = new Date();
       await complaint.save();
 
-      // Department + officer counters (only if not already incremented)
-      await Department.findOneAndUpdate({ name: complaint.department }, { $inc: { resolvedComplaints: 1, pendingComplaints: -1 } });
+      // Update dept + officer counters
+      await Department.findOneAndUpdate(
+        { name: complaint.department },
+        { $inc: { resolvedComplaints: 1 } }
+      );
       if (complaint.officerId) {
         await Officer.findByIdAndUpdate(complaint.officerId, { $inc: { casesResolved: 1 } });
       }
@@ -632,11 +638,19 @@ router.post("/complaint/:id/admin-review", async (req, res) => {
       return res.json({ message: "Complaint approved and resolved by admin.", complaint });
 
     } else {
-      // Reassign — send back to in_progress, clear resolution evidence + AI data
-      complaint.status                   = "in_progress";
-      complaint.resolvedAt               = null;
-      complaint.resolutionEvidencePaths  = [];
-      complaint.aiVerification           = { matchScore: null, passed: null, summary: "", checkedAt: null, adminReviewed: false, adminAction: null };
+      // Reassign — clear AI results so officer can resubmit resolution evidence
+      complaint.status                  = "in_progress";
+      complaint.resolvedAt              = null;
+      complaint.resolutionEvidencePaths = [];
+      complaint.aiVerification          = {
+        matchScore:    null,
+        passed:        null,
+        summary:       "",
+        checkedAt:     null,
+        adminReviewed: false,
+        adminAction:   null,
+      };
+      complaint.markModified("aiVerification");
       await complaint.save();
       return res.json({ message: "Complaint reassigned to officer for re-resolution.", complaint });
     }
