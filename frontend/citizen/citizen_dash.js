@@ -163,75 +163,6 @@ function renderStats(data) {
   document.getElementById("s-resolved").textContent = data.filter(c => c.status === "resolved").length;
 }
 
-// -----------------------------------------------
-// 5. Map dots
-// -----------------------------------------------
-
-function renderMap() {
-  const dots = document.getElementById("mapDots");
-  if (!dots) return;
-  const NEARBY = [
-    { x: "18%", y: "22%", status: "pending", tip: "Broken lamp post" },
-    { x: "72%", y: "15%", status: "inprogress", tip: "Road pothole" },
-    { x: "55%", y: "55%", status: "resolved", tip: "Sewage overflow" },
-    { x: "25%", y: "68%", status: "pending", tip: "Garbage pile" },
-    { x: "80%", y: "70%", status: "inprogress", tip: "Water leakage" },
-    { x: "40%", y: "35%", status: "resolved", tip: "Broken bench" },
-  ];
-  dots.innerHTML = NEARBY.map(d => `
-    <div class="map-complaint-dot ${d.status}"
-      style="left:${d.x};top:${d.y};"
-      onmouseenter="showTooltip(event,'${d.tip}')"
-      onmouseleave="hideTooltip()">
-    </div>`).join("");
-}
-
-function showTooltip(e, txt) {
-  const t = document.getElementById("mapTooltip");
-  const map = document.getElementById("nearbyMap").getBoundingClientRect();
-  const dotRect = e.target.getBoundingClientRect();
-  t.textContent = txt;
-  t.style.display = "block";
-  t.style.left = (dotRect.left - map.left + 7) + "px";
-  t.style.top = (dotRect.top - map.top + 0) + "px";
-}
-
-function hideTooltip() {
-  const t = document.getElementById("mapTooltip");
-  if (t) t.style.display = "none";
-}
-
-// -----------------------------------------------
-// 6. Category breakdown
-// -----------------------------------------------
-
-function renderBreakdown(data) {
-  const el = document.getElementById("breakdownList");
-  if (!el) return;
-  const cats = {};
-  data.forEach(c => { cats[c.category] = (cats[c.category] || 0) + 1; });
-  if (!Object.keys(cats).length) { el.innerHTML = "<p style='color:var(--muted);font-size:0.85rem;'>No data yet.</p>"; return; }
-  const max = Math.max(...Object.values(cats), 1);
-  const PALETTE = ["#f97316","#3b82f6","#22c55e","#8b5cf6","#f59e0b","#ef4444","#06b6d4","#ec4899","#14b8a6","#a855f7"];
-  const _colorCache = {};
-  let _colorIdx = 0;
-  function getDeptColor(name) {
-    if (!_colorCache[name]) _colorCache[name] = PALETTE[_colorIdx++ % PALETTE.length];
-    return _colorCache[name];
-  }
-  const COLORS = new Proxy({}, { get: function(t, k) { return getDeptColor(k); } });
-  el.innerHTML = Object.entries(cats)
-    .sort((a, b) => b[1] - a[1])
-    .map(([cat, count]) => `
-      <div>
-        <div style="display:flex;justify-content:space-between;font-size:0.78rem;font-weight:600;color:var(--muted);margin-bottom:4px;">
-          <span>${cat}</span><span>${count}</span>
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar" style="width:${Math.round(count / max * 100)}%;background:${COLORS[cat] || "#94a3b8"};"></div>
-        </div>
-      </div>`).join("");
-}
 
 // -----------------------------------------------
 // 7. Detail modal
@@ -376,8 +307,6 @@ async function loadDashboard() {
 
     renderStats(allComplaints);
     renderComplaints(allComplaints);
-    renderMap();
-    renderBreakdown(allComplaints);
 
   } catch (err) {
     console.error("Failed to load dashboard:", err);

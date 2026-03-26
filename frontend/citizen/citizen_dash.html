@@ -116,10 +116,10 @@
         </div>
         </div>
 
-      <!-- TWO COLUMN LAYOUT -->
-      <div style="display:grid;grid-template-columns:1fr 380px;gap:16px;">
+      <!-- SINGLE COLUMN LAYOUT -->
+      <div style="display:block;">
 
-        <!-- LEFT: MY COMPLAINTS -->
+        <!-- COMPLAINTS LIST -->
         <div>
           <!-- Filters -->
           <div class="toolbar">
@@ -156,58 +156,6 @@
             <small>Try adjusting your filters</small>
           </div>
         </div>
-
-        <!-- RIGHT COLUMN -->
-        <div>
-
-          <!-- NEARBY COMPLAINTS MAP -->
-          <div class="section-card" style="margin-bottom:16px;">
-            <div class="section-card-header">
-              <h3>📍 Nearby Complaints</h3>
-              <span style="font-size:0.75rem;color:var(--muted);">Your area</span>
-            </div>
-            <div style="padding:14px;">
-              <div class="nearby-map" id="nearbyMap">
-                <div class="map-bg"></div>
-                <!-- Roads -->
-                <div class="road rh" style="top:38%"></div>
-                <div class="road rh" style="top:62%"></div>
-                <div class="road rv" style="left:32%"></div>
-                <div class="road rv" style="left:66%"></div>
-                <!-- Blocks -->
-                <div class="blk" style="top:10%;left:6%;width:20%;height:22%"></div>
-                <div class="blk" style="top:10%;left:36%;width:24%;height:22%"></div>
-                <div class="blk" style="top:10%;left:70%;width:22%;height:22%"></div>
-                <div class="blk green" style="top:42%;left:6%;width:20%;height:14%"></div>
-                <div class="blk" style="top:42%;left:36%;width:24%;height:14%"></div>
-                <div class="blk" style="top:42%;left:70%;width:22%;height:14%"></div>
-                <div class="blk" style="top:66%;left:6%;width:20%;height:18%"></div>
-                <div class="blk" style="top:66%;left:36%;width:24%;height:18%"></div>
-                <div class="blk" style="top:66%;left:70%;width:22%;height:18%"></div>
-                <!-- You are here -->
-                <div
-                  style="position:absolute;left:49%;top:39%;transform:translate(-50%,-50%);width:16px;height:16px;background:var(--navy);border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 4px rgba(26,60,110,0.2);z-index:5;">
-                </div>
-                <!-- Complaint dots populated by JS -->
-                <div id="mapDots"></div>
-                <div class="map-tooltip" id="mapTooltip"></div>
-              </div>
-              <div class="map-legend">
-                <span><span class="legend-dot" style="background:var(--blue)"></span>Pending</span>
-                <span><span class="legend-dot" style="background:var(--amber)"></span>In Progress</span>
-                <span><span class="legend-dot" style="background:var(--green)"></span>Resolved</span>
-                <span><span class="legend-dot" style="background:var(--navy)"></span>You</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- QUICK STATS BREAKDOWN -->
-          <div class="section-card">
-            <div class="section-card-header">
-              <h3>📊 Resolution Progress</h3>
-            </div>
-            <div style="padding:16px;display:flex;flex-direction:column;gap:12px;" id="breakdownList"></div>
-          </div>
 
         </div>
       </div>
